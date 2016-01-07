@@ -27,7 +27,12 @@ import edu.cmu.tetrad.util.TetradMatrix;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.linear.SingularMatrixException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static java.lang.Math.abs;
 
 /**
  * Implements a test for simultaneously zero sextads in the style of Bollen, K. (1990).
@@ -36,13 +41,15 @@ import java.util.*;
  *
  * @author Joseph Ramsey
  */
-public class DeltaSextadTest {
+public class DeltaSextadTest2 {
     static final long serialVersionUID = 23L;
+    private final CorrelationMatrix corr;
 
     private double[][] data;
     private int N;
     private ICovarianceMatrix cov;
     private List<Node> variables;
+    private List<Sigma> boldSigma;
 
     // As input we require a data set and a list of non-redundant Tetrads.
 
@@ -55,7 +62,7 @@ public class DeltaSextadTest {
      * Constructs a test using a given data set. If a data set is provided (that is, a tabular data set), fourth moment
      * statistics can be calculated (p. 160); otherwise, it must be assumed that the data are multivariate Gaussian.
      */
-    public DeltaSextadTest(DataSet dataSet) {
+    public DeltaSextadTest2(DataSet dataSet) {
         if (dataSet == null) {
             throw new NullPointerException();
         }
@@ -65,6 +72,7 @@ public class DeltaSextadTest {
         }
 
         this.cov = new CovarianceMatrixOnTheFly(dataSet);
+        this.corr = new CorrelationMatrix(dataSet);
 
         TetradMatrix centered = DataUtils.centerData(dataSet.getDoubleData());
         this.data = centered.transpose().toArray();
@@ -76,12 +84,13 @@ public class DeltaSextadTest {
      * Constructs a test using the given covariance matrix. Fourth moment statistics are not caculated; it is assumed
      * that the data are distributed as multivariate Gaussian.
      */
-    public DeltaSextadTest(ICovarianceMatrix cov) {
+    public DeltaSextadTest2(ICovarianceMatrix cov) {
         if (cov == null) {
             throw new NullPointerException();
         }
 
         this.cov = cov;
+        this.corr = new CorrelationMatrix(cov);
         this.N = cov.getSampleSize();
         this.variables = cov.getVariables();
     }
@@ -89,8 +98,8 @@ public class DeltaSextadTest {
     /**
      * Generates a simple exemplar of this class to test serialization.
      */
-    public static DeltaSextadTest serializableInstance() {
-        return new DeltaSextadTest(ColtDataSet.serializableInstance());
+    public static DeltaSextadTest2 serializableInstance() {
+        return new DeltaSextadTest2(ColtDataSet.serializableInstance());
     }
 
     /**
@@ -183,6 +192,8 @@ public class DeltaSextadTest {
             }
         }
 
+        this.boldSigma = boldSigma;
+
         // Need a matrix of of population estimates of partial derivatives of tetrads
         // with respect to covariances in boldSigma.
         TetradMatrix del = new TetradMatrix(boldSigma.size(), sextads.length);
@@ -225,7 +236,7 @@ public class DeltaSextadTest {
         return chisq;
     }
 
-    /**
+     /**
      * If using a covariance matrix or a correlation matrix, just returns the lookups. Otherwise calculates the
      * covariance.
      */
@@ -294,6 +305,16 @@ public class DeltaSextadTest {
 
     public List<Node> getVariables() {
         return variables;
+    }
+
+    public double getLogProductCorrelations() {
+        double logsum = 0.0;
+
+        for (Sigma sigma : boldSigma) {
+            logsum += abs(corr.getValue(sigma.getA(), sigma.getB()));
+        }
+
+        return logsum;
     }
 
     // Represents a single covariance symbolically.
