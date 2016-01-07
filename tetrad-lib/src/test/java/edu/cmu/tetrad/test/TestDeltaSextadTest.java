@@ -55,9 +55,6 @@ public class TestDeltaSextadTest {
         SemIm sem = getSem1();
         DataSet data = sem.simulateData(3000, false);
 
-        List<Node> variables = data.getVariables();
-
-
         int m1 = 0;
         int m2 = 1;
         int m3 = 2;
@@ -93,7 +90,6 @@ public class TestDeltaSextadTest {
         DeltaSextadTest test = new DeltaSextadTest(data);
 
         int numSextads = 3;
-        double alpha = 0.001;
 
         ChoiceGenerator gen = new ChoiceGenerator(sextads.size(), numSextads);
         int choice[];
