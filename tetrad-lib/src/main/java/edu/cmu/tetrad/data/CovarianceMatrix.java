@@ -150,12 +150,12 @@ public class CovarianceMatrix implements ICovarianceMatrix {
      * Copy constructor.
      */
     public CovarianceMatrix(CovarianceMatrix covMatrix) {
-        this(covMatrix.variables, covMatrix.matrix,
+        this(covMatrix.variables, new TetradMatrix(covMatrix.matrix),
                 covMatrix.sampleSize);
     }
 
     public CovarianceMatrix(ICovarianceMatrix covMatrix) {
-        this(covMatrix.getVariables(), covMatrix.getMatrix(),
+        this(covMatrix.getVariables(), new TetradMatrix(covMatrix.getMatrix()),
                 covMatrix.getSampleSize());
     }
 

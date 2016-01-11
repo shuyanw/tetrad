@@ -999,6 +999,7 @@ public class FindTwoFactorClusters {
     }
 
     private boolean vanishes(List<Integer> sextet) {
+        Collections.sort(sextet);
 
         PermutationGenerator gen = new PermutationGenerator(6);
         int[] perm;
