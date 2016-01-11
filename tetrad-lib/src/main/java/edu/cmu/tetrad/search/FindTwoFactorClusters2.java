@@ -89,7 +89,7 @@ public class FindTwoFactorClusters2 {
         List<Double> corrList = new ArrayList<Double>();
 
         for (int i = 0; i < covarianceMatrix.getDimension(); i++) {
-            for (int j = 0; j < covarianceMatrix.getDimension(); j++) {
+            for (int j = i + 1; j < covarianceMatrix.getDimension(); j++) {
                 double r = corr.getValue(i, j);
                 corrList.add(abs(r));
             }

@@ -149,7 +149,7 @@ public class DeltaSextadTest2 {
 
         for (int i = 0; i < boldSigma.size(); i++) {
             for (int j = 0; j < boldSigma.size(); j++) {
-                if (i == j) continue;
+//                if (i == j) continue;
 
                 Sigma sigmaef = boldSigma.get(i);
                 Sigma sigmagh = boldSigma.get(j);
@@ -159,7 +159,10 @@ public class DeltaSextadTest2 {
                 int g = sigmagh.getA();
                 int h = sigmagh.getB();
 
-//                if (e == g || e == h || f == g || f == h) continue;
+//                if (e == g || e == h || f == g || f == h) {
+//                    continue;
+////                     sigma_ss.set(i, j, 1);
+//                }
 
                 if (cov != null && cov instanceof CorrelationMatrix) {
 
@@ -246,6 +249,7 @@ public class DeltaSextadTest2 {
      */
     private double r(int i, int j) {
         if (cov != null) {
+//            if (i == j) return 0;
             return cov.getValue(i, j);
         } else {
             double[] arr1 = data[i];
