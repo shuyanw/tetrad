@@ -109,17 +109,10 @@ public class DeltaSextadTest2 {
      * Square distribution with degrees of freedom equal to the number of nonredundant tetrads tested.
      */
     public double getPValue(List<IntSextad> sextads) {
-//        int df = sextads.size() ;
         int df = dofHarman(sextads.size());
         double chisq = calcChiSquare(sextads);
-//        double cdf = ProbUtils.chisqCdf(chisq, df);
-        double cdf = new ChiSquaredDistribution(df).cumulativeProbability(chisq);
-        double p = 1.0 - cdf;
-//        System.out.println(p);
-
-//        if (p == 0) return 1.0;
-
-        return p;
+        if (chisq < 0) throw new IllegalArgumentException();
+        return 1.0 - new ChiSquaredDistribution(df).cumulativeProbability(chisq);
     }
 
     /**
@@ -164,36 +157,35 @@ public class DeltaSextadTest2 {
 ////                     sigma_ss.set(i, j, 1);
 //                }
 
+                double _ss;
+
                 if (cov != null && cov instanceof CorrelationMatrix) {
 
 //                Assumes multinormality. Using formula 23. (Not implementing formula 22 because that case
 //                does not come up.)
-                    double rr = 0.5 * (r(e, f) * r(g, h))
+                    _ss = 0.5 * (r(e, f) * r(g, h))
                             * (r(e, g) * r(e, g) + r(e, h) * r(e, h) + r(f, g) * r(f, g) + r(f, h) * r(f, h))
                             + r(e, g) * r(f, h) + r(e, h) * r(f, g)
                             - r(e, f) * (r(f, g) * r(f, h) + r(e, g) * r(e, h))
                             - r(g, h) * (r(f, g) * r(e, g) + r(f, h) * r(e, h));
 
-                    // General.
-                    double rr2 = r(e, f, g, h) + 0.25 * r(e, f) * r(g, h) *
-                            (r(e, e, g, g) * r(f, f, g, g) + r(e, e, h, h) + r(f, f, h, h))
-                            - 0.5 * r(e, f) * (r(e, e, g, h) + r(f, f, g, h))
-                            - 0.5 * r(g, h) * (r(e, f, g, g) + r(e, f, h, h));
-
-                    sigma_ss.set(i, j, rr);
-//                    sigma_ss.set(j, i, rr);
-                } else if (cov != null && data == null) {
+                } else if (cov != null && cov instanceof CovarianceMatrix && data == null) {
 
                     // Assumes multinormality--see p. 160.
-//                    double _ss = r(e, g) * r(f, h) + r(e, h) * r(f, g); // + or -? Different advise. + in the code.
-                    double _ss = r(e, g) * r(f, h) + r(e, h) * r(f, g);
-                    sigma_ss.set(i, j, _ss);
-//                    sigma_ss.set(j, i, _ss);
+                    _ss = r(e, g) * r(f, h) + r(e, h) * r(f, g);
+                } else if (data != null) {
+                    _ss = r(e, f, g, h) - r(e, f) * r(g, h);
+
+                    // General.
+//                    _ss = r(e, f, g, h) + 0.25 * r(e, f) * r(g, h) *
+//                            (r(e, e, g, g) * r(f, f, g, g) + r(e, e, h, h) + r(f, f, h, h))
+//                            - 0.5 * r(e, f) * (r(e, e, g, h) + r(f, f, g, h))
+//                            - 0.5 * r(g, h) * (r(e, f, g, g) + r(e, f, h, h));
                 } else {
-                    double _ss = r(e, f, g, h) - r(e, f) * r(g, h);
-                    sigma_ss.set(i, j, _ss);
-//                    sigma_ss.set(j, i, _ss);
+                    throw new IllegalStateException();
                 }
+
+                sigma_ss.set(i, j, _ss);
             }
         }
 
@@ -249,7 +241,6 @@ public class DeltaSextadTest2 {
      */
     private double r(int i, int j) {
         if (cov != null) {
-//            if (i == j) return 0;
             return cov.getValue(i, j);
         } else {
             double[] arr1 = data[i];
@@ -270,8 +261,8 @@ public class DeltaSextadTest2 {
         int n6 = sextad.getN();
 
         double x1 = derivative(a, b, n1, n2, n3, n4, n5, n6);
-//        double x2 = derivative(a, b, n4, n5, n6, n1, n2, n3);
-        double x2 = derivative(b, a, n1, n2, n3, n4, n5, n6);
+        double x2 = derivative(a, b, n4, n5, n6, n1, n2, n3);
+//        double x2 = derivative(b, a, n1, n2, n3, n4, n5, n6);
 
         if (x1 == 0) return x2;
         if (x2 == 0) return x1;

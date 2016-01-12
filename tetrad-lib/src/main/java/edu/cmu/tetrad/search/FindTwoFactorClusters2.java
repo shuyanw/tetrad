@@ -28,14 +28,12 @@ import edu.cmu.tetrad.util.*;
 
 import java.util.*;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.signum;
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
 
 
 /**
  * Implements FindOneFactorCluster by Erich Kummerfeld (adaptation of a two factor
- * sextet algorithm to a one factor IntSextad algorithm).
+ * sextad algorithm to a one factor IntSextad algorithm).
  *
  * @author Joseph Ramsey
  */
@@ -95,28 +93,39 @@ public class FindTwoFactorClusters2 {
             }
         }
 
-        Collections.sort(corrList);
-        double threshold = corrList.get((int)(.9 * corrList.size()) - 1);
+//        Collections.sort(corrList);
+//        double threshold = corrList.get((int) (.9 * corrList.size()) - 1);
+//
+//        for (int i = 0; i < covarianceMatrix.getDimension(); i++) {
+//            for (int j = 0; j < covarianceMatrix.getDimension(); j++) {
+//                if (i == j) ;//covarianceMatrix.setValue(i, j, 0);
+//                else {
+//                    double r = corr.getValue(i, j);
+//                    if (abs(r) > threshold) {//getCorrelationP(r) > alpha) {
+//                        covarianceMatrix.setValue(i, j, 0); //signum(r) * covarianceMatrix.getValue(i, j));
+//                    }
+//                }
+//            }
+//        }
 
-        for (int i = 0; i < covarianceMatrix.getDimension(); i++) {
-            for (int j = 0; j < covarianceMatrix.getDimension(); j++) {
-                if (i == j) covarianceMatrix.setValue(i, j, 0);
-                else {
-                    double r = corr.getValue(i, j);
-                    if (abs(r) > threshold) {//getCorrelationP(r) > alpha) {
-                        covarianceMatrix.setValue(i, j, 0);//i, j, signum(r) * threshold);
-                    }
-                }
-            }
-        }
-
-        System.out.println(covarianceMatrix);
+//        System.out.println(covarianceMatrix);
     }
 
     public FindTwoFactorClusters2(DataSet dataSet, FindTwoFactorClusters.Algorithm algorithm, double alpha) {
         this.variables = dataSet.getVariables();
         this.alpha = alpha;
         this.test = new DeltaSextadTest2(dataSet);
+
+//        dataSet = dataSet.copy();
+//
+//        for (int i = 0; i < dataSet.getNumRows(); i++) {
+//            for (int j = 0; j < dataSet.getNumColumns(); j++) {
+//                dataSet.setDouble(i, j, Math.log(dataSet.getDouble(i, j) + 1));
+//            }
+//        }
+
+//        this.dataModel = new CovarianceMatrix(dataSet);
+
         this.dataModel = dataSet;
         this.algorithm = algorithm;
 
@@ -220,15 +229,15 @@ public class FindTwoFactorClusters2 {
 //                continue;
 //            }
 
-            if (!purePentad(pentad)) {
+            if (!purePentad2(pentad)) {
                 continue;
             }
 
             List<Integer> _cluster = new ArrayList<>(pentad);
 
 //            if (verbose) {
-                System.out.println("++ " + variablesForIndices(pentad));
-                log("++ " + variablesForIndices(pentad), false);
+            System.out.println("++ " + variablesForIndices(pentad));
+            log("++ " + variablesForIndices(pentad), false);
 //            }
 
 
@@ -272,12 +281,12 @@ public class FindTwoFactorClusters2 {
 //                    continue;
 //                }
 //
-//                List<Integer> sextet = new ArrayList<>(pentad);
-//                sextet.add(o);
+//                List<Integer> sextad = new ArrayList<>(pentad);
+//                sextad.add(o);
 //
-//                Collections.sort(sextet);
-//                IntSextad sextad = new IntSextad(sextet.get(0), sextet.get(1), sextet.get(2),
-//                        sextet.get(3), sextet.get(4), sextet.get(5));
+//                Collections.sort(sextad);
+//                IntSextad sextad = new IntSextad(sextad.get(0), sextad.get(1), sextad.get(2),
+//                        sextad.get(3), sextad.get(4), sextad.get(5));
 //                double pValue = test.getPValue(Collections.singletonList(sextad));
 //                score2 += Math.log(pValue);
 //            }
@@ -291,75 +300,51 @@ public class FindTwoFactorClusters2 {
     }
 
     private boolean purePentad(List<Integer> pentad) {
-//        if (true) return true;
+        for (int o : allVariables()) {
+            if (pentad.contains(o)) {
+                continue;
+            }
+
+            List<Integer> sextad = new ArrayList<>(pentad);
+            sextad.add(o);
+
+            if (!vanishes(sextad)) {
+                return false;
+            }
+        }
+
+        System.out.println("Pure pentad: " + variablesForIndices(pentad));
+
+        return true;
+    }
+
+    private boolean purePentad2(List<Integer> pentad) {
+        if (true) return purePentad(pentad);
 
         for (int o : allVariables()) {
             if (pentad.contains(o)) {
                 continue;
             }
 
-            List<Integer> sextet = new ArrayList<>(pentad);
-            sextet.add(o);
+            List<Integer> sextad = new ArrayList<>(pentad);
+            sextad.add(o);
 
-            Collections.sort(sextet);
-
-            if (!vanishes(sextet)) {
-//                System.out.println("Doesnn't vanish: " + pentad);
+            if (!pureSextad(sextad)) {
                 return false;
             }
         }
 
-//        System.out.println("PPP " + pentad);
+        System.out.println("PURE: " + variablesForIndices(pentad));
 
         return true;
-
-
     }
-
-//    private boolean existsImpurePentad(List<Integer> variables) {
-//        log("exists impure pentad.", true);
-//
-//        ChoiceGenerator gen = new ChoiceGenerator(variables.size(), 5);
-//        int[] choice;
-//
-//        while ((choice = gen.next()) != null) {
-//            int n1 = variables.get(choice[0]);
-//            int n2 = variables.get(choice[1]);
-//            int n3 = variables.get(choice[2]);
-//            int n4 = variables.get(choice[3]);
-//            int n5 = variables.get(choice[4]);
-//
-//            List<Integer> pentad = pentad(n1, n2, n3, n4, n5);
-//
-//            if (zeroCorr(pentad, 4)) continue;
-//
-//            for (int o : allVariables()) {
-//                if (pentad.contains(o)) {
-//                    continue;
-//                }
-//
-//                List<Integer> sextet = sextet(n1, n2, n3, n4, n5, o);
-//
-//                Collections.sort(sextet);
-//
-//                boolean vanishes = vanishes(sextet);
-//
-//                if (!vanishes) {
-//                    return true;
-//                }
-//            }
-//        }
-//
-//        return false;
-//    }
-
 
     private Set<List<Integer>> combinePurePentads(List<List<Integer>> purePentads, List<Integer> _variables) {
         log("Growing pure pentads.", true);
         Set<List<Integer>> grown = new HashSet<>();
 
         // Lax grow phase with speedup.
-        if (false) {
+        if (true) {
             List<Integer> t = new ArrayList<>();
             int count = 0;
             int total = purePentads.size();
@@ -466,8 +451,6 @@ public class FindTwoFactorClusters2 {
 
                         List<Integer> t = new ArrayList<>(pentad);
 
-                        Collections.sort(t);
-
                         if (!purePentads.contains(t)) {
                             rejected++;
                         } else {
@@ -489,7 +472,7 @@ public class FindTwoFactorClusters2 {
                 }
 
                 if (verbose) {
-                    System.out.println("Grown " + (++count) + " of " + total + ": " + _cluster);
+                    System.out.println("Grown " + (++count) + " of " + total + ": " + variablesForIndices(_cluster));
                 }
 
                 grown.add(_cluster);
@@ -497,7 +480,7 @@ public class FindTwoFactorClusters2 {
         }
 
         // Strict grow phase.
-        if (true) {
+        if (false) {
             List<Integer> t = new ArrayList<>();
             int count = 0;
             int total = purePentads.size();
@@ -531,8 +514,6 @@ public class FindTwoFactorClusters2 {
                         t.add(n3);
                         t.add(n4);
                         t.add(o);
-
-                        Collections.sort(t);
 
                         if (!purePentads.contains(t)) {
                             continue VARIABLES;
@@ -648,8 +629,6 @@ public class FindTwoFactorClusters2 {
             t.add(n4);
             t.add(n5);
 
-            Collections.sort(t);
-
             purePentads.remove(t);
         }
     }
@@ -687,14 +666,14 @@ public class FindTwoFactorClusters2 {
 
                     // Note that purity needs to be assessed with respect to all of the variables in order to
                     // remove all latent-measure impurities between pairs of latents.
-                    if (purePentad(cluster)) {
+                    if (purePentad2(cluster)) {
                         if (verbose) {
                             log("Found a pure: " + variablesForIndices(cluster) + " score = " + score(cluster), true);
                         }
 
-                        addOtherVariables1(_variables, cluster);
+                        addOtherVariablesStrict(_variables, cluster);
 
-                        if (cluster.size() < k) continue;
+//                        if (cluster.size() < k) continue;
 
                         if (verbose) {
                             log("Cluster found: " + variablesForIndices(cluster), true);
@@ -717,16 +696,45 @@ public class FindTwoFactorClusters2 {
     }
 
     private double logsum2(List<Integer> cluster) {
-        List<List<IntSextad>> intSextads = getIntSextads(cluster.get(0), cluster.get(1), cluster.get(2),
+        List<IntSextad> intSextads = getIntSextads(cluster.get(0), cluster.get(1), cluster.get(2),
                 cluster.get(3), cluster.get(4), cluster.get(5));
-        double pValue = test.getPValue(intSextads.get(0));
+        double pValue = test.getPValue(intSextads);
         double logsum = Math.log(pValue);
-        logsum += test.getLogProductCorrelations(intSextads.get(0));
+        logsum += test.getLogProductCorrelations(intSextads);
 //        System.out.println(logsum);
         return logsum;
     }
 
-    private void addOtherVariables1(List<Integer> _variables, List<Integer> cluster) {
+    private void addOtherVariablesStrict(List<Integer> _variables, List<Integer> cluster) {
+
+        O:
+        for (int o : _variables) {
+            if (cluster.contains(o)) continue;
+            List<Integer> _cluster = new ArrayList<>(cluster);
+
+            ChoiceGenerator gen2 = new ChoiceGenerator(_cluster.size(), 4);
+            int[] choice;
+
+            while ((choice = gen2.next()) != null) {
+                int t1 = _cluster.get(choice[0]);
+                int t2 = _cluster.get(choice[1]);
+                int t3 = _cluster.get(choice[2]);
+                int t4 = _cluster.get(choice[3]);
+
+                List<Integer> sextad = cluster(t1, t2, t3, t4);
+                sextad.add(o);
+
+                if (!purePentad(sextad)) {
+                    continue O;
+                }
+            }
+
+            log("Extending by " + variables.get(o), true);
+            cluster.add(o);
+        }
+    }
+
+    private void addOtherVariablesLax(List<Integer> _variables, List<Integer> cluster) {
 
         O:
         for (int o : _variables) {
@@ -755,20 +763,22 @@ public class FindTwoFactorClusters2 {
 //                }
 //                if (zeroCorr(sextad, 4)) continue;
 
-                if (!purePentad(sextad)) {
+                if (!purePentad2(sextad)) {
 //                    rejected++;
-                    continue O;
+                    continue;
                 }
 
                 accepted++;
 
-//                if (accepted > threshold) {
-//                    break;
-//                }
+                if (accepted > threshold) {
+                    break;
+                }
             }
 
-            log("Extending by " + variables.get(o), true);
-            cluster.add(o);
+            if (accepted > threshold) {
+                log("Extending by " + variables.get(o), true);
+                cluster.add(o);
+            }
         }
     }
 
@@ -836,7 +846,7 @@ public class FindTwoFactorClusters2 {
 //        }
 //    }
 
-    //  Finds clusters of size 5 for the sextet first algorithm.
+    //  Finds clusters of size 5 for the sextad first algorithm.
     private Set<List<Integer>> findMixedClusters(Set<List<Integer>> clusters, List<Integer> remaining, Set<Integer> unionPure) {
         Set<List<Integer>> pentads = new HashSet<>();
         Set<List<Integer>> _clusters = new HashSet<>(clusters);
@@ -955,25 +965,23 @@ public class FindTwoFactorClusters2 {
         return variables;
     }
 
-    private boolean pure(List<Integer> sextet) {
-        if (vanishes(sextet)) {
-            for (int o : allVariables()) {
-                if (sextet.contains(o)) continue;
+    private boolean pureSextad(List<Integer> sextad) {
+        if (vanishes(sextad)) {
+            for (int i = 0; i < sextad.size(); i++) {
+                for (int o : allVariables()) {
+                    if (sextad.contains(o)) continue;
 
-                for (int i = 0; i < sextet.size(); i++) {
-                    List<Integer> _sextet = new ArrayList<>(sextet);
-                    _sextet.remove(sextet.get(i));
-                    _sextet.add(i, o);
+                    List<Integer> _sextad = new ArrayList<>(sextad);
+                    _sextad.remove(sextad.get(i));
+                    _sextad.add(i, o);
 
-                    if (!(vanishes(_sextet))) {
+                    if (!(vanishes(_sextad))) {
                         return false;
                     }
                 }
             }
 
-//            if (existsImpurePentad(sextet)) return false;
-
-            System.out.println("PURE: " + variablesForIndices(sextet));
+//            if (existsImpurePentad(sextad)) return false;
 
             return true;
         }
@@ -986,7 +994,7 @@ public class FindTwoFactorClusters2 {
         return im.getChiSquare();
     }
 
-    private SemIm estimateClusterModel(List<Integer> sextet) {
+    private SemIm estimateClusterModel(List<Integer> sextad) {
         Graph g = new EdgeListGraph();
         Node l1 = new GraphNode("L1");
         l1.setNodeType(NodeType.LATENT);
@@ -995,7 +1003,7 @@ public class FindTwoFactorClusters2 {
         g.addNode(l1);
         g.addNode(l2);
 
-        for (Integer aQuartet : sextet) {
+        for (Integer aQuartet : sextad) {
             Node n = this.variables.get(aQuartet);
             g.addNode(n);
             g.addDirectedEdge(l1, n);
@@ -1082,7 +1090,7 @@ public class FindTwoFactorClusters2 {
         return est.estimate();
     }
 
-    private List<Integer> cluster(int...vars) {
+    private List<Integer> cluster(int... vars) {
         List<Integer> cluster = new ArrayList<>();
 
         for (int i : vars) {
@@ -1094,43 +1102,6 @@ public class FindTwoFactorClusters2 {
 
         return cluster;
     }
-
-    private boolean vanishes(List<Integer> sextet) {
-//        if (zeroCorr(sextet, 4)) {
-//            return false;
-//        }
-
-        Collections.sort(sextet);
-
-//        PermutationGenerator gen = new PermutationGenerator(6);
-//        int[] perm;
-
-//        while ((perm = gen.next()) != null) {
-//            int n1 = sextet.get(perm[0]);
-//            int n2 = sextet.get(perm[1]);
-//            int n3 = sextet.get(perm[2]);
-//            int n4 = sextet.get(perm[3]);
-//            int n5 = sextet.get(perm[4]);
-//            int n6 = sextet.get(perm[5);
-//
-//            if (!vanishes(n1, n2, n3, n4, n5, n6)) return false;
-//        }
-//
-//        return true;
-
-        int n1 = sextet.get(0);
-        int n2 = sextet.get(1);
-        int n3 = sextet.get(2);
-        int n4 = sextet.get(3);
-        int n5 = sextet.get(4);
-        int n6 = sextet.get(5);
-
-        return vanishes(n1, n2, n3, n4, n5, n6);
-//                && vanishes(n3, n2, n1, n6, n5, n4)
-//                && vanishes(n4, n5, n6, n1, n2, n3)
-//                && vanishes(n6, n5, n4, n3, n2, n1);
-    }
-
 
     private boolean zeroCorr(List<Integer> cluster, int n) {
         int count = 0;
@@ -1166,55 +1137,33 @@ public class FindTwoFactorClusters2 {
         this.verbose = verbose;
     }
 
-    private boolean vanishes(int n1, int n2, int n3, int n4, int n5, int n6) {
-        List<List<IntSextad>> independents = getIntSextads(n1, n2, n3, n4, n5, n6);
+    private boolean vanishes(List<Integer> sextad) {
+        List<IntSextad> sextads = getIntSextads(sextad.get(0), sextad.get(1), sextad.get(2),
+                sextad.get(3), sextad.get(4), sextad.get(5));
 
-//        IntSextad[] all = {t1, t2, t3, t4, t5, t6, t7, t8, t9, t10};
-//        independents.add(all);
-
-        for (List<IntSextad> sextads : independents) {
-            for (IntSextad sextad : sextads) {
-                if (zeroCorr(sextad.getNodes(), 5)) continue;
-            }
-
-            double p = 0;
-            try {
-                p = test.getPValue(sextads);
-            } catch (Exception e) {
-                return true;
-            }
-//            System.out.println("p = " + p);
-            if (p < alpha) return false;
-        }
-
-
-//        IntSextad[] sextads = new IntSextad[]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10};
-//
-//        for (IntSextad sextad : sextads) {
-//            if (test.getPValue(sextad) < alpha) return false;
-//        }
-
-//        for (int i = 0; i < independents.size(); i++) {
-//            if (test.getPValue(independents.get(0)) < alpha) {
+//        for (int i = 0; i < sextads.size(); i++) {
+//            double pValue = test.getPValue(Collections.singletonList(sextads.get(i)));
+//            if (pValue < alpha) {
 //                return false;
 //            }
 //        }
 //
-//
 //        return true;
 
-//        for (List<IntSextad> sextads : independents) {
-//            for (IntSextad sextad : sextads) {
-//                if (logsum2(sextad.getNodes()) < -30) {
-//                    return false;
-//                }
-//            }
-//        }
+        List<Node> s = variablesForIndices(sextad);
 
-        return true;
+//        independents.add(all);
+
+        double p = test.getPValue(sextads);
+
+        if (p < alpha) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
-    private List<List<IntSextad>> getIntSextads(int n1, int n2, int n3, int n4, int n5, int n6) {
+    private List<IntSextad> getIntSextads(int n1, int n2, int n3, int n4, int n5, int n6) {
         IntSextad t1 = new IntSextad(n1, n2, n3, n4, n5, n6);
         IntSextad t2 = new IntSextad(n1, n5, n6, n2, n3, n4);
         IntSextad t3 = new IntSextad(n1, n4, n6, n2, n3, n5);
@@ -1227,26 +1176,29 @@ public class FindTwoFactorClusters2 {
         IntSextad t10 = new IntSextad(n1, n2, n6, n3, n4, n5);
 
         // The four sextads implied by equation 5.17 in Harmann.
-        // independents.add(new IntSextad[]{t3, t7, t8, t9});
+//        return sextadList(t3, t7, t8, t9);
+
+//        return sextadList(t1, t8, t10, t5, t7);
 
 //            IntSextad[] independents = {t2, t5, t10, t3, t6};
 
-        List<List<IntSextad>> independents = new ArrayList<>();
-//        independents.add(sextadList(t1, t2, t3, t5, t6));
-//        independents.add(sextadList(t1, t2, t3, t9, t10));
-//        independents.add(sextadList(t6, t7, t8, t9, t10));
-//        independents.add(sextadList(t1, t2, t4, t5, t9));
-        independents.add(sextadList(t1, t3, t4, t6, t10));
-        return independents;
+        return sextadList(t1, t2, t3, t5, t6);
+//        return sextadList(t1, t2, t3, t9, t10);
+//        return sextadList(t6, t7, t8, t9, t10);
+//        return sextadList(t1, t2, t4, t5, t9);
+//        return sextadList(t1, t3, t4, t6, t10);
+
+//        return sextadList(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
+
     }
 
-    private List<IntSextad> sextadList(IntSextad t1, IntSextad t2, IntSextad t3, IntSextad t5, IntSextad t6) {
+    private List<IntSextad> sextadList(IntSextad... t) {
         List<IntSextad> list = new ArrayList<>();
-        list.add(t1);
-        list.add(t2);
-        list.add(t3);
-        list.add(t5);
-        list.add(t6);
+
+        for (int i = 0; i < t.length; i++) {
+            list.add(t[i]);
+        }
+
         return list;
     }
 
