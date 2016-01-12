@@ -404,8 +404,8 @@ public class DeltaSextadTest2 {
     }
 
     private int dofHarman(int n) {
-        int dof = n * (n - 5) / 2 + 1;
-        if (dof < 1) dof = 1;
+        int dof = n * (5 - n) / 2 + 1;
+        if (dof < 0) dof = 0;
         return dof;
     }
 

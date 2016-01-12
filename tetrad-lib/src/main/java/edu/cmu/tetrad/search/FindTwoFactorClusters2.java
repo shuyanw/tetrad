@@ -660,7 +660,7 @@ public class FindTwoFactorClusters2 {
 
                     List<Integer> cluster = cluster(n1, n2, n3, n4, n5);
 
-//                    if (score(cluster) < scoreCutoff) continue;
+                    if (score(cluster) < scoreCutoff) continue;
 
 //                    if (zeroCorr(cluster, 4)) continue;
 
@@ -671,7 +671,7 @@ public class FindTwoFactorClusters2 {
                             log("Found a pure: " + variablesForIndices(cluster) + " score = " + score(cluster), true);
                         }
 
-                        addOtherVariablesStrict(_variables, cluster);
+                        addOtherVariablesLax(_variables, cluster);
 
 //                        if (cluster.size() < k) continue;
 
@@ -721,10 +721,13 @@ public class FindTwoFactorClusters2 {
                 int t3 = _cluster.get(choice[2]);
                 int t4 = _cluster.get(choice[3]);
 
-                List<Integer> sextad = cluster(t1, t2, t3, t4);
-                sextad.add(o);
+                List<Integer> pentad = cluster(t1, t2, t3, t4);
+                pentad.add(o);
 
-                if (!purePentad(sextad)) {
+                if (score(pentad) < scoreCutoff) continue;
+//                if (zeroCorr(pentad, 4)) continue;
+
+                if (!purePentad(pentad)) {
                     continue O;
                 }
             }
@@ -757,10 +760,9 @@ public class FindTwoFactorClusters2 {
                 List<Integer> sextad = cluster(t1, t2, t3, t4);
                 sextad.add(o);
 
-//                if (score(sextad) < scoreCutoff) {
-//                    rejected++;
-//                    continue O;
-//                }
+                if (score(sextad) < scoreCutoff) {
+                    continue O;
+                }
 //                if (zeroCorr(sextad, 4)) continue;
 
                 if (!purePentad2(sextad)) {
@@ -1110,7 +1112,7 @@ public class FindTwoFactorClusters2 {
             for (int j = i + 1; j < cluster.size(); j++) {
                 double r = this.corr.getValue(cluster.get(i), cluster.get(j));
                 double p = getCorrelationP(r);
-                if (p > alpha) count++;
+                if (p > .0001) count++;
             }
         }
 
@@ -1147,20 +1149,15 @@ public class FindTwoFactorClusters2 {
 //                return false;
 //            }
 //        }
-//
-//        return true;
 
-        List<Node> s = variablesForIndices(sextad);
-
-//        independents.add(all);
-
+//        List<Node> s = variablesForIndices(sextad);
         double p = test.getPValue(sextads);
 
         if (p < alpha) {
             return false;
-        } else {
-            return true;
         }
+
+        return true;
     }
 
     private List<IntSextad> getIntSextads(int n1, int n2, int n3, int n4, int n5, int n6) {
