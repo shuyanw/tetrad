@@ -45,12 +45,13 @@ public class DeltaSextadTest2 {
     static final long serialVersionUID = 23L;
     private final CorrelationMatrix corr;
 
-    private double[][] data;
+    private double[][] centeredData;
+    private double[][] standardizedData;
     private int N;
     private ICovarianceMatrix cov;
     private List<Node> variables;
 
-    // As input we require a data set and a list of non-redundant Tetrads.
+    // As input we require a standardizedData set and a list of non-redundant Tetrads.
 
     // Need a method to remove Tetrads from the input list until what's left is
     // non-redundant. Or at least to check for non-redundancy. Maybe simply
@@ -58,10 +59,12 @@ public class DeltaSextadTest2 {
     // Peter suggests looking at Modern Factor Analysis by Harmon, at triplets.
 
     /**
-     * Constructs a test using a given data set. If a data set is provided (that is, a tabular data set), fourth moment
-     * statistics can be calculated (p. 160); otherwise, it must be assumed that the data are multivariate Gaussian.
+     * Constructs a test using a given standardizedData set. If a standardizedData set is provided (that is, a tabular standardizedData set), fourth moment
+     * statistics can be calculated (p. 160); otherwise, it must be assumed that the standardizedData are multivariate Gaussian.
      */
     public DeltaSextadTest2(DataSet dataSet) {
+        System.out.println(dataSet);
+
         if (dataSet == null) {
             throw new NullPointerException();
         }
@@ -70,18 +73,18 @@ public class DeltaSextadTest2 {
             throw new IllegalArgumentException();
         }
 
-        this.cov = new CovarianceMatrixOnTheFly(dataSet);
+        this.cov = new CovarianceMatrix(dataSet);
         this.corr = new CorrelationMatrix(dataSet);
 
-        TetradMatrix centered = DataUtils.centerData(dataSet.getDoubleData());
-        this.data = centered.transpose().toArray();
+        this.centeredData = DataUtils.centerData(dataSet.getDoubleData()).toArray();
+        this.standardizedData = DataUtils.standardizeData(dataSet.getDoubleData()).transpose().toArray();
         this.N = dataSet.getNumRows();
         this.variables = dataSet.getVariables();
     }
 
     /**
      * Constructs a test using the given covariance matrix. Fourth moment statistics are not caculated; it is assumed
-     * that the data are distributed as multivariate Gaussian.
+     * that the standardizedData are distributed as multivariate Gaussian.
      */
     public DeltaSextadTest2(ICovarianceMatrix cov) {
         if (cov == null) {
@@ -89,7 +92,7 @@ public class DeltaSextadTest2 {
         }
 
         this.cov = cov;
-        this.corr = new CorrelationMatrix(cov);
+        this.corr = new CorrelationMatrix(cov.copy());
         this.N = cov.getSampleSize();
         this.variables = cov.getVariables();
     }
@@ -102,7 +105,7 @@ public class DeltaSextadTest2 {
     }
 
     /**
-     * Takes a list of tetrads for the given data set and returns the chi square value for the test. We assume that the
+     * Takes a list of tetrads for the given standardizedData set and returns the chi square value for the test. We assume that the
      * tetrads are non-redundant; if not, a matrix exception will be thrown.
      * <p>
      * Calculates the T statistic (Bollen and Ting, p. 161). This is significant if tests as significant using the Chi
@@ -111,12 +114,12 @@ public class DeltaSextadTest2 {
     public double getPValue(List<IntSextad> sextads) {
         int df = dofHarman(sextads.size());
         double chisq = calcChiSquare(sextads);
-        if (chisq < 0) throw new IllegalArgumentException();
+        if (chisq < 0) chisq = 0;//throw new IllegalArgumentException("Negative chi square = " + chisq);
         return 1.0 - new ChiSquaredDistribution(df).cumulativeProbability(chisq);
     }
 
     /**
-     * Takes a list of tetrads for the given data set and returns the chi square value for the test. We assume that the
+     * Takes a list of tetrads for the given standardizedData set and returns the chi square value for the test. We assume that the
      * tetrads are non-redundant; if not, a matrix exception will be thrown.
      * <p>
      * Calculates the T statistic (Bollen and Ting, p. 161). This is significant if tests as significant using the Chi
@@ -154,33 +157,34 @@ public class DeltaSextadTest2 {
 
 //                if (e == g || e == h || f == g || f == h) {
 //                    continue;
-////                     sigma_ss.set(i, j, 1);
+//                     sigma_ss.set(i, j, 1);
 //                }
 
                 double _ss;
 
-                if (cov != null && cov instanceof CorrelationMatrix) {
-
-//                Assumes multinormality. Using formula 23. (Not implementing formula 22 because that case
-//                does not come up.)
-                    _ss = 0.5 * (r(e, f) * r(g, h))
-                            * (r(e, g) * r(e, g) + r(e, h) * r(e, h) + r(f, g) * r(f, g) + r(f, h) * r(f, h))
-                            + r(e, g) * r(f, h) + r(e, h) * r(f, g)
-                            - r(e, f) * (r(f, g) * r(f, h) + r(e, g) * r(e, h))
-                            - r(g, h) * (r(f, g) * r(e, g) + r(f, h) * r(e, h));
-
-                } else if (cov != null && cov instanceof CovarianceMatrix && data == null) {
-
-                    // Assumes multinormality--see p. 160.
-                    _ss = r(e, g) * r(f, h) + r(e, h) * r(f, g);
-                } else if (data != null) {
-                    _ss = r(e, f, g, h) - r(e, f) * r(g, h);
+                if (centeredData != null) {
+                    _ss = s(e, f, g, h) - s(e, f) * s(g, h);
 
                     // General.
-//                    _ss = r(e, f, g, h) + 0.25 * r(e, f) * r(g, h) *
+//                   _ss = r(e, f, g, h) + 0.25 * r(e, f) * r(g, h) *
 //                            (r(e, e, g, g) * r(f, f, g, g) + r(e, e, h, h) + r(f, f, h, h))
 //                            - 0.5 * r(e, f) * (r(e, e, g, h) + r(f, f, g, h))
 //                            - 0.5 * r(g, h) * (r(e, f, g, g) + r(e, f, h, h));
+
+                } else if (cov != null) {
+                    if (cov instanceof CorrelationMatrix) {
+//                        Assumes multinormality. Using formula 23. (Not implementing formula 22 because that case
+//                        does not come up.)
+                        _ss = 0.5 * (r(e, f) * r(g, h))
+                                * (r(e, g) * r(e, g) + r(e, h) * r(e, h) + r(f, g) * r(f, g) + r(f, h) * r(f, h))
+                                + r(e, g) * r(f, h) + r(e, h) * r(f, g)
+                                - r(e, f) * (r(f, g) * r(f, h) + r(e, g) * r(e, h))
+                                - r(g, h) * (r(f, g) * r(e, g) + r(f, h) * r(e, h));
+
+                    } else {
+                        // Assumes multinormality--see p. 160.
+                        _ss = s(e, g) * s(f, h) + s(e, h) * s(f, g);
+                    }
                 } else {
                     throw new IllegalStateException();
                 }
@@ -213,7 +217,7 @@ public class DeltaSextadTest2 {
 
             for (int k1 = 0; k1 < 3; k1++) {
                 for (int k2 = 0; k2 < 3; k2++) {
-                    m.set(k1, k2, r(nodes.get(k1), nodes.get(3 + k2)));
+                    m.set(k1, k2, s(nodes.get(k1), nodes.get(3 + k2)));
                 }
             }
 
@@ -241,12 +245,20 @@ public class DeltaSextadTest2 {
      */
     private double r(int i, int j) {
         if (cov != null) {
-            return cov.getValue(i, j);
+            return corr.getValue(i, j);
         } else {
-            double[] arr1 = data[i];
-            double[] arr2 = data[j];
+            double[] arr1 = standardizedData[i];
+            double[] arr2 = standardizedData[j];
             return r(arr1, arr2, arr1.length);
         }
+    }
+
+    private double s(int i, int j) {
+        if (cov != null) {
+            return cov.getValue(i, j);
+        }
+
+        throw new IllegalStateException();
     }
 
     private double getDerivative(IntSextad sextad, Sigma sigma) {
@@ -261,8 +273,7 @@ public class DeltaSextadTest2 {
         int n6 = sextad.getN();
 
         double x1 = derivative(a, b, n1, n2, n3, n4, n5, n6);
-        double x2 = derivative(a, b, n4, n5, n6, n1, n2, n3);
-//        double x2 = derivative(b, a, n1, n2, n3, n4, n5, n6);
+        double x2 = derivative(b, a, n1, n2, n3, n4, n5, n6);
 
         if (x1 == 0) return x2;
         if (x2 == 0) return x1;
@@ -272,29 +283,29 @@ public class DeltaSextadTest2 {
     private double derivative(int a, int b, int n1, int n2, int n3, int n4, int n5, int n6) {
         if (a == n1) {
             if (b == n4) {
-                return r(n2, n5) * r(n3, n6) - r(n2, n6) * r(n3, n5);
+                return s(n2, n5) * s(n3, n6) - s(n2, n6) * s(n3, n5);
             } else if (b == n5) {
-                return -r(n2, n4) * r(n3, n6) + r(n3, n4) * r(n2, n6);
+                return s(n2, n6) * s(n3, n4) - s(n2, n4) * s(n3, n6);
             } else if (b == n6) {
-                return r(n2, n4) * r(n3, n5) - r(n3, n4) * r(n2, n5);
+                return s(n3, n5) * s(n2, n4) - s(n2, n5) * s(n3, n4);
             }
 
         } else if (a == n2) {
             if (b == n4) {
-                return r(n3, n5) * r(n1, n6) - r(n1, n5) * r(n3, n6);
+                return s(n1, n6) * s(n3, n5) - s(n2, n5) * s(n3, n4);
             } else if (b == n5) {
-                return r(n1, n4) * r(n3, n6) - r(n3, n4) * r(n1, n6);
+                return s(n2, n6) * s(n3, n4) - s(n1, n6) * s(n3, n4);
             } else if (b == n6) {
-                return -r(n1, n4) * r(n3, n5) + r(n3, n4) * r(n1, n5);
+                return s(n1, n5) * s(n3, n4) - s(n1, n5) * s(n3, n5);
             }
 
         } else if (a == n3) {
             if (b == n4) {
-                return r(n1, n5) * r(n2, n6) - r(n2, n5) * r(n1, n6);
+                return s(n1, n5) * s(n2, n6) - s(n1, n6) * s(n2, n5);
             } else if (b == n5) {
-                return -r(n1, n4) * r(n2, n6) + r(n2, n4) * r(n1, n6);
+                return s(n1, n6) * s(n2, n4) - s(n1, n4) * s(n2, n6);
             } else if (b == n6) {
-                return r(n1, n4) * r(n2, n5) - r(n2, n4) * r(n1, n5);
+                return s(n1, n4) * s(n2, n5) - s(n1, n5) * s(n2, n4);
             }
 
         }
@@ -359,7 +370,7 @@ public class DeltaSextadTest2 {
         }
 
         public int hashCode() {
-            return a + b;
+            return a * b;
         }
 
         public String toString() {
@@ -367,14 +378,14 @@ public class DeltaSextadTest2 {
         }
     }
 
-    // Assumes data are mean-centered.
+    // Assumes standardizedData are mean-centered.
     private double r(int x, int y, int z, int w) {
         double sxyzw = 0.0;
 
-        double[] _x = data[x];
-        double[] _y = data[y];
-        double[] _z = data[z];
-        double[] _w = data[w];
+        double[] _x = standardizedData[x];
+        double[] _y = standardizedData[y];
+        double[] _z = standardizedData[z];
+        double[] _w = standardizedData[w];
 
         int N = _x.length;
 
@@ -385,7 +396,24 @@ public class DeltaSextadTest2 {
         return (1.0 / N) * sxyzw;
     }
 
-    // Assumes data are mean-centered.
+    private double s(int x, int y, int z, int w) {
+        double sxyzw = 0.0;
+
+        double[] _x = centeredData[x];
+        double[] _y = centeredData[y];
+        double[] _z = centeredData[z];
+        double[] _w = centeredData[w];
+
+        int N = _x.length;
+
+        for (int j = 0; j < N; j++) {
+            sxyzw += _x[j] * _y[j] * _z[j] * _w[j];
+        }
+
+        return (1.0 / N) * sxyzw;
+    }
+
+    // Assumes standardizedData are mean-centered.
     private double r(double array1[], double array2[], int N) {
         int i;
         double sum = 0.0;
@@ -399,7 +427,7 @@ public class DeltaSextadTest2 {
 
     private int dofDrton(int n) {
         int dof = ((n - 2) * (n - 3)) / 2 - 2;
-        if (dof < 1) dof = 1;
+        if (dof < 0) dof = 0;
         return dof;
     }
 

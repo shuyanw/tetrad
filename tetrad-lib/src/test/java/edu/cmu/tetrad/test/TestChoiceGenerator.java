@@ -21,10 +21,7 @@
 
 package edu.cmu.tetrad.test;
 
-import edu.cmu.tetrad.util.ChoiceGenerator;
-import edu.cmu.tetrad.util.DepthChoiceGenerator;
-import edu.cmu.tetrad.util.PermutationGenerator;
-import edu.cmu.tetrad.util.SelectionGenerator;
+import edu.cmu.tetrad.util.*;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -46,7 +43,7 @@ public class TestChoiceGenerator {
         int a = 10;
         int b = 3;
 
-        int numCombinations = ChoiceGenerator.getNumCombinations(a, b);
+        int numCombinations = MathUtils.choose(a, b);
 
         assertEquals(120, numCombinations);
     }

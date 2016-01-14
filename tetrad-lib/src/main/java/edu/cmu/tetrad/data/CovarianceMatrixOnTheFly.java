@@ -461,6 +461,11 @@ public class CovarianceMatrixOnTheFly implements ICovarianceMatrix {
         return m;
     }
 
+    @Override
+    public ICovarianceMatrix copy() {
+        return this;
+    }
+
     //========================PRIVATE METHODS============================//
 
     public Node getVariable(String name) {

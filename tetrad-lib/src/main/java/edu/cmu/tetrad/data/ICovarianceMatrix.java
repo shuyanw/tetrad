@@ -85,6 +85,8 @@ public interface ICovarianceMatrix extends DataModel, TetradSerializable {
     void setVariables(List<Node> variables);
 
     TetradMatrix getSelection(int[] rows, int[] cols);
+
+    ICovarianceMatrix copy();
 }
 
 

@@ -423,6 +423,11 @@ public class CovarianceMatrix implements ICovarianceMatrix {
         return matrix.getSelection(rows, cols);
     }
 
+    @Override
+    public ICovarianceMatrix copy() {
+        return new CovarianceMatrix(getVariables(), getMatrix().copy(), getSampleSize());
+    }
+
     //========================PRIVATE METHODS============================//
 
     public Node getVariable(String name) {

@@ -124,6 +124,11 @@ public final class CorrelationMatrix extends CovarianceMatrix
         return getMatrix().getSelection(rows, cols);
     }
 
+    @Override
+    public ICovarianceMatrix copy() {
+        return new CorrelationMatrix(getVariables(), getMatrix().copy(), getSampleSize());
+    }
+
     /**
      * @return a submatrix, returning as a correlation matrix, with variables
      * in the given order.

@@ -21,6 +21,10 @@
 
 package edu.cmu.tetrad.util;
 
+import static edu.cmu.tetrad.util.ProbUtils.lngamma;
+import static java.lang.Math.exp;
+import static java.lang.Math.round;
+
 /**
  * Some extra mathematical functions not contained in java.lang.Math.
  *
@@ -44,6 +48,10 @@ public class MathUtils {
         }
 
         return i;
+    }
+
+    public static int choose(int a, int b) {
+        return (int) round(exp(lngamma(a + 1) - lngamma(b + 1) - lngamma((a - b) + 1)));
     }
 }
 
