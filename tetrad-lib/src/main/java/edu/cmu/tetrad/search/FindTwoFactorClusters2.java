@@ -76,7 +76,6 @@ public class FindTwoFactorClusters2 {
     //========================================PUBLIC METHODS====================================//
 
     public FindTwoFactorClusters2(ICovarianceMatrix cov, FindTwoFactorClusters.Algorithm algorithm, double alpha) {
-//        CovarianceMatrix covarianceMatrix = new CovarianceMatrix(cov);
         this.variables = cov.getVariables();
         this.alpha = alpha;
         this.test = new DeltaSextadTest2(cov);
@@ -84,49 +83,12 @@ public class FindTwoFactorClusters2 {
         this.algorithm = algorithm;
 
         this.corr = new CorrelationMatrix(cov);
-
-//        List<Double> corrList = new ArrayList<Double>();
-//
-//        for (int i = 0; i < covarianceMatrix.getDimension(); i++) {
-//            for (int j = i + 1; j < covarianceMatrix.getDimension(); j++) {
-//                double r = corr.getValue(i, j);
-//                corrList.add(abs(r));
-//            }
-//        }
-
-//        Collections.sort(corrList);
-//        double threshold = corrList.get((int) (.9 * corrList.size()) - 1);
-//
-//        for (int i = 0; i < covarianceMatrix.getDimension(); i++) {
-//            for (int j = 0; j < covarianceMatrix.getDimension(); j++) {
-//                if (i == j) ;//covarianceMatrix.setValue(i, j, 0);
-//                else {
-//                    double r = corr.getValue(i, j);
-//                    if (abs(r) > threshold) {//getCorrelationP(r) > alpha) {
-//                        covarianceMatrix.setValue(i, j, 0); //signum(r) * covarianceMatrix.getValue(i, j));
-//                    }
-//                }
-//            }
-//        }
-
-//        System.out.println(covarianceMatrix);
     }
 
     public FindTwoFactorClusters2(DataSet dataSet, FindTwoFactorClusters.Algorithm algorithm, double alpha) {
         this.variables = dataSet.getVariables();
         this.alpha = alpha;
         this.test = new DeltaSextadTest2(dataSet);
-
-//        dataSet = dataSet.copy();
-//
-//        for (int i = 0; i < dataSet.getNumRows(); i++) {
-//            for (int j = 0; j < dataSet.getNumColumns(); j++) {
-//                dataSet.setDouble(i, j, Math.log(dataSet.getDouble(i, j) + 1));
-//            }
-//        }
-
-//        this.dataModel = new CovarianceMatrix(dataSet);
-
         this.dataModel = dataSet;
         this.algorithm = algorithm;
 
@@ -156,24 +118,7 @@ public class FindTwoFactorClusters2 {
 
         final Map<List<Integer>, Double> scoredPentads = findPurePentads(_variables);
         List<List<Integer>> pentads = new ArrayList<>(scoredPentads.keySet());
-
-//        Collections.sort(pentads, new Comparator<List<Integer>>() {
-//            @Override
-//            public int compare(List<Integer> o1, List<Integer> o2) {
-//                return -Double.compare(scoredPentads.get(o1), scoredPentads.get(o2));
-//            }
-//        });
-//
-//        List<List<Integer>> sublist = new ArrayList<>();
-//
-//        for (int i = 0; i < (int) (pentads.size() * 0.8); i++) {
-//            sublist.add(pentads.get(i));
-//        }
-//
-//        pentads = sublist;
-
         Set<List<Integer>> combined = combinePurePentads(pentads, _variables);
-
         Set<List<Integer>> _combined = new HashSet<>();
 
         for (List<Integer> c : combined) {
@@ -588,17 +533,6 @@ public class FindTwoFactorClusters2 {
                     _cluster.add(o);
                 }
 
-//                for (Set<Integer> c : new HashSet<>(purePentads)) {
-////                    for (Integer d : c) {
-////                        if (_cluster.contains(d)) {
-////                            purePentads.remove(c);
-////                        }
-////                    }
-//
-//                    if (_cluster.containsAll(c)) {
-//                        purePentads.remove(c);
-//                    }
-//                }
                 removeSubsets(purePentads, _cluster);
 
                 if (verbose) {
@@ -631,15 +565,6 @@ public class FindTwoFactorClusters2 {
         while (!(new ArrayList<>(list).isEmpty())) {
             List<List<Integer>> tier = getTier(list, list.get(0).size());
             list.removeAll(tier);
-
-//            if (tier.get(0).size() == 5) {
-//                Collections.sort(tier, new Comparator<List<Integer>>() {
-//                    @Override
-//                    public int compare(List<Integer> o1, List<Integer> o2) {
-//                        return -Double.compare(score(o1), score(o2));
-//                    }
-//                });
-//            }
 
             C2:
             for (List<Integer> cluster : new ArrayList<>(tier)) {
@@ -938,29 +863,12 @@ public class FindTwoFactorClusters2 {
         // The four sextads implied by equation 5.17 in Harmann.
 //        return sextadList(t3, t7, t8, t9);
 
-//        return sextadList(t1, t8, t9, t10, t5);
-
-//            IntSextad[] independents = {t2, t5, t10, t3, t6};
-
 //        return sextadList(t1, t2, t3, t5, t6);
 //        return sextadList(t1, t2, t3, t9, t10);
 //        return sextadList(t6, t7, t8, t9, t10);
 //        return sextadList(t1, t2, t4, t5, t9);
 //        return sextadList(t1, t3, t4, t6, t10);
         return sextadList(t6, t7, t8, t9, t10);
-
-//        List<IntSextad> intSextads = sextadList(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
-
-//        List<IntSextad> sextads = new ArrayList<>(choice.length);
-//
-//        for (int i = 0; i < choice.length; i++) {
-//            sextads.add(intSextads.get(choice[i]));
-//        }
-//
-//        return sextads;
-//
-//        return intSextads;
-
     }
 
     private List<IntSextad> sextadList(IntSextad... t) {
