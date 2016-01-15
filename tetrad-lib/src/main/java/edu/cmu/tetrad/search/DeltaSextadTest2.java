@@ -145,8 +145,6 @@ public class DeltaSextadTest2 {
 
         for (int i = 0; i < boldSigma.size(); i++) {
             for (int j = 0; j < boldSigma.size(); j++) {
-//                if (i == j) continue;
-
                 Sigma sigmaef = boldSigma.get(i);
                 Sigma sigmagh = boldSigma.get(j);
 
@@ -154,11 +152,6 @@ public class DeltaSextadTest2 {
                 int f = sigmaef.getB();
                 int g = sigmagh.getA();
                 int h = sigmagh.getB();
-
-//                if (e == g || e == h || f == g || f == h) {
-//                    continue;
-//                     sigma_ss.set(i, j, 1);
-//                }
 
                 double _ss;
 
@@ -222,8 +215,6 @@ public class DeltaSextadTest2 {
             }
 
             double det = m.det();
-//            System.out.println(det);
-
             t.set(i, 0, det);
         }
 
@@ -235,7 +226,6 @@ public class DeltaSextadTest2 {
             throw new RuntimeException("Singularity problem.", e);
         }
 
-//        System.out.println(chisq);
         return chisq;
     }
 
@@ -247,9 +237,7 @@ public class DeltaSextadTest2 {
         if (cov != null) {
             return corr.getValue(i, j);
         } else {
-            double[] arr1 = standardizedData[i];
-            double[] arr2 = standardizedData[j];
-            return r(arr1, arr2, arr1.length);
+            throw new IllegalStateException();
         }
     }
 
@@ -315,31 +303,6 @@ public class DeltaSextadTest2 {
 
     public List<Node> getVariables() {
         return variables;
-    }
-
-    public double getLogProductCorrelations(List<IntSextad> sextads) {
-        Set<Sigma> boldSigmaSet = new HashSet<>();
-
-        for (IntSextad sextad : sextads) {
-            List<Integer> _nodes = sextad.getNodes();
-
-            for (int k1 = 0; k1 < 3; k1++) {
-                for (int k2 = 0; k2 < 3; k2++) {
-                    boldSigmaSet.add(new Sigma(_nodes.get(k1), _nodes.get(3 + k2)));
-                }
-            }
-        }
-
-        List<Sigma> boldSigma = new ArrayList<>(boldSigmaSet);
-
-        double logsum = 0.0;
-
-        for (Sigma sigma : boldSigma) {
-            double value = corr.getValue(sigma.getA(), sigma.getB());
-            logsum += Math.log(abs(value));
-        }
-
-        return logsum;
     }
 
     // Represents a single covariance symbolically.
@@ -411,18 +374,6 @@ public class DeltaSextadTest2 {
         }
 
         return (1.0 / N) * sxyzw;
-    }
-
-    // Assumes standardizedData are mean-centered.
-    private double r(double array1[], double array2[], int N) {
-        int i;
-        double sum = 0.0;
-
-        for (i = 0; i < N; i++) {
-            sum += array1[i] * array2[i];
-        }
-
-        return (1.0 / N) * sum;
     }
 
     private int dofDrton(int n) {
