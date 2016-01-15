@@ -496,7 +496,7 @@ public class Mimbuild2 {
                 new InitialGuess(values),
                 new ObjectiveFunction(function),
                 GoalType.MINIMIZE,
-                new MaxEval(100000));
+                new MaxEval(1000000));
 
         minimum = pair.getValue();
     }
