@@ -88,7 +88,7 @@ public class DeltaTetradTest {
      * Constructs a test using the given covariance matrix. Fourth moment statistics are not caculated; it is assumed
      * that the standardizedData are distributed as multivariate Gaussian.
      */
-    public DeltaTetradTest(ICovarianceMatrix cov) {
+    public  DeltaTetradTest(ICovarianceMatrix cov) {
         if (cov == null) {
             throw new NullPointerException();
         }

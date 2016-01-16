@@ -57,7 +57,7 @@ public class PurifyTetradBased2 implements IPurify {
             originalNodes.addAll(cluster);
         }
 
-        List<List<Node>> _clustering = new ArrayList<List<Node>>();
+        List<List<Node>> _clustering = new ArrayList<>();
 
         for (List<Node> cluster : clustering) {
             List<Node> converted = GraphUtils.replaceNodes(cluster, nodes);
@@ -268,7 +268,7 @@ public class PurifyTetradBased2 implements IPurify {
 
     private Set<Tetrad> listTetrads(List<Node> cluster, Set<Node> eliminated, double cutoff) {
         if (cluster.size() < 4) return null;
-        cluster = new ArrayList<Node>(cluster);
+        cluster = new ArrayList<>(cluster);
         boolean countable = false;
 
         Set<Tetrad> tetrads = new HashSet<Tetrad>();
