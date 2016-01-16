@@ -412,8 +412,6 @@ public class FindOneFactorClusters {
                     while ((choice = gen.next()) != null) {
                         int n1 = _cluster2.get(choice[0]);
                         int n2 = _cluster2.get(choice[1]);
-                        int n3 = _cluster2.get(choice[2]);
-                        int n4 = _cluster2.get(choice[3]);
 
                         List<Integer> triple = triple(n1, n2, o);
 
@@ -687,7 +685,7 @@ public class FindOneFactorClusters {
 
                 // Note that purity needs to be assessed with respect to all of the variables in order to
                 // remove all latent-measure impurities between pairs of latents.
-                if (pure(cluster, allVariables, alpha)) {
+                if (pure(cluster)) {
                     if (verbose) {
                         log("Found a pure: " + variablesForIndices(cluster), false);
                     }
@@ -737,7 +735,7 @@ public class FindOneFactorClusters {
 //                    break;
 //                }
 
-                if (!pure(quartet, allVariables, alpha)) {
+                if (!pure(quartet)) {
                     continue O;
                 }
             }
@@ -887,7 +885,7 @@ public class FindOneFactorClusters {
         return variables;
     }
 
-    private boolean pure(List<Integer> quartet, List<Integer> variables, double alpha) {
+    private boolean pure(List<Integer> quartet) {
         if (zeroCorr(quartet)) {
             return false;
         }
