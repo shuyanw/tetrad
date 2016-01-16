@@ -95,10 +95,10 @@ public class TestDeltaSextadTest {
         int choice[];
 
         while ((choice = gen.next()) != null) {
-            IntSextad[] _sextads = new IntSextad[numSextads];
+            List<IntSextad> _sextads = new ArrayList<>();
 
             for (int i = 0; i < numSextads; i++) {
-                _sextads[i] = sextads.get(choice[i]);
+                _sextads.add(sextads.get(choice[i]));
             }
 
             double p = test.getPValue(_sextads);
@@ -138,16 +138,22 @@ public class TestDeltaSextadTest {
 
         DeltaSextadTest test = new DeltaSextadTest(data);
 
-        IntSextad[] _sextads = {t2, t5, t10, t3, t6};
+        List<IntSextad> _sextads = sextadList(t2, t5, t10, t3, t6);
         double p = test.getPValue(_sextads);
         assertEquals(0.21, p, 0.01);
 
-        _sextads = new IntSextad[] {t10};
+        _sextads = sextadList(t10);
         p = test.getPValue(_sextads);
         assertEquals(0.30, p, 0.01);
 
         // This should throw an exception but doesn't.
 //        MySextad[] _sextads = {t1, t2, t3, t4, t5, t6, t7, t8, t9, t10};
+    }
+
+    private List<IntSextad> sextadList(IntSextad... t) {
+        List<IntSextad> list = new ArrayList<>();
+        Collections.addAll(list, t);
+        return list;
     }
 
     @Test
@@ -238,8 +244,8 @@ public class TestDeltaSextadTest {
         DeltaSextadTest test = new DeltaSextadTest(data);
 
         // Should be invariant to changes or order of the first three or of the last three variables.
-        double a = test.getPValue(new IntSextad(x1, x2, x3, x4, x5, x6));
-        double b = test.getPValue(new IntSextad(x2, x3, x1, x5, x4, x6));
+        double a = test.getPValue(Collections.singletonList(new IntSextad(x1, x2, x3, x4, x5, x6)));
+        double b = test.getPValue(Collections.singletonList(new IntSextad(x2, x3, x1, x5, x4, x6)));
 
         assertEquals(a, b, 1e-7);
     }
