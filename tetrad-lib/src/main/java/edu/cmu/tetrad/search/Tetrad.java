@@ -39,7 +39,7 @@ public class Tetrad {
     private double pValue;
 
     public Tetrad(Node i, Node j, Node k, Node l) {
-//        testDistinctness(i, j, k, l);
+        testDistinctness(i, j, k, l);
         this.i = i;
         this.j = j;
         this.k = k;
@@ -48,7 +48,7 @@ public class Tetrad {
     }
 
     public Tetrad(Node i, Node j, Node k, Node l, double pValue) {
-//        testDistinctness(i, j, k, l);
+        testDistinctness(i, j, k, l);
         this.i = i;
         this.j = j;
         this.k = k;
@@ -56,19 +56,19 @@ public class Tetrad {
         this.pValue = pValue;
     }
 
-//    private void testDistinctness(Node i, Node j, Node k, Node l) {
-//        if (i == j || i == k || i == l) {
-//            throw new IllegalArgumentException("Nodes not distinct.");
-//        }
-//
-//        if (j == k || j == l) {
-//            throw new IllegalArgumentException("Nodes not distinct.");
-//        }
-//
-//        if (k == l) {
-//            throw new IllegalArgumentException("Nodes not distinct.");
-//        }
-//    }
+    private void testDistinctness(Node i, Node j, Node k, Node l) {
+        if (i == j || i == k || i == l) {
+            throw new IllegalArgumentException("Nodes not distinct.");
+        }
+
+        if (j == k || j == l) {
+            throw new IllegalArgumentException("Nodes not distinct.");
+        }
+
+        if (k == l) {
+            throw new IllegalArgumentException("Nodes not distinct.");
+        }
+    }
 
     public Node getI() {
         return i;
