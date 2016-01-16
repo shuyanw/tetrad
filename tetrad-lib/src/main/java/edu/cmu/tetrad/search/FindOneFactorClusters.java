@@ -269,7 +269,7 @@ public class FindOneFactorClusters {
         ChoiceGenerator gen = new ChoiceGenerator(allVariables.size(), 3);
         int[] choice;
         Set<Set<Integer>> puretriples = new HashSet<Set<Integer>>();
-        CHOICE:
+
         while ((choice = gen.next()) != null) {
             int n1 = allVariables.get(choice[0]);
             int n2 = allVariables.get(choice[1]);
@@ -279,23 +279,7 @@ public class FindOneFactorClusters {
 
             if (zeroCorr(triple)) continue;
 
-            for (int o : allVariables) {
-                if (triple.contains(o)) {
-                    continue;
-                }
-
-                List<Integer> quartet = quartet(n1, n2, n3, o);
-
-                boolean vanishes = vanishes(quartet);
-
-                if (!vanishes) {
-                    continue CHOICE;
-                }
-
-//                if (!(avgSumLnP(quartet) > -20)) {
-//                    continue CHOICE;
-//                }
-            }
+            if (!pureTriple(triple)) continue;
 
             HashSet<Integer> _cluster = new HashSet<Integer>(triple);
 
