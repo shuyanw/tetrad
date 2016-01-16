@@ -40,14 +40,6 @@ import static java.lang.Math.sqrt;
  */
 public class FindOneFactorClusters {
 
-    public Algorithm getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(Algorithm algorithm) {
-        this.algorithm = algorithm;
-    }
-
     public enum Algorithm {SAG, GAP}
 
     private CorrelationMatrix corr;
@@ -106,114 +98,13 @@ public class FindOneFactorClusters {
         this.corr = new CorrelationMatrix(dataSet);
     }
 
-    // renjiey
-    private int findFrequentestIndex(Integer outliers[]) {
-        Map<Integer, Integer> map = new HashMap<Integer, Integer>();
-
-        for (int i = 0; i < outliers.length; i++) {
-            if (map.containsKey(outliers[i])) {
-                map.put(outliers[i], map.get(outliers[i]) + 1);
-            } else {
-                map.put(outliers[i], 1);
-            }
-        }
-
-        Set<Map.Entry<Integer, Integer>> set = map.entrySet();
-        Iterator<Map.Entry<Integer, Integer>> it = set.iterator();
-        int nums = 0;// how many times variable occur
-        int key = 0;// the number occur the most times
-
-        while (it.hasNext()) {
-            Map.Entry<Integer, Integer> entry = it.next();
-            if (entry.getValue() > nums) {
-                nums = entry.getValue();
-                key = entry.getKey();
-            }
-        }
-
-        return (key);
-    }
-
-    // This is the main function. It remove variables in the data such that the remaining correlation matrix
-    // does not contain extreme value
-    // Inputs: correlation matrix, upper and lower bound for unacceptable correlations
-    // Output: and dynamic array of removed variables
-    // renjiey
-    private ArrayList<Integer> removeVariables(TetradMatrix correlationMatrix, double lowerBound, double upperBound,
-                                               double percentBound) {
-        Integer outlier[] = new Integer[correlationMatrix.rows() * (correlationMatrix.rows() - 1)];
-        int count = 0;
-        for (int i = 2; i < (correlationMatrix.rows() + 1); i++) {
-            for (int j = 1; j < i; j++) {
-
-                if ((Math.abs(correlationMatrix.get(i - 1, j - 1)) < lowerBound)
-                        || (Math.abs(correlationMatrix.get(i - 1, j - 1)) > upperBound)) {
-                    outlier[count * 2] = i;
-                    outlier[count * 2 + 1] = j;
-
-                } else {
-                    outlier[count * 2] = 0;
-                    outlier[count * 2 + 1] = 0;
-                }
-                count = count + 1;
-            }
-        }
-
-        //find out the variables that should be deleted
-        ArrayList<Integer> removedVariables = new ArrayList<Integer>();
-
-        // Added the percent bound jdramsey
-        while (outlier.length > 1 && removedVariables.size() < percentBound * correlationMatrix.rows()) {
-            //find out the variable that occurs most frequently in outlier
-            int worstVariable = findFrequentestIndex(outlier);
-            if (worstVariable > 0) {
-                removedVariables.add(worstVariable);
-            }
-
-            //remove the correlations having the bad variable (change the relevant variables to 0)
-            for (int i = 1; i < outlier.length + 1; i++) {
-                if (outlier[i - 1] == worstVariable) {
-                    outlier[i - 1] = 0;
-
-                    if (i % 2 != 0) {
-                        outlier[i] = 0;
-                    } else {
-                        outlier[i - 2] = 0;
-                    }
-                }
-            }
-
-            //delete zero elements in outlier
-            outlier = removeZeroIndex(outlier);
-        }
-
-        log(removedVariables.size() + " variables removed: " + variablesForIndices(removedVariables), true);
-
-        return (removedVariables);
-    }
-
-    // renjiey
-    private Integer[] removeZeroIndex(Integer outlier[]) {
-        List<Integer> list = new ArrayList<Integer>();
-        for (int i = 0; i < outlier.length; i++) {
-            list.add(outlier[i]);
-        }
-        for (Integer element : outlier) {
-            if (element < 1) {
-                list.remove(element);
-            }
-        }
-        return list.toArray(new Integer[1]);
-    }
-
-
     public Graph search() {
         Set<List<Integer>> allClusters;
 
         if (algorithm == Algorithm.SAG) {
-            allClusters = estimateClustersTetradsFirst();
+            allClusters = estimateClustersSAG();
         } else if (algorithm == Algorithm.GAP) {
-            allClusters = estimateClustersTriplesFirst();
+            allClusters = estimateClustersGAP();
         } else {
             throw new IllegalStateException("Expected SAG or GAP: " + testType);
         }
@@ -221,10 +112,37 @@ public class FindOneFactorClusters {
         return convertToGraph(allClusters);
     }
 
+    public Algorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(Algorithm algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    /**
+     * The clusters output by the algorithm from the last call to search().
+     */
+    public List<List<Node>> getClusters() {
+        return clusters;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    public boolean isSignificanceCalculated() {
+        return significanceCalculated;
+    }
+
+    public void setSignificanceCalculated(boolean significanceCalculated) {
+        this.significanceCalculated = significanceCalculated;
+    }
+
     //========================================PRIVATE METHODS====================================//
 
     // This is the main algorithm.
-    private Set<List<Integer>> estimateClustersTriplesFirst() {
+    private Set<List<Integer>> estimateClustersGAP() {
 //        List<Integer> _variables = new ArrayList<Integer>();
 //        for (int i = 0; i < variables.size(); i++) _variables.add(i);
         List<Integer> _variables = allVariables();
@@ -250,7 +168,7 @@ public class FindOneFactorClusters {
         return _variables;
     }
 
-    private Set<List<Integer>> estimateClustersTetradsFirst() {
+    private Set<List<Integer>> estimateClustersSAG() {
         System.out.println("A");
 
         List<Integer> _variables = allVariables();
@@ -697,6 +615,7 @@ public class FindOneFactorClusters {
                     if (verbose) {
                         log("Cluster found: " + variablesForIndices(cluster), true);
                     }
+
                     clusters.add(cluster);
                     _variables.removeAll(cluster);
 
@@ -1071,17 +990,6 @@ public class FindOneFactorClusters {
         return count >= 1;
     }
 
-    /**
-     * The clusters output by the algorithm from the last call to search().
-     */
-    public List<List<Node>> getClusters() {
-        return clusters;
-    }
-
-    public void setVerbose(boolean verbose) {
-        this.verbose = verbose;
-    }
-
     private boolean vanishes(int x, int y, int z, int w) {
         if (testType == TestType.TETRAD_DELTA) {
             Tetrad t1 = new Tetrad(variables.get(x), variables.get(y), variables.get(z), variables.get(w));
@@ -1152,13 +1060,108 @@ public class FindOneFactorClusters {
         System.out.println(s);
     }
 
-    public boolean isSignificanceCalculated() {
-        return significanceCalculated;
+    // This is the main function. It remove variables in the data such that the remaining correlation matrix
+    // does not contain extreme value
+    // Inputs: correlation matrix, upper and lower bound for unacceptable correlations
+    // Output: and dynamic array of removed variables
+    // renjiey
+    private ArrayList<Integer> removeVariables(TetradMatrix correlationMatrix, double lowerBound, double upperBound,
+                                               double percentBound) {
+        Integer outlier[] = new Integer[correlationMatrix.rows() * (correlationMatrix.rows() - 1)];
+        int count = 0;
+        for (int i = 2; i < (correlationMatrix.rows() + 1); i++) {
+            for (int j = 1; j < i; j++) {
+
+                if ((Math.abs(correlationMatrix.get(i - 1, j - 1)) < lowerBound)
+                        || (Math.abs(correlationMatrix.get(i - 1, j - 1)) > upperBound)) {
+                    outlier[count * 2] = i;
+                    outlier[count * 2 + 1] = j;
+
+                } else {
+                    outlier[count * 2] = 0;
+                    outlier[count * 2 + 1] = 0;
+                }
+                count = count + 1;
+            }
+        }
+
+        //find out the variables that should be deleted
+        ArrayList<Integer> removedVariables = new ArrayList<Integer>();
+
+        // Added the percent bound jdramsey
+        while (outlier.length > 1 && removedVariables.size() < percentBound * correlationMatrix.rows()) {
+            //find out the variable that occurs most frequently in outlier
+            int worstVariable = findFrequentestIndex(outlier);
+            if (worstVariable > 0) {
+                removedVariables.add(worstVariable);
+            }
+
+            //remove the correlations having the bad variable (change the relevant variables to 0)
+            for (int i = 1; i < outlier.length + 1; i++) {
+                if (outlier[i - 1] == worstVariable) {
+                    outlier[i - 1] = 0;
+
+                    if (i % 2 != 0) {
+                        outlier[i] = 0;
+                    } else {
+                        outlier[i - 2] = 0;
+                    }
+                }
+            }
+
+            //delete zero elements in outlier
+            outlier = removeZeroIndex(outlier);
+        }
+
+        log(removedVariables.size() + " variables removed: " + variablesForIndices(removedVariables), true);
+
+        return (removedVariables);
     }
 
-    public void setSignificanceCalculated(boolean significanceCalculated) {
-        this.significanceCalculated = significanceCalculated;
+    // renjiey
+    private Integer[] removeZeroIndex(Integer outlier[]) {
+        List<Integer> list = new ArrayList<Integer>();
+        for (int i = 0; i < outlier.length; i++) {
+            list.add(outlier[i]);
+        }
+        for (Integer element : outlier) {
+            if (element < 1) {
+                list.remove(element);
+            }
+        }
+        return list.toArray(new Integer[1]);
     }
+
+
+
+    // renjiey
+    private int findFrequentestIndex(Integer outliers[]) {
+        Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+
+        for (int i = 0; i < outliers.length; i++) {
+            if (map.containsKey(outliers[i])) {
+                map.put(outliers[i], map.get(outliers[i]) + 1);
+            } else {
+                map.put(outliers[i], 1);
+            }
+        }
+
+        Set<Map.Entry<Integer, Integer>> set = map.entrySet();
+        Iterator<Map.Entry<Integer, Integer>> it = set.iterator();
+        int nums = 0;// how many times variable occur
+        int key = 0;// the number occur the most times
+
+        while (it.hasNext()) {
+            Map.Entry<Integer, Integer> entry = it.next();
+            if (entry.getValue() > nums) {
+                nums = entry.getValue();
+                key = entry.getKey();
+            }
+        }
+
+        return (key);
+    }
+
 }
 
 
