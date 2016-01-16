@@ -65,7 +65,7 @@ public class FindOneFactorClusters {
     private boolean verbose = false;
     private boolean significanceCalculated = false;
     private Algorithm algorithm = Algorithm.GAP;
-    private Map<Set<Integer>, Double> avgSumLnPs = new HashMap<Set<Integer>, Double>();
+    private Map<Set<Integer>, Double> avgSumLnPs = new HashMap<>();
 
 
     //========================================PUBLIC METHODS====================================//
@@ -134,7 +134,7 @@ public class FindOneFactorClusters {
 
     // renjiey
     private int findFrequentestIndex(Integer outliers[]) {
-        Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> map = new HashMap<>();
 
         for (int i = 0; i < outliers.length; i++) {
             if (map.containsKey(outliers[i])) {
@@ -186,7 +186,7 @@ public class FindOneFactorClusters {
         }
 
         //find out the variables that should be deleted
-        ArrayList<Integer> removedVariables = new ArrayList<Integer>();
+        ArrayList<Integer> removedVariables = new ArrayList<>();
 
         // Added the percent bound jdramsey
         while (outlier.length > 1 && removedVariables.size() < percentBound * correlationMatrix.rows()) {
@@ -220,7 +220,7 @@ public class FindOneFactorClusters {
 
     // renjiey
     private Integer[] removeZeroIndex(Integer outlier[]) {
-        List<Integer> list = new ArrayList<Integer>();
+        List<Integer> list = new ArrayList<>();
         for (int i = 0; i < outlier.length; i++) {
             list.add(outlier[i]);
         }
@@ -241,10 +241,10 @@ public class FindOneFactorClusters {
         Set<Set<Integer>> triples = findPuretriplesGAP(_variables);
         Set<Set<Integer>> combined = combinePuretriples(triples, _variables);
 
-        Set<List<Integer>> _combined = new HashSet<List<Integer>>();
+        Set<List<Integer>> _combined = new HashSet<>();
 
         for (Set<Integer> c : combined) {
-            List a = new ArrayList<Integer>(c);
+            List a = new ArrayList<>(c);
             Collections.sort(a);
             _combined.add(a);
         }
@@ -254,21 +254,21 @@ public class FindOneFactorClusters {
     }
 
     private List<Integer> allVariables() {
-        List<Integer> _variables = new ArrayList<Integer>();
+        List<Integer> _variables = new ArrayList<>();
         for (int i = 0; i < variables.size(); i++) _variables.add(i);
         return _variables;
     }
 
     private Set<Set<Integer>> findPuretriplesGAP(List<Integer> allVariables) {
         if (allVariables.size() < 4) {
-            return new HashSet<Set<Integer>>();
+            return new HashSet<>();
         }
 
         log("Finding pure triples.", true);
 
         ChoiceGenerator gen = new ChoiceGenerator(allVariables.size(), 3);
         int[] choice;
-        Set<Set<Integer>> puretriples = new HashSet<Set<Integer>>();
+        Set<Set<Integer>> puretriples = new HashSet<>();
 
         while ((choice = gen.next()) != null) {
             int n1 = allVariables.get(choice[0]);
@@ -387,11 +387,11 @@ public class FindOneFactorClusters {
 
     private Set<Set<Integer>> combinePuretriples(Set<Set<Integer>> puretriples, List<Integer> _variables) {
         log("Growing pure triples.", true);
-        Set<Set<Integer>> grown = new HashSet<Set<Integer>>();
+        Set<Set<Integer>> grown = new HashSet<>();
 
         // Lax grow phase with speedup.
         if (true) {
-            Set<Integer> t = new HashSet<Integer>();
+            Set<Integer> t = new HashSet<>();
             int count = 0;
             int total = puretriples.size();
 
@@ -401,12 +401,12 @@ public class FindOneFactorClusters {
                 }
 
                 Set<Integer> cluster = puretriples.iterator().next();
-                Set<Integer> _cluster = new HashSet<Integer>(cluster);
+                Set<Integer> _cluster = new HashSet<>(cluster);
 
                 for (int o : _variables) {
                     if (_cluster.contains(o)) continue;
 
-                    List<Integer> _cluster2 = new ArrayList<Integer>(_cluster);
+                    List<Integer> _cluster2 = new ArrayList<>(_cluster);
                     int rejected = 0;
                     int accepted = 0;
 
@@ -440,7 +440,7 @@ public class FindOneFactorClusters {
                 // This takes out all pure clusters that are subsets of _cluster.
                 ChoiceGenerator gen2 = new ChoiceGenerator(_cluster.size(), 3);
                 int[] choice2;
-                List<Integer> _cluster3 = new ArrayList<Integer>(_cluster);
+                List<Integer> _cluster3 = new ArrayList<>(_cluster);
 
                 while ((choice2 = gen2.next()) != null) {
                     int n1 = _cluster3.get(choice2[0]);
@@ -456,7 +456,7 @@ public class FindOneFactorClusters {
                 }
 
                 if (verbose) {
-                    System.out.println("Grown " + (++count) + " of " + total + ": " + variablesForIndices(new ArrayList<Integer>(_cluster)));
+                    System.out.println("Grown " + (++count) + " of " + total + ": " + variablesForIndices(new ArrayList<>(_cluster)));
                 }
                 grown.add(_cluster);
             } while (!puretriples.isEmpty());
@@ -468,13 +468,13 @@ public class FindOneFactorClusters {
             int total = puretriples.size();
 
             // Optimized lax version of grow phase.
-            for (Set<Integer> cluster : new HashSet<Set<Integer>>(puretriples)) {
-                Set<Integer> _cluster = new HashSet<Integer>(cluster);
+            for (Set<Integer> cluster : new HashSet<>(puretriples)) {
+                Set<Integer> _cluster = new HashSet<>(cluster);
 
                 for (int o : _variables) {
                     if (_cluster.contains(o)) continue;
 
-                    List<Integer> _cluster2 = new ArrayList<Integer>(_cluster);
+                    List<Integer> _cluster2 = new ArrayList<>(_cluster);
                     int rejected = 0;
                     int accepted = 0;
 
@@ -487,7 +487,7 @@ public class FindOneFactorClusters {
 
                         List<Integer> triple = triple(n1, n2, o);
 
-                        Set<Integer> t = new HashSet<Integer>(triple);
+                        Set<Integer> t = new HashSet<>(triple);
 
                         if (!puretriples.contains(t)) {
                             rejected++;
@@ -505,7 +505,7 @@ public class FindOneFactorClusters {
                     _cluster.add(o);
                 }
 
-                for (Set<Integer> c : new HashSet<Set<Integer>>(puretriples)) {
+                for (Set<Integer> c : new HashSet<>(puretriples)) {
                     if (_cluster.containsAll(c)) {
                         puretriples.remove(c);
                     }
@@ -521,7 +521,7 @@ public class FindOneFactorClusters {
 
         // Strict grow phase.
         if (false) {
-            Set<Integer> t = new HashSet<Integer>();
+            Set<Integer> t = new HashSet<>();
             int count = 0;
             int total = puretriples.size();
 
@@ -531,13 +531,13 @@ public class FindOneFactorClusters {
                 }
 
                 Set<Integer> cluster = puretriples.iterator().next();
-                Set<Integer> _cluster = new HashSet<Integer>(cluster);
+                Set<Integer> _cluster = new HashSet<>(cluster);
 
                 VARIABLES:
                 for (int o : _variables) {
                     if (_cluster.contains(o)) continue;
 
-                    List<Integer> _cluster2 = new ArrayList<Integer>(_cluster);
+                    List<Integer> _cluster2 = new ArrayList<>(_cluster);
 
                     ChoiceGenerator gen = new ChoiceGenerator(_cluster2.size(), 2);
                     int[] choice;
@@ -564,7 +564,7 @@ public class FindOneFactorClusters {
                 // This takes out all pure clusters that are subsets of _cluster.
                 ChoiceGenerator gen2 = new ChoiceGenerator(_cluster.size(), 3);
                 int[] choice2;
-                List<Integer> _cluster3 = new ArrayList<Integer>(_cluster);
+                List<Integer> _cluster3 = new ArrayList<>(_cluster);
 
                 while ((choice2 = gen2.next()) != null) {
                     int n1 = _cluster3.get(choice2[0]);
@@ -589,8 +589,8 @@ public class FindOneFactorClusters {
         if (false) {
             System.out.println("# pure triples = " + puretriples.size());
 
-            List<Set<Integer>> clusters = new LinkedList<Set<Integer>>(puretriples);
-            Set<Integer> t = new HashSet<Integer>();
+            List<Set<Integer>> clusters = new LinkedList<>(puretriples);
+            Set<Integer> t = new HashSet<>();
 
             I:
             for (int i = 0; i < clusters.size(); i++) {
@@ -622,10 +622,10 @@ public class FindOneFactorClusters {
                     if (ci == null) continue;
                     if (cj == null) continue;
 
-                    Set<Integer> ck = new HashSet<Integer>(ci);
+                    Set<Integer> ck = new HashSet<>(ci);
                     ck.addAll(cj);
 
-                    List<Integer> cm = new ArrayList<Integer>(ck);
+                    List<Integer> cm = new ArrayList<>(ck);
 
                     ChoiceGenerator gen = new ChoiceGenerator(cm.size(), 3);
                     int[] choice;
@@ -648,23 +648,23 @@ public class FindOneFactorClusters {
                 }
             }
 
-            grown = new HashSet<Set<Integer>>(clusters);
+            grown = new HashSet<>(clusters);
         }
 
         // Optimized pick phase.
         log("Choosing among grown clusters.", true);
 
         for (Set<Integer> l : grown) {
-            ArrayList<Integer> _l = new ArrayList<Integer>(l);
+            ArrayList<Integer> _l = new ArrayList<>(l);
             Collections.sort(_l);
             if (verbose) {
                 log("Grown: " + variablesForIndices(_l), false);
             }
         }
 
-        Set<Set<Integer>> out = new HashSet<Set<Integer>>();
+        Set<Set<Integer>> out = new HashSet<>();
 
-        List<Set<Integer>> list = new ArrayList<Set<Integer>>(grown);
+        List<Set<Integer>> list = new ArrayList<>(grown);
 
         Collections.sort(list, new Comparator<Set<Integer>>() {
             @Override
@@ -698,7 +698,7 @@ public class FindOneFactorClusters {
 //            }
 //        });
 
-        Set<Integer> all = new HashSet<Integer>();
+        Set<Integer> all = new HashSet<>();
 
         CLUSTER:
         for (Set<Integer> cluster : list) {
@@ -713,15 +713,15 @@ public class FindOneFactorClusters {
         if (significanceCalculated) {
             for (Set<Integer> _out : out) {
                 try {
-                    double p = significance(new ArrayList<Integer>(_out));
-                    log("OUT: " + variablesForIndices(new ArrayList<Integer>(_out)) + " p = " + p, true);
+                    double p = significance(new ArrayList<>(_out));
+                    log("OUT: " + variablesForIndices(new ArrayList<>(_out)) + " p = " + p, true);
                 } catch (Exception e) {
-                    log("OUT: " + variablesForIndices(new ArrayList<Integer>(_out)) + " p = EXCEPTION", true);
+                    log("OUT: " + variablesForIndices(new ArrayList<>(_out)) + " p = EXCEPTION", true);
                 }
             }
         } else {
             for (Set<Integer> _out : out) {
-                log("OUT: " + variablesForIndices(new ArrayList<Integer>(_out)), true);
+                log("OUT: " + variablesForIndices(new ArrayList<>(_out)), true);
             }
         }
 
@@ -731,7 +731,7 @@ public class FindOneFactorClusters {
     private boolean modelInsignificantWithNewCluster(Set<List<Integer>> clusters, List<Integer> cluster) {
 //        if (true) return false;
 
-        List<List<Integer>> __clusters = new ArrayList<List<Integer>>(clusters);
+        List<List<Integer>> __clusters = new ArrayList<>(clusters);
         __clusters.add(cluster);
         double significance3 = getModelPValue(__clusters);
         if (verbose) {
@@ -768,7 +768,7 @@ public class FindOneFactorClusters {
     }
 
     private List<Node> variablesForIndices(List<Integer> cluster) {
-        List<Node> _cluster = new ArrayList<Node>();
+        List<Node> _cluster = new ArrayList<>();
 
         for (int c : cluster) {
             _cluster.add(variables.get(c));
@@ -780,7 +780,7 @@ public class FindOneFactorClusters {
     }
 
     private List<List<Node>> variablesForIndices2(Set<List<Integer>> clusters) {
-        List<List<Node>> variables = new ArrayList<List<Node>>();
+        List<List<Node>> variables = new ArrayList<>();
 
         for (List<Integer> cluster : clusters) {
             variables.add(variablesForIndices(cluster));
@@ -799,7 +799,7 @@ public class FindOneFactorClusters {
                 if (quartet.contains(o)) continue;
 
                 for (int i = 0; i < quartet.size(); i++) {
-                    List<Integer> _quartet = new ArrayList<Integer>(quartet);
+                    List<Integer> _quartet = new ArrayList<>(quartet);
                     _quartet.remove(quartet.get(i));
                     _quartet.add(o);
 
@@ -861,8 +861,8 @@ public class FindOneFactorClusters {
     private SemIm estimateModel(List<List<Integer>> clusters) {
         Graph g = new EdgeListGraph();
 
-        List<Node> upperLatents = new ArrayList<Node>();
-        List<Node> lowerLatents = new ArrayList<Node>();
+        List<Node> upperLatents = new ArrayList<>();
+        List<Node> lowerLatents = new ArrayList<>();
 
         for (int i = 0; i < clusters.size(); i++) {
             List<Integer> cluster = clusters.get(i);
@@ -926,25 +926,25 @@ public class FindOneFactorClusters {
     }
 
     private List<Integer> quartet(int n1, int n2, int n3, int n4) {
-        List<Integer> quartet = new ArrayList<Integer>();
+        List<Integer> quartet = new ArrayList<>();
         quartet.add(n1);
         quartet.add(n2);
         quartet.add(n3);
         quartet.add(n4);
 
-        if (new HashSet<Integer>(quartet).size() < 4)
+        if (new HashSet<>(quartet).size() < 4)
             throw new IllegalArgumentException("quartet elements must be unique: <" + n1 + ", " + n2 + ", " + n3 + ", " + n4 + ">");
 
         return quartet;
     }
 
     private List<Integer> triple(int n1, int n2, int n3) {
-        List<Integer> triple = new ArrayList<Integer>();
+        List<Integer> triple = new ArrayList<>();
         triple.add(n1);
         triple.add(n2);
         triple.add(n3);
 
-        if (new HashSet<Integer>(triple).size() < 3)
+        if (new HashSet<>(triple).size() < 3)
             throw new IllegalArgumentException("triple elements must be unique: <" + n1 + ", " + n2 + ", " + n3 + ">");
 
         return triple;
@@ -1002,7 +1002,7 @@ public class FindOneFactorClusters {
     private Graph convertSearchGraphNodes(Set<Set<Node>> clusters) {
         Graph graph = new EdgeListGraph(variables);
 
-        List<Node> latents = new ArrayList<Node>();
+        List<Node> latents = new ArrayList<>();
         for (int i = 0; i < clusters.size(); i++) {
             Node latent = new GraphNode(MimBuild.LATENT_PREFIX + (i + 1));
             latent.setNodeType(NodeType.LATENT);
@@ -1010,7 +1010,7 @@ public class FindOneFactorClusters {
             graph.addNode(latent);
         }
 
-        List<Set<Node>> _clusters = new ArrayList<Set<Node>>(clusters);
+        List<Set<Node>> _clusters = new ArrayList<>(clusters);
 
         for (int i = 0; i < latents.size(); i++) {
             for (Node node : _clusters.get(i)) {
@@ -1023,10 +1023,10 @@ public class FindOneFactorClusters {
     }
 
     private Graph convertToGraph(Set<List<Integer>> allClusters) {
-        Set<Set<Node>> _clustering = new HashSet<Set<Node>>();
+        Set<Set<Node>> _clustering = new HashSet<>();
 
         for (List<Integer> cluster : allClusters) {
-            Set<Node> nodes = new HashSet<Node>();
+            Set<Node> nodes = new HashSet<>();
 
             for (int i : cluster) {
                 nodes.add(variables.get(i));
@@ -1039,7 +1039,7 @@ public class FindOneFactorClusters {
     }
 
     private Set<Integer> unionPure(Set<List<Integer>> pureClusters) {
-        Set<Integer> unionPure = new HashSet<Integer>();
+        Set<Integer> unionPure = new HashSet<>();
 
         for (List<Integer> cluster : pureClusters) {
             unionPure.addAll(cluster);
