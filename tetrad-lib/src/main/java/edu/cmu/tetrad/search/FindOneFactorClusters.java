@@ -281,13 +281,11 @@ public class FindOneFactorClusters {
 
             if (!pureTriple(triple)) continue;
 
-            HashSet<Integer> _cluster = new HashSet<Integer>(triple);
-
             if (verbose) {
                 log("++" + variablesForIndices(triple), false);
             }
 
-            puretriples.add(_cluster);
+            puretriples.add(new HashSet<>(triple));
         }
 
         return puretriples;
