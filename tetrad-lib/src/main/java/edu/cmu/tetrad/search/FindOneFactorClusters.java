@@ -469,20 +469,16 @@ public class FindOneFactorClusters {
 
                     List<Integer> _cluster2 = new ArrayList<Integer>(_cluster);
 
-                    ChoiceGenerator gen = new ChoiceGenerator(_cluster2.size(), 4);
+                    ChoiceGenerator gen = new ChoiceGenerator(_cluster2.size(), 2);
                     int[] choice;
 
                     while ((choice = gen.next()) != null) {
                         int n1 = _cluster2.get(choice[0]);
                         int n2 = _cluster2.get(choice[1]);
-                        int n3 = _cluster2.get(choice[2]);
-                        int n4 = _cluster2.get(choice[3]);
 
                         t.clear();
                         t.add(n1);
                         t.add(n2);
-                        t.add(n3);
-                        t.add(n4);
                         t.add(o);
 
                         if (!puretriples.contains(t)) {
