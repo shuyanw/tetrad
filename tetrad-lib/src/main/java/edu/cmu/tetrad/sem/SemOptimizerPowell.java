@@ -83,7 +83,7 @@ public class SemOptimizerPowell implements SemOptimizer {
 
             _sem2.setFreeParamValues(p);
 
-            MultivariateOptimizer search = new PowellOptimizer(1e-7, 1e-7);
+            MultivariateOptimizer search = new PowellOptimizer(1e-5, 1e-5);
             PointValuePair pair = search.optimize(
                     new InitialGuess(_sem2.getFreeParamValues()),
                     new ObjectiveFunction(fittingFunction(semIm)),

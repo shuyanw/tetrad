@@ -145,14 +145,14 @@ public class Mimbuild2 {
 //        search.setKnowledge(knowledge);
 //        graph = search.search();
 
-        PcMax search = new PcMax(new IndTestFisherZ(latentscov, alpha));
-        search.setKnowledge(knowledge);
-        graph = search.search();
-
-//        Fgs search = new Fgs(latentscov);
-//        search.setPenaltyDiscount(1);
+//        PcMax search = new PcMax(new IndTestFisherZ(latentscov, alpha));
 //        search.setKnowledge(knowledge);
 //        graph = search.search();
+//
+        Fgs search = new Fgs(latentscov);
+        search.setPenaltyDiscount(1);
+        search.setKnowledge(knowledge);
+        graph = search.search();
 
         this.structureGraph = new EdgeListGraph(graph);
         GraphUtils.fruchtermanReingoldLayout(this.structureGraph);
