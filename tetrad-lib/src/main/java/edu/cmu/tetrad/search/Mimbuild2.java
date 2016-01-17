@@ -21,11 +21,9 @@
 
 package edu.cmu.tetrad.search;
 
-import edu.cmu.tetrad.data.CovarianceMatrix;
-import edu.cmu.tetrad.data.ICovarianceMatrix;
-import edu.cmu.tetrad.data.IKnowledge;
-import edu.cmu.tetrad.data.Knowledge2;
+import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.*;
+import edu.cmu.tetrad.util.MatrixUtils;
 import edu.cmu.tetrad.util.TetradMatrix;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.optim.InitialGuess;
@@ -143,21 +141,18 @@ public class Mimbuild2 {
         this.latentsCov = latentscov;
         Graph graph;
 
-        Cpc search = new Cpc(new IndTestFisherZ(latentscov, alpha));
+//        Cpc search = new Cpc(new IndTestFisherZ(latentscov, alpha));
+//        search.setKnowledge(knowledge);
+//        graph = search.search();
+
+        PcMax search = new PcMax(new IndTestFisherZ(latentscov, alpha));
         search.setKnowledge(knowledge);
         graph = search.search();
 
-//        try {
-//            Ges search = new Ges(latentscov);
-//            search.setPenaltyDiscount(penaltyDiscount);
-//            search.setKnowledge(knowledge);
-//            graph = search.search();
-//        } catch (Exception e) {
-////            e.printStackTrace();
-//            Cpc search = new Cpc(new IndTestFisherZ(latentscov, alpha));
-//            search.setKnowledge(knowledge);
-//            graph = search.search();
-//        }
+//        Fgs search = new Fgs(latentscov);
+//        search.setPenaltyDiscount(1);
+//        search.setKnowledge(knowledge);
+//        graph = search.search();
 
         this.structureGraph = new EdgeListGraph(graph);
         GraphUtils.fruchtermanReingoldLayout(this.structureGraph);
@@ -280,7 +275,7 @@ public class Mimbuild2 {
             for (int j = i; j < latentscov.columns(); j++) {
                 if (i == j) latentscov.set(i, j, 1.0);
                 else {
-                    double v = .5;
+                    double v = 0;
                     latentscov.set(i, j, v);
                     latentscov.set(j, i, v);
                 }
@@ -319,21 +314,9 @@ public class Mimbuild2 {
             delta[i] = 1;
         }
 
-        int numNonMeasureVarianceParams = 0;
+        double[] allParams1 = getAllParams(latentscov, loadings, delta);
 
-        for (int i = 0; i < latentscov.rows(); i++) {
-            for (int j = i; j < latentscov.columns(); j++) {
-                numNonMeasureVarianceParams++;
-            }
-        }
-
-        for (int i = 0; i < indicators.length; i++) {
-            numNonMeasureVarianceParams += indicators[i].length;
-        }
-
-        double[] allParams1 = getAllParams(indicators, latentscov, loadings, delta);
-
-        optimizeNonMeasureVariancesQuick(indicators, measurescov, latentscov, loadings, indicatorIndices);
+        optimizeNonMeasureVariancesQuick(measurescov, latentscov, loadings, indicatorIndices);
 
 //        for (int i = 0; i < 10; i++) {
 //            optimizeNonMeasureVariancesConditionally(indicators, measurescov, latentscov, loadings, indicatorIndices, delta);
@@ -347,7 +330,7 @@ public class Mimbuild2 {
         this.numParams = allParams1.length;
 
 //        // Very slow but could be done alone.
-        optimizeAllParamsSimultaneously(indicators, measurescov, latentscov, loadings, indicatorIndices, delta);
+        optimizeAllParamsSimultaneously(measurescov, latentscov, loadings, indicatorIndices, delta);
 
         double N = _measurescov.getSampleSize();
         int p = _measurescov.getDimension();
@@ -370,18 +353,22 @@ public class Mimbuild2 {
         return sqrt(sum);
     }
 
-    private void optimizeNonMeasureVariancesQuick(Node[][] indicators, TetradMatrix measurescov, TetradMatrix latentscov,
+    private void optimizeNonMeasureVariancesQuick(TetradMatrix measurescov, TetradMatrix latentscov,
                                                   double[][] loadings, int[][] indicatorIndices) {
         int count = 0;
 
-        for (int i = 0; i < indicators.length; i++) {
-            for (int j = i; j < indicators.length; j++) {
+        for (int i = 0; i < loadings.length; i++) {
+            count++;
+        }
+
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = i + 1; j < loadings.length; j++) {
                 count++;
             }
         }
 
-        for (int i = 0; i < indicators.length; i++) {
-            for (int j = 0; j < indicators[i].length; j++) {
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = 0; j < loadings[i].length; j++) {
                 count++;
             }
         }
@@ -389,20 +376,24 @@ public class Mimbuild2 {
         double[] values = new double[count];
         count = 0;
 
-        for (int i = 0; i < indicators.length; i++) {
-            for (int j = i; j < indicators.length; j++) {
+        for (int i = 0; i < loadings.length; i++) {
+            values[count++] = latentscov.get(i, i);
+        }
+
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = i + 1; j < loadings.length; j++) {
                 values[count++] = latentscov.get(i, j);
             }
         }
 
-        for (int i = 0; i < indicators.length; i++) {
-            for (int j = 0; j < indicators[i].length; j++) {
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = 0; j < loadings[i].length; j++) {
                 values[count++] = loadings[i][j];
             }
         }
 
         Function1 function1 = new Function1(indicatorIndices, measurescov, loadings, latentscov, count);
-        MultivariateOptimizer search = new PowellOptimizer(1e-7, 1e-7);
+        MultivariateOptimizer search = new PowellOptimizer(1e-4, 1e-4);
 
         PointValuePair pair = search.optimize(
                 new InitialGuess(values),
@@ -448,7 +439,7 @@ public class Mimbuild2 {
         }
 
         Function2 function2 = new Function2(indicatorIndices, measurescov, loadings, latentscov, delta, count);
-        MultivariateOptimizer search = new PowellOptimizer(1e-7, 1e-7);
+        MultivariateOptimizer search = new PowellOptimizer(1e-4, 1e-4);
 
         PointValuePair pair = search.optimize(
                 new InitialGuess(values3),
@@ -469,7 +460,7 @@ public class Mimbuild2 {
         }
 
         Function2 function2 = new Function2(indicatorIndices, measurescov, loadings, latentscov, delta, count);
-        MultivariateOptimizer search = new PowellOptimizer(1e-7, 1e-7);
+        MultivariateOptimizer search = new PowellOptimizer(1e-4, 1e-4);
 
         PointValuePair pair = search.optimize(
                 new InitialGuess(values2),
@@ -484,13 +475,13 @@ public class Mimbuild2 {
         return numParams;
     }
 
-    private void optimizeAllParamsSimultaneously(Node[][] indicators, TetradMatrix measurescov,
+    private void optimizeAllParamsSimultaneously(TetradMatrix measurescov,
                                                  TetradMatrix latentscov, double[][] loadings,
                                                  int[][] indicatorIndices, double[] delta) {
-        double[] values = getAllParams(indicators, latentscov, loadings, delta);
+        double[] values = getAllParams(latentscov, loadings, delta);
 
         Function4 function = new Function4(indicatorIndices, measurescov, loadings, latentscov, delta);
-        MultivariateOptimizer search = new PowellOptimizer(1e-7, 1e-7);
+        MultivariateOptimizer search = new PowellOptimizer(1e-4, 1e-4);
 
         PointValuePair pair = search.optimize(
                 new InitialGuess(values),
@@ -501,17 +492,21 @@ public class Mimbuild2 {
         minimum = pair.getValue();
     }
 
-    private double[] getAllParams(Node[][] indicators, TetradMatrix latentscov, double[][] loadings, double[] delta) {
+    private double[] getAllParams(TetradMatrix latentscov, double[][] loadings, double[] delta) {
         int count = 0;
 
-        for (int i = 0; i < indicators.length; i++) {
-            for (int j = i; j < indicators.length; j++) {
+        for (int i = 0; i < loadings.length; i++) {
+            count++;
+        }
+
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = i + 1; j < loadings.length; j++) {
                 count++;
             }
         }
 
-        for (int i = 0; i < indicators.length; i++) {
-            for (int j = 0; j < indicators[i].length; j++) {
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = 0; j < loadings[i].length; j++) {
                 count++;
             }
         }
@@ -523,15 +518,20 @@ public class Mimbuild2 {
         double[] values = new double[count];
         count = 0;
 
-        for (int i = 0; i < indicators.length; i++) {
-            for (int j = i; j < indicators.length; j++) {
+        for (int i = 0; i < loadings.length; i++) {
+            values[count] = latentscov.get(i, i);
+            count++;
+        }
+
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = i + 1; j < loadings.length; j++) {
                 values[count] = latentscov.get(i, j);
                 count++;
             }
         }
 
-        for (int i = 0; i < indicators.length; i++) {
-            for (int j = 0; j < indicators[i].length; j++) {
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = 0; j < loadings[i].length; j++) {
                 values[count] = loadings[i][j];
                 count++;
             }
@@ -546,7 +546,6 @@ public class Mimbuild2 {
     }
 
     /**
-     * jf
      * Clusters smaller than this size will be tossed out.
      */
     public int getMinClusterSize() {
@@ -580,11 +579,23 @@ public class Mimbuild2 {
             int count = 0;
 
             for (int i = 0; i < loadings.length; i++) {
-                for (int j = i; j < loadings.length; j++) {
+                if (values[i] <= 0) return Double.POSITIVE_INFINITY;
+            }
+
+            for (int i = 0; i < loadings.length; i++) {
+                latentscov.set(i, i, values[count]);
+            }
+
+            for (int i = 0; i < loadings.length; i++) {
+                for (int j = i + 1; j < loadings.length; j++) {
                     latentscov.set(i, j, values[count]);
                     latentscov.set(j, i, values[count]);
                     count++;
                 }
+            }
+
+            if (!MatrixUtils.isPositiveDefinite(latentscov)) {
+                return Double.POSITIVE_INFINITY;
             }
 
             for (int i = 0; i < loadings.length; i++) {
@@ -596,18 +607,6 @@ public class Mimbuild2 {
 
             return sumOfDifferences(indicatorIndices, measurescov, loadings, latentscov);
         }
-
-//        public int getNumArguments() {
-//            return numParams;
-//        }
-//
-//        public double getLowerBound(int i) {
-//            return -100;
-//        }
-//
-//        public double getUpperBound(int i) {
-//            return 100;
-//        }
     }
 
     private class Function2 implements org.apache.commons.math3.analysis.MultivariateFunction {
@@ -616,9 +615,7 @@ public class Mimbuild2 {
         private TetradMatrix measuresCovInverse;
         private final double[][] loadings;
         private final TetradMatrix latentscov;
-        private final int numParams;
         private final double[] delta;
-        private final List<Integer> aboveZero = new ArrayList<Integer>();
 
         public Function2(int[][] indicatorIndices, TetradMatrix measurescov, double[][] loadings, TetradMatrix latentscov,
                          double[] delta, int numNonMeasureVarianceParams) {
@@ -626,24 +623,8 @@ public class Mimbuild2 {
             this.measurescov = measurescov;
             this.loadings = loadings;
             this.latentscov = latentscov;
-            this.numParams = numNonMeasureVarianceParams;
             this.delta = delta;
             this.measuresCovInverse = measurescov.inverse();
-
-            int count = 0;
-
-            for (int i = 0; i < loadings.length; i++) {
-                for (int j = i; j < loadings.length; j++) {
-                    if (i == j) aboveZero.add(count);
-                    count++;
-                }
-            }
-
-            for (int i = 0; i < loadings.length; i++) {
-                for (int j = 0; j < loadings[i].length; j++) {
-                    count++;
-                }
-            }
         }
 
         @Override
@@ -725,7 +706,6 @@ public class Mimbuild2 {
         private TetradMatrix measuresCovInverse;
         private final double[][] loadings;
         private final TetradMatrix latentscov;
-        private final int numParams;
         private final double[] delta;
         private final List<Integer> aboveZero = new ArrayList<Integer>();
 
@@ -757,8 +737,6 @@ public class Mimbuild2 {
                 aboveZero.add(count);
                 count++;
             }
-
-            numParams = count;
         }
 
         @Override
@@ -766,7 +744,16 @@ public class Mimbuild2 {
             int count = 0;
 
             for (int i = 0; i < loadings.length; i++) {
-                for (int j = i; j < loadings.length; j++) {
+                if (values[i] <= 0) return Double.POSITIVE_INFINITY;
+            }
+
+            for (int i = 0; i < loadings.length; i++) {
+                latentscov.set(i, i, values[count]);
+                count++;
+            }
+
+            for (int i = 0; i < loadings.length; i++) {
+                for (int j = i + 1; j < loadings.length; j++) {
                     latentscov.set(i, j, values[count]);
                     latentscov.set(j, i, values[count]);
                     count++;

@@ -50,7 +50,7 @@ public abstract class AbstractMimRunner implements MimRunner, ParamsResettable {
      *
      * @serial Cannot be null.
      */
-    private transient DataModel dataModel;
+    private DataModel dataModel;
 
     /**
      * The parameters guiding this search (when executed).
@@ -86,7 +86,6 @@ public abstract class AbstractMimRunner implements MimRunner, ParamsResettable {
      * @serial Can be null.
      */
     private Graph structureGraph;
-    private DataWrapper dataWrapper;
 
     //===========================CONSTRUCTORS===========================//
 
@@ -103,17 +102,14 @@ public abstract class AbstractMimRunner implements MimRunner, ParamsResettable {
             throw new NullPointerException();
         }
 
-        this.dataWrapper = dataWrapper;
-
         this.params = params;
         setClusters(clusters);
         this.sourceGraph = dataWrapper.getSourceGraph();
 
-        DataModel data = getDataModel(dataWrapper);
-        getParams().setKnowledge(dataWrapper.getKnowledge());
-        List names = data.getVariableNames();
+        DataModel dataSource = dataWrapper.getSelectedDataModel();
+        List names = dataSource.getVariableNames();
         transferVarNamesToParams(names);
-        this.dataModel = data;
+        this.dataModel = dataSource;
     }
 
     public AbstractMimRunner(MeasurementModelWrapper wrapper, Clusters clusters, MimParams params) {
@@ -126,12 +122,11 @@ public abstract class AbstractMimRunner implements MimRunner, ParamsResettable {
 
         this.params = params;
         setClusters(clusters);
-//        this.sourceGraph = wrapper.getSourceGraph();
 
-        DataModel data = wrapper.getData();
-        List names = data.getVariableNames();
+        DataModel dataSource = wrapper.getData();
+        List names = dataSource.getVariableNames();
         transferVarNamesToParams(names);
-        this.dataModel = data;
+        this.dataModel = dataSource;
     }
 
     public AbstractMimRunner(MimRunner runner, MimParams params) {
@@ -172,15 +167,7 @@ public abstract class AbstractMimRunner implements MimRunner, ParamsResettable {
     }
 
     public final DataModel getData() {
-        if (dataWrapper != null) {
-            DataModelList dataModelList = dataWrapper.getDataModelList();
-
-            if (dataModelList.size() == 1) {
-                return dataModelList.get(0);
-            } else {
-                return dataModelList;
-            }
-        } else if (dataModel != null) {
+        if (dataModel != null) {
             return dataModel;
         } else {
             throw new IllegalArgumentException();

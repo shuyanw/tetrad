@@ -120,8 +120,7 @@ public class MimBuildRunner extends AbstractMimRunner implements GraphSource {
         if (getData() instanceof CovarianceMatrix) {
             CovarianceMatrix cov = (CovarianceMatrix) getData();
             this.dataSet = DataUtils.choleskySimulation(cov);
-        }
-        else {
+        } else {
             this.dataSet = (DataSet) getData();
         }
 
@@ -207,8 +206,7 @@ public class MimBuildRunner extends AbstractMimRunner implements GraphSource {
 
         if (getParams().isInclude3Clusters()) {
             mimbuild.setMinClusterSize(3);
-        }
-        else {
+        } else {
             mimbuild.setMinClusterSize(4);
         }
 
@@ -253,26 +251,25 @@ public class MimBuildRunner extends AbstractMimRunner implements GraphSource {
         TetradLogger.getInstance().log("details", getLatentClustersString(fullGraph).toString());
         TetradLogger.getInstance().log("details", "P = " + p);
 
-        if (getParams().isShowMaxP()) {
-            if (p > getParams().getMaxP()) {
-                getParams().setMaxP(p);
-                getParams().setMaxStructureGraph(structureGraph);
-                getParams().setMaxClusters(getClusters());
-                getParams().setMaxFullGraph(fullGraph);
-                getParams().setMaxAlpha(getParams().getAlpha());
-            }
+//        if (getParams().isShowMaxP()) {
+//            if (p > getParams().getMaxP()) {
+//                getParams().setMaxP(p);
+        getParams().setMaxStructureGraph(structureGraph);
+        getParams().setMaxClusters(getClusters());
+        getParams().setMaxFullGraph(fullGraph);
+        getParams().setMaxAlpha(getParams().getAlpha());
+//            }
 
-            setStructureGraph(getParams().getMaxStructureGraph());
-            setFullGraph(getParams().getMaxFullGraph());
-            if (getParams().getMaxClusters() != null) {
-                setClusters(getParams().getMaxClusters());
-            }
-            setResultGraph(getParams().getMaxFullGraph());
-
-            TetradLogger.getInstance().log("maxmodel", "\nMAX GRAPH = " + getParams().getMaxStructureGraph());
-            TetradLogger.getInstance().log("maxmodel", getLatentClustersString(getParams().getMaxFullGraph()).toString());
-            TetradLogger.getInstance().log("maxmodel", "MAX P = " + getParams().getMaxP());
+        setStructureGraph(getParams().getMaxStructureGraph());
+        setFullGraph(getParams().getMaxFullGraph());
+        if (getParams().getMaxClusters() != null) {
+            setClusters(getParams().getMaxClusters());
         }
+        setResultGraph(getParams().getMaxFullGraph());
+
+        TetradLogger.getInstance().log("maxmodel", "\nMAX GRAPH = " + getParams().getMaxStructureGraph());
+        TetradLogger.getInstance().log("maxmodel", getLatentClustersString(getParams().getMaxFullGraph()).toString());
+//        TetradLogger.getInstance().log("maxmodel", "MAX P = " + getParams().getMaxP());
     }
 
     private StringBuilder getLatentClustersString(Graph graph) {

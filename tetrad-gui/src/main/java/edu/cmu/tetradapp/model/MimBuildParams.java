@@ -65,7 +65,7 @@ public final class MimBuildParams implements MimParams {
      * @serial Can be null.
      */
     private Graph sourceGraph;
-    private double maxP = -1;
+//    private double maxP = -1;
     private Graph maxGraph = null;
     private boolean showMaxPSelected;
     private boolean include3Clusters;
@@ -169,12 +169,14 @@ public final class MimBuildParams implements MimParams {
 
     @Override
     public double getMaxP() {
-        return this.maxP;
+        throw new UnsupportedOperationException();
+//        return this.maxP;
     }
 
     @Override
     public void setMaxP(double p) {
-        this.maxP = p;
+        throw new UnsupportedOperationException();
+//        this.maxP = p;
     }
 
 

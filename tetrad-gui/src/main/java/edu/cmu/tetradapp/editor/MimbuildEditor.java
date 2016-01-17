@@ -160,41 +160,41 @@ public class MimbuildEditor extends JPanel {
             }
         });
 
-        JCheckBox showMaxP = new JCheckBox("Show Max P Value Result");
+//        JCheckBox showMaxP = new JCheckBox("Show Max P Value Result");
+//
+//        showMaxP.setSelected(getMimRunner().getParams().isShowMaxP());
+//
+//        showMaxP.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                JCheckBox box = (JCheckBox) e.getSource();
+//                boolean selected = box.isSelected();
+//
+//                MimParams params = getMimRunner().getParams();
+//                params.setShowMaxP(selected);
+//
+//                if (selected) {
+//                    JOptionPane.showMessageDialog(JOptionUtils.centeringComp(),
+//                            "Only the graph with the highest P value will be shown, until deselected.");
+//                }
+//                else if (!selected) {
+//                    JOptionPane.showMessageDialog(JOptionUtils.centeringComp(),
+//                            "Max P mode turned off and reset.");
+//                    params.setMaxP(-1);
+//                    params.setMaxStructureGraph(null);
+//                }
+//            }
+//        });
 
-        showMaxP.setSelected(getMimRunner().getParams().isShowMaxP());
+        JCheckBox include3Clusters = new JCheckBox("Exclude 3-clusters");
 
-        showMaxP.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JCheckBox box = (JCheckBox) e.getSource();
-                boolean selected = box.isSelected();
-
-                MimParams params = getMimRunner().getParams();
-                params.setShowMaxP(selected);
-
-                if (selected) {
-                    JOptionPane.showMessageDialog(JOptionUtils.centeringComp(),
-                            "Only the graph with the highest P value will be shown, until deselected.");
-                }
-                else if (!selected) {
-                    JOptionPane.showMessageDialog(JOptionUtils.centeringComp(),
-                            "Max P mode turned off and reset.");
-                    params.setMaxP(-1);
-                    params.setMaxStructureGraph(null);
-                }
-            }
-        });
-
-        JCheckBox include3Clusters = new JCheckBox("Include 3-clusters");
-
-        include3Clusters.setSelected(getMimRunner().getParams().isInclude3Clusters());
+        include3Clusters.setSelected(!getMimRunner().getParams().isInclude3Clusters());
 
         include3Clusters.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JCheckBox box = (JCheckBox) e.getSource();
-                boolean selected = box.isSelected();
+                boolean selected = !box.isSelected();
                 getMimRunner().getParams().setInclude3Clusters(selected);
             }
         });
@@ -222,10 +222,10 @@ public class MimbuildEditor extends JPanel {
 
         b1.add(Box.createVerticalStrut(20));
 
-        Box b4 = Box.createHorizontalBox();
-        b4.add(showMaxP);
-        b4.add(Box.createHorizontalGlue());
-        b1.add(b4);
+//        Box b4 = Box.createHorizontalBox();
+//        b4.add(showMaxP);
+//        b4.add(Box.createHorizontalGlue());
+//        b1.add(b4);
 
         Box b5 = Box.createHorizontalBox();
         b5.add(Box.createHorizontalStrut(25));
