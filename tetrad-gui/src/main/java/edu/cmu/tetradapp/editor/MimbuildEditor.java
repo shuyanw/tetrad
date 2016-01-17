@@ -263,7 +263,9 @@ public class MimbuildEditor extends JPanel {
                 setErrorMessage(null);
 
                 try {
-//                    mimRunner.getParams().setClusters(clusterEditor.getClusters());
+                    if (clusterEditor != null) {
+                        mimRunner.getParams().setClusters(clusterEditor.getClusters());
+                    }
                     getMimRunner().execute();
                 }
                 catch (Exception e) {
