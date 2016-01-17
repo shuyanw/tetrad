@@ -227,11 +227,11 @@ public class MimbuildEditor extends JPanel {
 //        b4.add(Box.createHorizontalGlue());
 //        b1.add(b4);
 
-        Box b5 = Box.createHorizontalBox();
-        b5.add(Box.createHorizontalStrut(25));
-        b5.add(new JLabel("(Click to set/reset)"));
-        b5.add(Box.createHorizontalGlue());
-        b1.add(b5);
+//        Box b5 = Box.createHorizontalBox();
+//        b5.add(Box.createHorizontalStrut(25));
+//        b5.add(new JLabel("(Click to set/reset)"));
+//        b5.add(Box.createHorizontalGlue());
+//        b1.add(b5);
 
 
         b1.add(Box.createVerticalStrut(10));

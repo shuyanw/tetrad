@@ -760,6 +760,10 @@ public class Mimbuild2 {
                 }
             }
 
+            if (!MatrixUtils.isPositiveDefinite(latentscov)) {
+                return Double.POSITIVE_INFINITY;
+            }
+
             for (int i = 0; i < loadings.length; i++) {
                 for (int j = 0; j < loadings[i].length; j++) {
                     loadings[i][j] = values[count];
