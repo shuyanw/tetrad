@@ -407,7 +407,7 @@ public class FindOneFactorClusters {
                     if (_cluster.contains(o)) continue;
 
                     List<Integer> _cluster2 = new ArrayList<>(_cluster);
-                    int rejected = 0;
+                    int possible = MathUtils.choose(_cluster2.size(), 2);
                     int accepted = 0;
 
                     ChoiceGenerator gen = new ChoiceGenerator(_cluster2.size(), 2);
@@ -420,13 +420,13 @@ public class FindOneFactorClusters {
                         t.add(o);
 
                         if (!puretriples.contains(t)) {
-                            rejected++;
-                        } else {
-                            accepted++;
+                            continue;
                         }
+
+                        accepted++;
                     }
 
-                    if (rejected > accepted) {
+                    if (accepted < 0.8 * possible) {
                         continue;
                     }
 

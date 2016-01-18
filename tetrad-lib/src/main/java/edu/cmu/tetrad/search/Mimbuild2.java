@@ -144,17 +144,23 @@ public class Mimbuild2 {
 //        Cpc search = new Cpc(new IndTestFisherZ(latentscov, alpha));
 //        search.setKnowledge(knowledge);
 //        graph = search.search();
-
+//
 //        PcMax search = new PcMax(new IndTestFisherZ(latentscov, alpha));
 //        search.setKnowledge(knowledge);
 //        graph = search.search();
-//
+
         Fgs search = new Fgs(latentscov);
-        search.setPenaltyDiscount(1);
+        search.setPenaltyDiscount(2);
         search.setKnowledge(knowledge);
         graph = search.search();
 
-        this.structureGraph = new EdgeListGraph(graph);
+//
+//        Ges search = new Ges(latentscov);
+//        search.setPenaltyDiscount(2);
+//        search.setKnowledge(knowledge);
+//        graph = search.search();
+
+         this.structureGraph = new EdgeListGraph(graph);
         GraphUtils.fruchtermanReingoldLayout(this.structureGraph);
 
         return this.structureGraph;
@@ -314,7 +320,7 @@ public class Mimbuild2 {
             delta[i] = 1;
         }
 
-        double[] allParams1 = getAllParams(latentscov, loadings, delta);
+        double[] allParams = getAllParams(latentscov, loadings, delta);
 
         optimizeNonMeasureVariancesQuick(measurescov, latentscov, loadings, indicatorIndices);
 
@@ -323,14 +329,14 @@ public class Mimbuild2 {
 //            optimizeMeasureVariancesConditionally(measurescov, latentscov, loadings, indicatorIndices, delta);
 //
 //            double[] allParams2 = getAllParams(indicators, latentscov, loadings, delta);
-//            if (distance(allParams1, allParams2) < epsilon) break;
-//            allParams1 = allParams2;
+//            if (distance(allParams, allParams2) < epsilon) break;
+//            allParams = allParams2;
 //        }
 
-        this.numParams = allParams1.length;
+        this.numParams = allParams.length;
 
 //        // Very slow but could be done alone.
-        optimizeAllParamsSimultaneously(measurescov, latentscov, loadings, indicatorIndices, delta);
+//        optimizeAllParamsSimultaneously(measurescov, latentscov, loadings, indicatorIndices, delta);
 
         double N = _measurescov.getSampleSize();
         int p = _measurescov.getDimension();
@@ -579,11 +585,8 @@ public class Mimbuild2 {
             int count = 0;
 
             for (int i = 0; i < loadings.length; i++) {
-                if (values[i] <= 0) return Double.POSITIVE_INFINITY;
-            }
-
-            for (int i = 0; i < loadings.length; i++) {
                 latentscov.set(i, i, values[count]);
+                count++;
             }
 
             for (int i = 0; i < loadings.length; i++) {
@@ -594,16 +597,21 @@ public class Mimbuild2 {
                 }
             }
 
-            if (!MatrixUtils.isPositiveDefinite(latentscov)) {
-                return Double.POSITIVE_INFINITY;
-            }
-
             for (int i = 0; i < loadings.length; i++) {
                 for (int j = 0; j < loadings[i].length; j++) {
                     loadings[i][j] = values[count];
                     count++;
                 }
             }
+
+            for (int i = 0; i < loadings.length; i++) {
+                if (values[i] <= 0) return Double.POSITIVE_INFINITY;
+            }
+
+            // This doesn't work.
+//            if (!MatrixUtils.isPositiveDefinite(latentscov)) {
+//                return Double.POSITIVE_INFINITY;
+//            }
 
             return sumOfDifferences(indicatorIndices, measurescov, loadings, latentscov);
         }
@@ -718,34 +726,35 @@ public class Mimbuild2 {
             this.delta = delta;
             this.measuresCovInverse = measurescov.inverse();
 
-            int count = 0;
-
-            for (int i = 0; i < loadings.length; i++) {
-                for (int j = i; j < loadings.length; j++) {
-                    if (i == j) aboveZero.add(count);
-                    count++;
-                }
-            }
-
-            for (int i = 0; i < loadings.length; i++) {
-                for (int j = 0; j < loadings[i].length; j++) {
-                    count++;
-                }
-            }
-
-            for (int i = 0; i < delta.length; i++) {
-                aboveZero.add(count);
-                count++;
-            }
+//            int count = 0;
+//
+//            for (int i = 0; i < loadings.length; i++) {
+//                for (int j = i; j < loadings.length; j++) {
+//                    if (i == j) aboveZero.add(count);
+//                    count++;
+//                }
+//            }
+//
+//            for (int i = 0; i < loadings.length; i++) {
+//                count++;
+//            }
+//
+//            for (int i = 0; i < loadings.length; i++) {
+//                for (int j = i + 1; j < loadings[i].length; j++) {
+//                    count++;
+//                }
+//            }
+//
+//            for (int i = 0; i < delta.length; i++) {
+//                aboveZero.add(count);
+//                count++;
+//            }
         }
 
         @Override
         public double value(double[] values) {
             int count = 0;
 
-            for (int i = 0; i < loadings.length; i++) {
-                if (values[i] <= 0) return Double.POSITIVE_INFINITY;
-            }
 
             for (int i = 0; i < loadings.length; i++) {
                 latentscov.set(i, i, values[count]);
@@ -760,10 +769,6 @@ public class Mimbuild2 {
                 }
             }
 
-            if (!MatrixUtils.isPositiveDefinite(latentscov)) {
-                return Double.POSITIVE_INFINITY;
-            }
-
             for (int i = 0; i < loadings.length; i++) {
                 for (int j = 0; j < loadings[i].length; j++) {
                     loadings[i][j] = values[count];
@@ -775,6 +780,15 @@ public class Mimbuild2 {
                 delta[i] = values[count];
                 count++;
             }
+
+//            for (int i = 0; i < loadings.length; i++) {
+//                if (latentscov.get(i, i) <= 0) return Double.POSITIVE_INFINITY;
+//            }
+
+            if (!MatrixUtils.isPositiveDefinite(latentscov)) {
+                return Double.POSITIVE_INFINITY;
+            }
+
 
             TetradMatrix implied = impliedCovariance(indicatorIndices, loadings, measurescov, latentscov, delta);
 

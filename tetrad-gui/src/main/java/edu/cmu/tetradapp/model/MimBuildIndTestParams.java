@@ -120,9 +120,9 @@ public class MimBuildIndTestParams implements MimIndTestParams {
     }
 
     public void setAlpha(double alpha) {
-        if (alpha < 0.0 || alpha > 1.0) {
-            throw new IllegalArgumentException("Alpha out of range: " + alpha);
-        }
+//        if (alpha < 0.0 || alpha > 1.0) {
+//            throw new IllegalArgumentException("Alpha out of range: " + alpha);
+//        }
         this.alpha = alpha;
     }
 
@@ -150,15 +150,15 @@ public class MimBuildIndTestParams implements MimIndTestParams {
     private void readObject(ObjectInputStream s)
             throws IOException, ClassNotFoundException {
         s.defaultReadObject();
+//
+//        if (numClusters < 1) {
+//            throw new IllegalStateException(
+//                    "NumClusters out of range: " + numClusters);
+//        }
 
-        if (numClusters < 1) {
-            throw new IllegalStateException(
-                    "NumClusters out of range: " + numClusters);
-        }
-
-        if (alpha < 0.0 || alpha > 1.0) {
-            throw new IllegalStateException("Alpha out of range: " + alpha);
-        }
+//        if (alpha < 0.0 || alpha > 1.0) {
+//            throw new IllegalStateException("Alpha out of range: " + alpha);
+//        }
     }
 
     public void setKnowledge(IKnowledge knowledge) {
