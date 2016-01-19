@@ -158,15 +158,17 @@ public class SemOptimizerPowell implements SemOptimizer {
 
         @Override
         public double value(double[] parameters) {
+            double high = 1e30;
+
             for (double parameter : parameters) {
                 if (Double.isNaN(parameter) || Double.isInfinite(parameter)) {
-                    return 100000;
+                    return high;
                 }
             }
 
             for (int i = 0; i < parameters.length; i++) {
                 if (freeParameters.get(i).getType() == ParamType.VAR && parameters[i] <= 0.0) {
-                    return 100000;
+                    return high;
                 }
             }
 
@@ -175,15 +177,15 @@ public class SemOptimizerPowell implements SemOptimizer {
             double fml = sem.getScore();
 
             if (Double.isNaN(fml) || Double.isInfinite(fml)) {
-                return 100000;
+                return high;
             }
 
             if (Double.isNaN(fml)) {
-                return 100000;
+                return high;
             }
 
             if (fml < 0) {
-                return 100000;
+                return high;
             }
 
             return fml;

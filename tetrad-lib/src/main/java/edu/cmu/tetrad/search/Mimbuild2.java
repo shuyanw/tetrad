@@ -399,7 +399,7 @@ public class Mimbuild2 {
         }
 
         Function1 function1 = new Function1(indicatorIndices, measurescov, loadings, latentscov, count);
-        MultivariateOptimizer search = new PowellOptimizer(1e-4, 1e-4);
+        MultivariateOptimizer search = new PowellOptimizer(1e-7, 1e-7);
 
         PointValuePair pair = search.optimize(
                 new InitialGuess(values),
@@ -843,7 +843,7 @@ public class Mimbuild2 {
                         double _cov = cov.get(indicatorIndices[i][k], indicatorIndices[j][l]);
                         double prod = loadings[i][k] * loadings[j][l] * loadingscov.get(i, j);
                         double diff = _cov - prod;
-                        sum += 2 * diff * diff;
+                        sum += diff * diff;
                     }
                 }
             }
