@@ -144,8 +144,8 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
                 ges.setVerbose(true);
             }
             else if (dataSet.isDiscrete()) {
-                double samplePrior = ((GesParams) getParams()).getSamplePrior();
-                double structurePrior = ((GesParams) getParams()).getStructurePrior();
+                double samplePrior = ((FgsParams) getParams()).getSamplePrior();
+                double structurePrior = ((FgsParams) getParams()).getStructurePrior();
                 BDeuScore score = new BDeuScore(dataSet);
                 score.setSamplePrior(samplePrior);
                 score.setStructurePrior(structurePrior);

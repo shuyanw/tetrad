@@ -315,7 +315,9 @@ public abstract class AbstractAlgorithmRunner
         } else if (dataModel != null) {
             return dataModel;
         } else {
-            throw new IllegalArgumentException();
+
+            // Do not throw an exception here!
+            return null;
         }
     }
 

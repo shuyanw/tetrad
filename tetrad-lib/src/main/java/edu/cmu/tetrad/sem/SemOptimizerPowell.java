@@ -75,9 +75,9 @@ public class SemOptimizerPowell implements SemOptimizer {
 
             for (int i = 0; i < freeParameters.size(); i++) {
                 if (freeParameters.get(i).getType() == ParamType.VAR) {
-                    p[i] = RandomUtil.getInstance().nextUniform(0, 1);
+                    p[i] = RandomUtil.getInstance().nextUniform(0, 5);
                 } else {
-                    p[i] = RandomUtil.getInstance().nextUniform(-1, 1);
+                    p[i] = RandomUtil.getInstance().nextUniform(-5, 5);
                 }
             }
 
