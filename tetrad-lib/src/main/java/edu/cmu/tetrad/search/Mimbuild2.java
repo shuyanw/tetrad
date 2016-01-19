@@ -317,12 +317,12 @@ public class Mimbuild2 {
         double[] delta = new double[measurescov.rows()];
 
         for (int i = 0; i < delta.length; i++) {
-            delta[i] = 1;
+            delta[i] = 10;
         }
 
         double[] allParams = getAllParams(latentscov, loadings, delta);
 
-        optimizeNonMeasureVariancesQuick(measurescov, latentscov, loadings, indicatorIndices);
+        optimizeQuick(measurescov, latentscov, loadings, indicatorIndices);
 
 //        for (int i = 0; i < 10; i++) {
 //            optimizeNonMeasureVariancesConditionally(indicators, measurescov, latentscov, loadings, indicatorIndices, delta);
@@ -359,8 +359,8 @@ public class Mimbuild2 {
         return sqrt(sum);
     }
 
-    private void optimizeNonMeasureVariancesQuick(TetradMatrix measurescov, TetradMatrix latentscov,
-                                                  double[][] loadings, int[][] indicatorIndices) {
+    private void optimizeQuick(TetradMatrix measurescov, TetradMatrix latentscov,
+                               double[][] loadings, int[][] indicatorIndices) {
         int count = 0;
 
         for (int i = 0; i < loadings.length; i++) {
@@ -804,20 +804,44 @@ public class Mimbuild2 {
                                            double[] delta) {
         TetradMatrix implied = new TetradMatrix(cov.rows(), cov.columns());
 
+//        for (int i = 0; i < loadings.length; i++) {
+//            for (int j = 0; j < loadings.length; j++) {
+//                for (int k = 0; k < loadings[i].length; k++) {
+//                    for (int l = 0; l < loadings[j].length; l++) {
+//                        double prod = loadings[i][k] * loadings[j][l] * loadingscov.get(i, j);
+//                        implied.set(indicatorIndices[i][k], indicatorIndices[j][l], prod);
+//                    }
+//                }
+//            }
+//        }
+
         for (int i = 0; i < loadings.length; i++) {
-            for (int j = 0; j < loadings.length; j++) {
+            for (int k = 0; k < loadings[i].length; k++) {
+                for (int l = k + 1; l < loadings[i].length; l++) {
+                    double prod = loadings[i][k] * loadings[i][l] * loadingscov.get(i, i);
+                    implied.set(indicatorIndices[i][k], indicatorIndices[i][l], prod);
+                    implied.set(indicatorIndices[i][l], indicatorIndices[i][k], prod);
+                }
+            }
+        }
+
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = i + 1; j < loadings.length; j++) {
                 for (int k = 0; k < loadings[i].length; k++) {
                     for (int l = 0; l < loadings[j].length; l++) {
                         double prod = loadings[i][k] * loadings[j][l] * loadingscov.get(i, j);
                         implied.set(indicatorIndices[i][k], indicatorIndices[j][l], prod);
+                        implied.set(indicatorIndices[j][l], indicatorIndices[i][k], prod);
                     }
                 }
             }
         }
 
         for (int i = 0; i < implied.rows(); i++) {
-            implied.set(i, i, implied.get(i, i) + delta[i]);
+            implied.set(i, i, delta[i]);
         }
+
+        System.out.println(implied);
 
         return implied;
     }
