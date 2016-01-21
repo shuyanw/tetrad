@@ -40,6 +40,8 @@ import static java.lang.Math.sqrt;
  */
 public class FindOneFactorClusters {
 
+    private final ICovarianceMatrix cov;
+
     public enum Algorithm {SAG, GAP}
 
     private CorrelationMatrix corr;
@@ -80,6 +82,7 @@ public class FindOneFactorClusters {
         this.test2 = new ContinuousTetradTest(cov, testType, alpha);
         this.dataModel = cov;
         this.algorithm = algorithm;
+        this.cov = cov;
 
         this.corr = new CorrelationMatrix(cov);
 
@@ -97,6 +100,7 @@ public class FindOneFactorClusters {
         this.algorithm = algorithm;
 
         this.corr = new CorrelationMatrix(dataSet);
+        this.cov = new CovarianceMatrix(dataSet);
     }
 
     public Algorithm getAlgorithm() {
@@ -239,7 +243,7 @@ public class FindOneFactorClusters {
         List<Integer> _variables = allVariables();
 
         Set<Set<Integer>> triples = findPuretriplesGAP(_variables);
-        Set<Set<Integer>> combined = combinePuretriples(triples, _variables);
+        Set<Set<Integer>> combined = combinePuretriplesGAP(triples, _variables);
 
         Set<List<Integer>> _combined = new HashSet<>();
 
@@ -363,8 +367,13 @@ public class FindOneFactorClusters {
                 }
             }
 
+
             log("Extending by " + variables.get(o), true);
             cluster.add(o);
+
+            if (getPValue(cluster) < alpha) {
+                cluster.remove(new Integer(o));
+            }
         }
     }
 
@@ -385,7 +394,7 @@ public class FindOneFactorClusters {
         return true;
     }
 
-    private Set<Set<Integer>> combinePuretriples(Set<Set<Integer>> puretriples, List<Integer> _variables) {
+    private Set<Set<Integer>> combinePuretriplesGAP(Set<Set<Integer>> puretriples, List<Integer> _variables) {
         log("Growing pure triples.", true);
         Set<Set<Integer>> grown = new HashSet<>();
 
@@ -430,12 +439,20 @@ public class FindOneFactorClusters {
                         continue;
                     }
 
+//                    if (_cluster.size() > 3 && getPValue(new ArrayList<>(_cluster)) > alpha) {
+//                        _cluster.add(o);
+//                    } else if (_cluster.size() == 3) {
+//                        _cluster.add(o);
+//                    }
+
                     _cluster.add(o);
 
 //                    if (!(avgSumLnP(new ArrayList<Integer>(_cluster)) > -10)) {
 //                        _cluster.remove(o);
 //                    }
                 }
+
+                Set<Integer> bestCluster = pickBestSubcluster(_cluster);
 
                 // This takes out all pure clusters that are subsets of _cluster.
                 ChoiceGenerator gen2 = new ChoiceGenerator(_cluster.size(), 3);
@@ -458,7 +475,10 @@ public class FindOneFactorClusters {
                 if (verbose) {
                     System.out.println("Grown " + (++count) + " of " + total + ": " + variablesForIndices(new ArrayList<>(_cluster)));
                 }
-                grown.add(_cluster);
+
+                if (bestCluster != null && bestCluster.size() > 3) {
+                    grown.add(bestCluster);
+                }
             } while (!puretriples.isEmpty());
         }
 
@@ -654,13 +674,13 @@ public class FindOneFactorClusters {
         // Optimized pick phase.
         log("Choosing among grown clusters.", true);
 
-        for (Set<Integer> l : grown) {
-            ArrayList<Integer> _l = new ArrayList<>(l);
-            Collections.sort(_l);
-            if (verbose) {
-                log("Grown: " + variablesForIndices(_l), false);
-            }
-        }
+//        for (Set<Integer> l : grown) {
+//            ArrayList<Integer> _l = new ArrayList<>(l);
+//            Collections.sort(_l);
+//            if (verbose) {
+//                log("Grown: " + variablesForIndices(_l), false);
+//            }
+//        }
 
         Set<Set<Integer>> out = new HashSet<>();
 
@@ -706,53 +726,50 @@ public class FindOneFactorClusters {
                 if (all.contains(i)) continue CLUSTER;
             }
 
-            out.add(cluster);
-            all.addAll(cluster);
+            if (cluster.size() > 3) {
+                out.add(cluster);
+                all.addAll(cluster);
+            }
+
+            System.out.println("P value for cluster " + variablesForIndices(new ArrayList<>(cluster)) + " = " + getPValue(new ArrayList<>(cluster)));
         }
 
-        if (significanceCalculated) {
-            for (Set<Integer> _out : out) {
-                try {
-                    double p = significance(new ArrayList<>(_out));
-                    log("OUT: " + variablesForIndices(new ArrayList<>(_out)) + " p = " + p, true);
-                } catch (Exception e) {
-                    log("OUT: " + variablesForIndices(new ArrayList<>(_out)) + " p = EXCEPTION", true);
-                }
-            }
-        } else {
-            for (Set<Integer> _out : out) {
-                log("OUT: " + variablesForIndices(new ArrayList<>(_out)), true);
-            }
+        for (Set<Integer> _out : out) {
+            log("OUT: " + variablesForIndices(new ArrayList<>(_out)), true);
         }
 
         return out;
     }
 
-    private boolean modelInsignificantWithNewCluster(Set<List<Integer>> clusters, List<Integer> cluster) {
-//        if (true) return false;
+    private Set<Integer> pickBestSubcluster(Set<Integer> _cluster) {
+        DepthChoiceGenerator gen = new DepthChoiceGenerator(_cluster.size(), _cluster.size());
+        int[] choice;
+        List<Integer> __cluster = new ArrayList<>(_cluster);
+        double maxP = 0.0;
+        List<Node> maxCluster = null;
+        int minSize = 6;
 
-        List<List<Integer>> __clusters = new ArrayList<>(clusters);
-        __clusters.add(cluster);
-        double significance3 = getModelPValue(__clusters);
-        if (verbose) {
-            log("Significance * " + __clusters + " = " + significance3, false);
+        while ((choice = gen.next()) != null) {
+            if (choice.length < minSize) continue;
+            List<Node> nodes = new ArrayList<>();
+            for (int i = 0; i < choice.length; i++) nodes.add(variables.get(__cluster.get(choice[i])));
+            Mimbuild2 mimbuild = new Mimbuild2();
+            mimbuild.setSearchForMax(false);
+            mimbuild.search(Collections.singletonList(nodes), Collections.singletonList("L"), cov);
+            double p = mimbuild.getPValue();
+            String s = "" + nodes;
+            if (p > alpha && p > maxP) {
+                maxP = p;
+                maxCluster = nodes;
+            }
         }
 
-        return significance3 < alpha;
-    }
+        if (maxCluster == null) return null;
 
-    private double significance(List<Integer> cluster) {
-        double chisq = getClusterChiSquare(cluster);
+        Set<Integer> cluster = new HashSet<>();
+        for (Node node : maxCluster) cluster.add(variables.indexOf(node));
 
-        // From "Algebraic factor analysis: tetrads, triples and beyond" Drton et al.
-        int n = cluster.size();
-        int dof = dofHarman(n);
-        double q = ProbUtils.chisqCdf(chisq, dof);
-        return 1.0 - q;
-    }
-
-    private double modelSignificance(List<List<Integer>> clusters) {
-        return getModelPValue(clusters);
+        return cluster;
     }
 
     private int dofDrton(int n) {
@@ -819,9 +836,12 @@ public class FindOneFactorClusters {
         return false;
     }
 
-    private double getClusterChiSquare(List<Integer> cluster) {
-        SemIm im = estimateClusterModel(cluster);
-        return im.getChiSquare();
+    public double getPValue(List<Integer> cluster) {
+        Mimbuild2 mimbuild = new Mimbuild2();
+        List<List<Node>> clustering = new ArrayList<>();
+        clustering.add(variablesForIndices(cluster));
+        mimbuild.search(clustering, Collections.singletonList("L"), cov);
+        return mimbuild.getPValue();
     }
 
     private SemIm estimateClusterModel(List<Integer> quartet) {
@@ -841,78 +861,6 @@ public class FindOneFactorClusters {
         }
 
         SemPm pm = new SemPm(g);
-
-        SemEstimator est;
-
-        if (dataModel instanceof DataSet) {
-            est = new SemEstimator((DataSet) dataModel, pm, new SemOptimizerEm());
-        } else {
-            est = new SemEstimator((CovarianceMatrix) dataModel, pm, new SemOptimizerEm());
-        }
-
-        return est.estimate();
-    }
-
-    private double getModelPValue(List<List<Integer>> clusters) {
-        SemIm im = estimateModel(clusters);
-        return im.getPValue();
-    }
-
-    private SemIm estimateModel(List<List<Integer>> clusters) {
-        Graph g = new EdgeListGraph();
-
-        List<Node> upperLatents = new ArrayList<>();
-        List<Node> lowerLatents = new ArrayList<>();
-
-        for (int i = 0; i < clusters.size(); i++) {
-            List<Integer> cluster = clusters.get(i);
-            Node l1 = new GraphNode("L1." + (i + 1));
-            l1.setNodeType(NodeType.LATENT);
-
-            Node l2 = new GraphNode("L2." + (i + 1));
-            l2.setNodeType(NodeType.LATENT);
-
-            upperLatents.add(l1);
-            lowerLatents.add(l2);
-
-            g.addNode(l1);
-            g.addNode(l2);
-
-            for (int k = 0; k < cluster.size(); k++) {
-                Node n = this.variables.get(cluster.get(k));
-                g.addNode(n);
-                g.addDirectedEdge(l1, n);
-                g.addDirectedEdge(l2, n);
-            }
-        }
-
-        for (int i = 0; i < upperLatents.size(); i++) {
-            for (int j = i + 1; j < upperLatents.size(); j++) {
-                g.addDirectedEdge(upperLatents.get(i), upperLatents.get(j));
-                g.addDirectedEdge(lowerLatents.get(i), lowerLatents.get(j));
-            }
-        }
-
-        for (int i = 0; i < upperLatents.size(); i++) {
-            for (int j = 0; j < lowerLatents.size(); j++) {
-                if (i == j) continue;
-                g.addDirectedEdge(upperLatents.get(i), lowerLatents.get(j));
-            }
-        }
-
-        SemPm pm = new SemPm(g);
-
-        for (Node node : upperLatents) {
-            Parameter p = pm.getParameter(node, node);
-            p.setFixed(true);
-            p.setStartingValue(1.0);
-        }
-
-        for (Node node : lowerLatents) {
-            Parameter p = pm.getParameter(node, node);
-            p.setFixed(true);
-            p.setStartingValue(1.0);
-        }
 
         SemEstimator est;
 

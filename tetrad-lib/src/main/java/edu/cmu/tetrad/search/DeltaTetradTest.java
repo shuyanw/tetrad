@@ -59,8 +59,6 @@ public class DeltaTetradTest {
      * statistics can be calculated (p. 160); otherwise, it must be assumed that the standardizedData are multivariate Gaussian.
      */
     public DeltaTetradTest(DataSet dataSet) {
-        System.out.println(dataSet);
-
         if (dataSet == null) {
             throw new NullPointerException();
         }

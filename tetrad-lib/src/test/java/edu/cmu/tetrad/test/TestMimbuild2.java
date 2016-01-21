@@ -113,15 +113,8 @@ public class TestMimbuild2 {
                     mimbuild.setAlpha(0.001);
                     mimbuild.setMinClusterSize(3);
                     mimbuildStructure = mimbuild.search(partition, latentVarList, new CovarianceMatrix(data));
-                    ICovarianceMatrix latentcov = mimbuild.getLatentsCov();
-//                    System.out.println("\nCovariance over the latents");
-//                    System.out.println(latentcov);
-//                    System.out.println("Estimated\n" + mimbuildStructure);
                     int shd = SearchGraphUtils.structuralHammingDistance(mimStructure, mimbuildStructure);
-//                    System.out.println("SHD = " + shd);
-
                     assertEquals(7, shd);
-//                    System.out.println();
                 } else if (mimbuildMethod == 3) {
 //                    System.out.println("Mimbuild Trek\n");
                     MimbuildTrek mimbuild = new MimbuildTrek();
@@ -255,7 +248,7 @@ public class TestMimbuild2 {
 //
 //            int shd = SearchGraphUtils.structuralHammingDistance(restrictToEmpiricalLatents(mimStructure, mimbuildStructure), mimbuildStructure);
 //            boolean impureCluster = containsImpureCluster(partition, trueClusters);
-//            double pValue = mimbuild.getpValue();
+//            double pValue = mimbuild.getPValue();
 ////            double pValue = pvalue(mimbuild.getClustering(), _cov);
 //            boolean pBelow05 = pValue < 0.05;
 //            boolean numClustersNe5 = partition.size() != 5;
@@ -427,7 +420,7 @@ public class TestMimbuild2 {
 //
 //            Graph mimbuildStructure = mimbuild.search(partition, latentVarList, _cov);
 //
-//            double pValue = mimbuild.getpValue();
+//            double pValue = mimbuild.getPValue();
 //            System.out.println(mimbuildStructure);
 //            System.out.println("P = " + pValue);
 //            System.out.println("Latent Cov = " + mimbuild.getLatentsCov());
@@ -527,7 +520,7 @@ public class TestMimbuild2 {
 //
 //            int shd = SearchGraphUtils.structuralHammingDistance(mimStructure, mimbuildStructure);
 //            boolean impureCluster = containsImpureCluster(partition, trueClusters);
-//            double pValue = mimbuild.getpValue();
+//            double pValue = mimbuild.getPValue();
 //            boolean pBelow05 = pValue < 0.05;
 //            boolean numClustersGreaterThan5 = partition.size() != 5;
 //            boolean error = false;
@@ -548,7 +541,7 @@ public class TestMimbuild2 {
 //
 //            if (pValue > maxP) {
 //                maxScore = shd;
-//                maxP = mimbuild.getpValue();
+//                maxP = mimbuild.getPValue();
 //                maxNumMeasures = numClustered(partition);
 //                System.out.println("maxNumMeasures = " + maxNumMeasures);
 //                System.out.println("maxScore = " + maxScore);

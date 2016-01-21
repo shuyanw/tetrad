@@ -142,7 +142,6 @@ public class ShortTriangularMatrix implements TriangularMatrix {
         test.becomeCorrelationMatrix(data);
         System.out.println(test.toString());
         CorrelationMatrix m = new CorrelationMatrix(data);
-        System.out.println(m.toString());
         System.out.println(test.getDouble(1, 3));
         System.out.println(test.getDouble(3, 1));
     }

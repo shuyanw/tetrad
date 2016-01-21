@@ -702,7 +702,7 @@ public class FindOneFactorClustersWithCausalIndicators {
 
                 mimbuild.search(clusters1, names, cov);
 
-                double c = mimbuild.getpValue();
+                double c = mimbuild.getPValue();
                 if (c > max) max = c;
             }
 
@@ -767,7 +767,7 @@ public class FindOneFactorClustersWithCausalIndicators {
 
                 mimbuild.search(_clusters, names, cov);
 
-                double c = mimbuild.getpValue();
+                double c = mimbuild.getPValue();
                 if (c > max) max = c;
             }
 

@@ -203,6 +203,7 @@ public class MimBuildRunner extends AbstractMimRunner implements GraphSource {
         Mimbuild2 mimbuild = new Mimbuild2();
         mimbuild.setAlpha(getParams().getAlpha());
         mimbuild.setKnowledge(getParams().getKnowledge());
+        mimbuild.setSearchForMax(false);
 
         if (getParams().isInclude3Clusters()) {
             mimbuild.setMinClusterSize(3);
@@ -213,10 +214,11 @@ public class MimBuildRunner extends AbstractMimRunner implements GraphSource {
         Clusters clusters = getParams().getClusters();
 
         List<List<Node>> partition = ClusterUtils.clustersToPartition(clusters, data.getVariables());
-        List<String> latentNames = new ArrayList<String>();
+        List<String> latentNames = new ArrayList<>();
 
         for (int i = 0; i < clusters.getNumClusters(); i++) {
             latentNames.add(clusters.getClusterName(i));
+//            latentNames.add("" + partition.get(i));
         }
 
         CovarianceMatrix cov = new CovarianceMatrix(data);
@@ -245,7 +247,7 @@ public class MimBuildRunner extends AbstractMimRunner implements GraphSource {
 
         this.covMatrix = latentsCov;
 
-        this.p = mimbuild.getpValue();
+        this.p = mimbuild.getPValue();
 
         TetradLogger.getInstance().log("details", "\nStructure graph = " + structureGraph);
         TetradLogger.getInstance().log("details", getLatentClustersString(fullGraph).toString());
