@@ -325,6 +325,11 @@ public class FindOneFactorClusters {
                     List<Integer> nodes = new ArrayList<>(cluster);
 
                     addOtherVariablesStrict(_variables, nodes);
+                    nodes = new ArrayList<>(nodes);
+                    Set<Integer> _nodes = pickSignificantSubcluster(new HashSet<>(nodes));
+                    if (_nodes != null) nodes = new ArrayList<>(_nodes);
+
+                    if (nodes.size() < 5) continue;
 
                     if (verbose) {
                         log("Cluster found: " + variablesForIndices(cluster), true);
@@ -367,13 +372,14 @@ public class FindOneFactorClusters {
                 }
             }
 
+            Integer o1 = o;
+            cluster.add(o1);
 
-            log("Extending by " + variables.get(o), true);
-            cluster.add(o);
+//            if (getPValue(cluster) < alpha) {
+//                cluster.remove(o1);
+//            }
 
-            if (getPValue(cluster) < alpha) {
-                cluster.remove(new Integer(o));
-            }
+            log("Extending by " + variables.get(o1), true);
         }
     }
 
@@ -435,7 +441,7 @@ public class FindOneFactorClusters {
                         accepted++;
                     }
 
-                    if (accepted < 0.8 * possible) {
+                    if (accepted < .8 * possible) {
                         continue;
                     }
 
@@ -452,7 +458,9 @@ public class FindOneFactorClusters {
 //                    }
                 }
 
-                Set<Integer> bestCluster = pickBestSubcluster(_cluster);
+//                Set<Integer> bestCluster = pickBestSubcluster(_cluster);
+                Set<Integer> bestCluster = pickSignificantSubcluster(_cluster);
+//                Set<Integer> bestCluster = _cluster;
 
                 // This takes out all pure clusters that are subsets of _cluster.
                 ChoiceGenerator gen2 = new ChoiceGenerator(_cluster.size(), 3);
@@ -476,7 +484,7 @@ public class FindOneFactorClusters {
                     System.out.println("Grown " + (++count) + " of " + total + ": " + variablesForIndices(new ArrayList<>(_cluster)));
                 }
 
-                if (bestCluster != null && bestCluster.size() > 3) {
+                if (bestCluster != null && bestCluster.size() >= 5) {
                     grown.add(bestCluster);
                 }
             } while (!puretriples.isEmpty());
@@ -742,22 +750,21 @@ public class FindOneFactorClusters {
     }
 
     private Set<Integer> pickBestSubcluster(Set<Integer> _cluster) {
-        DepthChoiceGenerator gen = new DepthChoiceGenerator(_cluster.size(), _cluster.size());
+        DepthChoiceGenerator gen = new DepthChoiceGenerator(_cluster.size(), Math.min(10, _cluster.size()));
         int[] choice;
         List<Integer> __cluster = new ArrayList<>(_cluster);
         double maxP = 0.0;
         List<Node> maxCluster = null;
-        int minSize = 6;
+        int minSize = 4;
 
         while ((choice = gen.next()) != null) {
             if (choice.length < minSize) continue;
             List<Node> nodes = new ArrayList<>();
-            for (int i = 0; i < choice.length; i++) nodes.add(variables.get(__cluster.get(choice[i])));
+            for (int aChoice : choice) nodes.add(variables.get(__cluster.get(aChoice)));
             Mimbuild2 mimbuild = new Mimbuild2();
-            mimbuild.setSearchForMax(false);
+            mimbuild.setMethod(Mimbuild2.Method.STRAIGHT);
             mimbuild.search(Collections.singletonList(nodes), Collections.singletonList("L"), cov);
             double p = mimbuild.getPValue();
-            String s = "" + nodes;
             if (p > alpha && p > maxP) {
                 maxP = p;
                 maxCluster = nodes;
@@ -772,17 +779,43 @@ public class FindOneFactorClusters {
         return cluster;
     }
 
-    private int dofDrton(int n) {
-        int dof = ((n - 2) * (n - 3)) / 2 - 2;
-        if (dof < 0) dof = 0;
-        return dof;
+    private Set<Integer> pickSignificantSubcluster(Set<Integer> _cluster) {
+        List<Integer> __cluster = new ArrayList<>(_cluster);
+        int minSize = 4;
+
+        for (int i = _cluster.size(); i >= minSize; i--) {
+            ChoiceGenerator gen = new ChoiceGenerator(__cluster.size(), i);
+            int[] choice;
+
+            while ((choice = gen.next()) != null) {
+                List<Node> nodes = new ArrayList<>();
+                for (int aChoice : choice) nodes.add(variables.get(__cluster.get(aChoice)));
+                Mimbuild2 mimbuild = new Mimbuild2();
+                mimbuild.setMethod(Mimbuild2.Method.STRAIGHT);
+                mimbuild.search(Collections.singletonList(nodes), Collections.singletonList("L"), cov);
+                double p = mimbuild.getPValue();
+                if (p > alpha) {
+                    Set<Integer> indices = new HashSet<>();
+                    for (int aChoice : choice) indices.add(__cluster.get(aChoice));
+                    return indices;
+                }
+            }
+        }
+
+        return null;
     }
 
-    private int dofHarman(int n) {
-        int dof = n * (n - 5) / 2 + 1;
-        if (dof < 0) dof = 0;
-        return dof;
-    }
+//    private int dofDrton(int n) {
+//        int dof = ((n - 2) * (n - 3)) / 2 - 2;
+//        if (dof < 0) dof = 0;
+//        return dof;
+//    }
+//
+//    private int dofHarman(int n) {
+//        int dof = n * (n - 5) / 2 + 1;
+//        if (dof < 0) dof = 0;
+//        return dof;
+//    }
 
     private List<Node> variablesForIndices(List<Integer> cluster) {
         List<Node> _cluster = new ArrayList<>();

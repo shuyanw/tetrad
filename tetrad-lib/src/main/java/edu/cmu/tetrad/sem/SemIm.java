@@ -2003,7 +2003,7 @@ public final class SemIm implements IM, ISemIm, TetradSerializable {
         int numVars = getVariableNodes().size();
 
         // Calculate inv(I - edgeCoefC)
-        TetradMatrix B = edgeCoef().transpose();
+        TetradMatrix B = edgeCoef();
         TetradMatrix iMinusBInv = TetradAlgebra.identity(B.rows()).minus(B).inverse();
 
         // Pick error values e, for each calculate inv * e.
@@ -2065,7 +2065,7 @@ public final class SemIm implements IM, ISemIm, TetradSerializable {
     // For testing.
     public TetradVector simulateOneRecord(TetradVector e) {
         // Calculate inv(I - edgeCoefC)
-        TetradMatrix edgeCoef = edgeCoef().copy().transpose();
+        TetradMatrix edgeCoef = edgeCoef().copy();
 
 //        TetradMatrix iMinusB = TetradAlgebra.identity(edgeCoefC.rows()); //TetradMatrix.identity(edgeCoefC.rows());
 //        iMinusB.assign(edgeCoefC, Functions.minus);
@@ -2546,7 +2546,7 @@ public final class SemIm implements IM, ISemIm, TetradSerializable {
             int j = getVariableNodes().indexOf(nodeB);
 
             if (parameter.getType() == ParamType.COEF) {
-                Mapping mapping = new Mapping(this, parameter, edgeCoef(), i, j);
+                Mapping mapping = new Mapping(this, parameter, edgeCoef(), j, i);
                 mappings.add(mapping);
             } else if (parameter.getType() == ParamType.VAR) {
                 Mapping mapping = new Mapping(this, parameter, errCovar(), i, i);
@@ -2595,7 +2595,7 @@ public final class SemIm implements IM, ISemIm, TetradSerializable {
      * only.
      */
     private void computeImpliedCovar() {
-        TetradMatrix edgeCoefT = edgeCoef().transpose();// getAlgebra().transpose(edgeCoefC());
+        TetradMatrix edgeCoefT = edgeCoef();// getAlgebra().transpose(edgeCoefC());
 
         // Note. Since the sizes of the temp matrices in this calculation
         // never change, we ought to be able to reuse them.
@@ -2821,7 +2821,7 @@ public final class SemIm implements IM, ISemIm, TetradSerializable {
                 int _i = variablesHash.get(iNode);
                 int _j = variablesHash.get(jNode);
 
-                implCovarMeas.set(i, j, implCovar.get(_i, _j));
+                implCovarMeas.set(j, i, implCovar.get(_j, _i));
             }
         }
 
