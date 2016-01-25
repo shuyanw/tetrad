@@ -42,14 +42,14 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
     private double samplePrior = 1;
     private double structurePrior = 1;
 
-    private int[] numCategories;
+    private short[] numCategories;
 
     private double lastBumpThreshold = 0.0;
 
     private VariableBox[][] boxes;
 
-    private int[] save1;
-    private int[] save2;
+    private short[] save1;
+    private short[] save2;
 
 
     public BDeuScore2(DataSet dataSet) {
@@ -87,14 +87,14 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
             this.sampleSize = dataSet.getNumRows();
         }
 
-        save1 = new int[data[0].length + 1];
-        save2 = new int[data[0].length + 1];
+        save1 = new short[data[0].length + 1];
+        save2 = new short[data[0].length + 1];
 
 
         final List<Node> variables = dataSet.getVariables();
-        numCategories = new int[variables.size()];
+        numCategories = new short[variables.size()];
         for (int i = 0; i < variables.size(); i++) {
-            numCategories[i] = (getVariable(i)).getNumCategories();
+            numCategories[i] = (short) (getVariable(i)).getNumCategories();
         }
 
         countData();
@@ -120,7 +120,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         int r = numCategories[node];
 
         // Numbers of categories of parents.
-        int[] dims = new int[parents.length];
+        short[] dims = new short[parents.length];
 
         for (int p = 0; p < parents.length; p++) {
             dims[p] = numCategories[parents[p]];
@@ -134,17 +134,17 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         }
 
         // Conditional cell coefs of data for node given parents(node).
-        int n_jk[][] = new int[q][r];
-        int n_j[] = new int[q];
+        short n_jk[][] = new short[q][r];
+        short n_j[] = new short[q];
 
         for (int _q = 0; _q < q; _q++) {
             int[] parentValues = getParentValues(_q, dims);
 
             for (int _r = 0; _r < r; _r++) {
-                int[] intersection = null;
+                short[] intersection = null;
 
                 if (parentValues.length == 0) {
-                    int count = this.boxes[node][node].getList(_r, _r).length;
+                    short count = (short) this.boxes[node][node].getList(_r, _r).length;
                     n_jk[_q][_r] = count;
                     n_j[_q] += count;
                 } else {
@@ -166,7 +166,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
                         throw new NullPointerException();
                     }
 
-                    n_jk[_q][_r] = intersection.length;
+                    n_jk[_q][_r] = (short) intersection.length;
                     n_j[_q] += intersection.length;
                 }
             }
@@ -202,7 +202,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         int r = numCategories[node];
 
         // Numbers of categories of parents.
-        int[] dims = new int[parents.length];
+        short[] dims = new short[parents.length];
 
         for (int p = 0; p < parents.length; p++) {
             dims[p] = numCategories[parents[p]];
@@ -223,7 +223,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
             int[] parentValues = getParentValues(_q, dims);
 
             for (int _r = 0; _r < r; _r++) {
-                int[] intersection = null;
+                short[] intersection = null;
 
                 if (parentValues.length == 0) {
                     int count = this.boxes[node][node].getList(_r, _r).length - 1;
@@ -236,7 +236,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
                         int Pi = parents[i];
                         int pi = parentValues[i];
 
-                        int[] list = this.boxes[Pi][node].getList(pi, _r);
+                        short[] list = this.boxes[Pi][node].getList(pi, _r);
 
                         if (i == 0) {
                             intersection = list;
@@ -245,7 +245,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
                             count = findIntersection2(intersection, list, save1);
                         } else {
                             count = findIntersection2(save1, list, save2);
-                            int[] temp = save1;
+                            short[] temp = save1;
                             save1 = save2;
                             save2 = temp;
                         }
@@ -343,7 +343,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         return rowIndex;
     }
 
-    public int[] getParentValues(int rowIndex, int[] parentDims) {
+    public int[] getParentValues(int rowIndex, short[] parentDims) {
         int[] values = new int[parentDims.length];
 
         for (int i = parentDims.length - 1; i >= 0; i--) {
@@ -358,14 +358,14 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
      * Finds the intersection of l1 and l2, placing the result in intersect. It is assumed that l1 and l2 are
      * sorted. Intersect is reused, is why it's a parameter.
      */
-    private int[] findIntersection(int[] l1, int[] l2) {
+    private short[] findIntersection(short[] l1, short[] l2) {
         int i = 0;
         int j = 0;
-        List<Integer> intersection = new ArrayList<>();
+        List<Short> intersection = new ArrayList<>();
         boolean column = true;
 
         while (i < l1.length && j < l2.length) {
-            if ((int) l1[i] == l2[j]) {
+            if (l1[i] == l2[j]) {
                 intersection.add(l1[i]);
                 i++;
                 j++;
@@ -377,18 +377,18 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
             }
         }
 
-        int[] ret = new int[intersection.size()];
+        short[] ret = new short[intersection.size()];
         for (int k = 0; k < intersection.size(); k++) ret[k] = intersection.get(k);
         return ret;
     }
 
-    private int findIntersection2(int[] l1, int[] l2, int[] intersection) {
+    private int findIntersection2(short[] l1, short[] l2, short[] intersection) {
         int i = 0;
         int j = 0;
         int k = 0;
         boolean column = true;
 
-        while (i < l1.length && j < l2.length && l1[i] != -99 && l2[j] != -99) {
+        while (l1[i] != -99 && l2[j] != -99) {
             if (l1[i] == l2[j]) {
                 intersection[k] = l1[i];
                 i++;
@@ -401,6 +401,8 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
                 else j++;
             }
         }
+
+        intersection[k] = -99;
 
         return k;
     }
@@ -447,7 +449,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         private int numCategories1;
         private int numCategories2;
 
-        private int[][][] lists;
+        private short[][][] lists;
 
         private VariableBox() {
 
@@ -457,17 +459,17 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
             this.numCategories1 = var1.getNumCategories();
             this.numCategories2 = var2.getNumCategories();
 
-            lists = new int[numCategories1][numCategories2][data1.length];
+            lists = new short[numCategories1][numCategories2][data1.length];
 
             for (int i = 0; i < numCategories1; i++) {
                 for (int j = 0; j < numCategories2; j++) {
-                    lists[i][j] = new int[data1.length];
+                    lists[i][j] = new short[data1.length];
                 }
             }
 
             int[][] bounds = new int[numCategories1][numCategories2];
 
-            for (int i = 0; i < data1.length; i++) {
+            for (short i = 0; i < data1.length; i++) {
                 int d1 = data1[i];
                 int d2 = data2[i];
                 lists[d1][d2][bounds[d1][d2]] = i;
@@ -476,15 +478,15 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
 
             for (int d1 = 0; d1 < numCategories1; d1++) {
                 for (int d2 = 0; d2 < numCategories2; d2++) {
-                    int[] list = lists[d1][d2];
-                    int[] shorterList = new int[bounds[d1][d2]];
+                    short[] list = lists[d1][d2];
+                    short[] shorterList = new short[bounds[d1][d2]];
                     System.arraycopy(list, 0, shorterList, 0, bounds[d1][d2]);
                     lists[d1][d2] = shorterList;
                 }
             }
         }
 
-        public int[] getList(int d1, int d2) {
+        public short[] getList(int d1, int d2) {
             return lists[d1][d2];
         }
 
@@ -498,8 +500,8 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
             return box2;
         }
 
-        private int[][][] transpose(int[][][] lists) {
-            int[][][] lists2 = new int[lists[0].length][lists.length][];
+        private short[][][] transpose(short[][][] lists) {
+            short[][][] lists2 = new short[lists[0].length][lists.length][];
 
             for (int i = 0; i < lists[0].length; i++) {
                 for (int j = 0; j < lists.length; j++) {
