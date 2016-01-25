@@ -146,7 +146,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
             else if (dataSet.isDiscrete()) {
                 double samplePrior = ((FgsParams) getParams()).getSamplePrior();
                 double structurePrior = ((FgsParams) getParams()).getStructurePrior();
-                BDeuScore score = new BDeuScore(dataSet);
+                BDeuScore2 score = new BDeuScore2(dataSet);
                 score.setSamplePrior(samplePrior);
                 score.setStructurePrior(structurePrior);
 //                BDeScore score = new BDeScore(dataSet);

@@ -25,6 +25,7 @@ import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.util.ProbUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,6 +34,7 @@ import java.util.Objects;
  */
 public class BDeuScore2 implements LocalDiscreteScore, GesScore {
     private List<Node> variables;
+    private List<DiscreteVariable> discreteVariables;
     private int[][] data;
     //    private final LocalScoreCache localScoreCache = new LocalScoreCache();
     private int sampleSize;
@@ -44,6 +46,12 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
 
     private double lastBumpThreshold = 0.0;
 
+    private VariableBox[][] boxes;
+
+    private int[] save1;
+    private int[] save2;
+
+
     public BDeuScore2(DataSet dataSet) {
         if (dataSet == null) {
             throw new NullPointerException();
@@ -53,6 +61,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
             DataBox dataBox = ((BoxDataSet) dataSet).getDataBox();
 
             this.variables = dataSet.getVariables();
+            this.discreteVariables = discreteVariables(dataSet.getVariables());
 
             if (!(((BoxDataSet) dataSet).getDataBox() instanceof VerticalIntDataBox)) {
                 throw new IllegalArgumentException();
@@ -65,6 +74,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         } else {
             data = new int[dataSet.getNumColumns()][];
             this.variables = dataSet.getVariables();
+            this.discreteVariables = discreteVariables(dataSet.getVariables());
 
             for (int j = 0; j < dataSet.getNumColumns(); j++) {
                 data[j] = new int[dataSet.getNumRows()];
@@ -77,18 +87,33 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
             this.sampleSize = dataSet.getNumRows();
         }
 
+        save1 = new int[data[0].length + 1];
+        save2 = new int[data[0].length + 1];
+
+
         final List<Node> variables = dataSet.getVariables();
         numCategories = new int[variables.size()];
         for (int i = 0; i < variables.size(); i++) {
             numCategories[i] = (getVariable(i)).getNumCategories();
         }
+
+        countData();
+    }
+
+    private List<DiscreteVariable> discreteVariables(List<Node> variables) {
+        List<DiscreteVariable> discreteVariables = new ArrayList<>();
+
+        for (Node node : variables) {
+            discreteVariables.add((DiscreteVariable) node);
+        }
+
+        return discreteVariables;
     }
 
     private DiscreteVariable getVariable(int i) {
         return (DiscreteVariable) variables.get(i);
     }
 
-    @Override
     public double localScore(int node, int parents[]) {
 
         // Number of categories for node.
@@ -112,31 +137,128 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         int n_jk[][] = new int[q][r];
         int n_j[] = new int[q];
 
-        int[] parentValues = new int[parents.length];
+        for (int _q = 0; _q < q; _q++) {
+            int[] parentValues = getParentValues(_q, dims);
 
-        int[][] myParents = new int[parents.length][];
-        for (int i = 0; i < parents.length; i++) {
-            myParents[i] = data[parents[i]];
+            for (int _r = 0; _r < r; _r++) {
+                int[] intersection = null;
+
+                if (parentValues.length == 0) {
+                    int count = this.boxes[node][node].getList(_r, _r).length;
+                    n_jk[_q][_r] = count;
+                    n_j[_q] += count;
+                } else {
+                    for (int i = 0; i < parentValues.length; i++) {
+                        // Need the intersection of Pi = _pi x C = _c for each i.
+                        int Pi = parents[i];
+                        int pi = parentValues[i];
+
+                        this.boxes[Pi][node].getList(pi, _r);
+
+                        if (intersection == null) {
+                            intersection = this.boxes[Pi][node].getList(pi, _r);
+                        } else {
+                            intersection = findIntersection(intersection, this.boxes[Pi][node].getList(pi, _r));
+                        }
+                    }
+
+                    if (intersection == null) {
+                        throw new NullPointerException();
+                    }
+
+                    n_jk[_q][_r] = intersection.length;
+                    n_j[_q] += intersection.length;
+                }
+            }
         }
 
-        int[] myChild = data[node];
+        //Finally, compute the score
+        double score = 0.0;
 
-        for (int i = 0; i < sampleSize; i++) {
-            for (int p = 0; p < parents.length; p++) {
-                parentValues[p] = myParents[p][i];
+        score += (r - 1) * q * Math.log(getStructurePrior());
+
+        final double cellPrior = getSamplePrior() / (r * q);
+        final double rowPrior = getSamplePrior() / q;
+
+        for (int j = 0; j < q; j++) {
+            score -= ProbUtils.lngamma(rowPrior + n_j[j]);
+
+            for (int k = 0; k < r; k++) {
+                score += ProbUtils.lngamma(cellPrior + n_jk[j][k]);
             }
+        }
 
-            int childValue = myChild[i];
+        score += q * ProbUtils.lngamma(rowPrior);
+        score -= r * q * ProbUtils.lngamma(cellPrior);
 
-            if (childValue == -99) {
-                throw new IllegalStateException("Please remove or impute missing " +
-                        "values (record " + i + " column " + i + ")");
+        lastBumpThreshold = ((r - 1) * q * Math.log(getStructurePrior()));
+
+        return score;
+    }
+
+    public double localScore2(int node, int parents[]) {
+
+        // Number of categories for node.
+        int r = numCategories[node];
+
+        // Numbers of categories of parents.
+        int[] dims = new int[parents.length];
+
+        for (int p = 0; p < parents.length; p++) {
+            dims[p] = numCategories[parents[p]];
+        }
+
+        // Number of parent states.
+        int q = 1;
+
+        for (int p = 0; p < parents.length; p++) {
+            q *= dims[p];
+        }
+
+        // Conditional cell coefs of data for node given parents(node).
+        int n_jk[][] = new int[q][r];
+        int n_j[] = new int[q];
+
+        for (int _q = 0; _q < q; _q++) {
+            int[] parentValues = getParentValues(_q, dims);
+
+            for (int _r = 0; _r < r; _r++) {
+                int[] intersection = null;
+
+                if (parentValues.length == 0) {
+                    int count = this.boxes[node][node].getList(_r, _r).length - 1;
+                    n_jk[_q][_r] = count;
+                    n_j[_q] += count;
+                } else {
+                    int count = 0;
+
+                    for (int i = 0; i < parentValues.length; i++) {
+                        int Pi = parents[i];
+                        int pi = parentValues[i];
+
+                        int[] list = this.boxes[Pi][node].getList(pi, _r);
+
+                        if (i == 0) {
+                            intersection = list;
+                            count = intersection.length - 1;
+                        } else if (i == 1) {
+                            count = findIntersection2(intersection, list, save1);
+                        } else {
+                            count = findIntersection2(save1, list, save2);
+                            int[] temp = save1;
+                            save1 = save2;
+                            save2 = temp;
+                        }
+                    }
+
+                    if (intersection == null) {
+                        throw new NullPointerException();
+                    }
+
+                    n_jk[_q][_r] = count;
+                    n_j[_q] += count;
+                }
             }
-
-            int rowIndex = getRowIndex(dims, parentValues);
-
-            n_jk[rowIndex][childValue]++;
-            n_j[rowIndex]++;
         }
 
         //Finally, compute the score
@@ -177,89 +299,12 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
 
     @Override
     public double localScore(int node, int parent) {
-
-        // Number of categories for node.
-        int r = numCategories[node];
-
-        // Numbers of categories of parents.
-        int q = numCategories[parent];
-
-        // Conditional cell coefs of data for node given parents(node).
-        int n_jk[][] = new int[q][r];
-        int n_j[] = new int[q];
-
-        int[] parentData = data[parent];
-        int[] childData = data[node];
-
-        for (int i = 0; i < sampleSize; i++) {
-            int parentValue = parentData[i];
-            int childValue = childData[i];
-            n_jk[parentValue][childValue]++;
-            n_j[parentValue]++;
-        }
-
-        //Finally, compute the score
-        double score = 0.0;
-
-        score += (r - 1) * q * Math.log(getStructurePrior());
-
-        final double cellPrior = getSamplePrior() / (r * q);
-        final double rowPrior = getSamplePrior() / q;
-
-        for (int j = 0; j < q; j++) {
-            score -= ProbUtils.lngamma(rowPrior + n_j[j]);
-
-            for (int k = 0; k < r; k++) {
-                score += ProbUtils.lngamma(cellPrior + n_jk[j][k]);
-            }
-        }
-
-        score += q * ProbUtils.lngamma(rowPrior);
-        score -= r * q * ProbUtils.lngamma(cellPrior);
-
-        lastBumpThreshold = ((r - 1) * q * Math.log(getStructurePrior()));
-
-        return score;
+        return localScore(node, new int[]{parent});
     }
 
     @Override
     public double localScore(int node) {
-
-        // Number of categories for node.
-        int r = numCategories[node];
-
-        // Conditional cell coefs of data for node given parents(node).
-        int n_jk[] = new int[numCategories[node]];
-        int n_j = 0;
-
-        int[] childData = data[node];
-
-        for (int i = 0; i < sampleSize; i++) {
-            int childValue = childData[i];
-            n_jk[childValue]++;
-            n_j++;
-        }
-
-        //Finally, compute the score
-        double score = 0.0;
-
-        score += (r - 1) * Math.log(getStructurePrior());
-
-        final double cellPrior = getSamplePrior() / r;
-        final double rowPrior = getSamplePrior();
-
-        score -= ProbUtils.lngamma(rowPrior + n_j);
-
-        for (int k = 0; k < r; k++) {
-            score += ProbUtils.lngamma(cellPrior + n_jk[k]);
-        }
-
-        score += ProbUtils.lngamma(rowPrior);
-        score -= r * ProbUtils.lngamma(cellPrior);
-
-        lastBumpThreshold = ((r - 1) * Math.log(getStructurePrior()));
-
-        return score;
+        return localScore(node, new int[0]);
     }
 
     @Override
@@ -298,28 +343,66 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         return rowIndex;
     }
 
+    public int[] getParentValues(int rowIndex, int[] parentDims) {
+        int[] values = new int[parentDims.length];
+
+        for (int i = parentDims.length - 1; i >= 0; i--) {
+            values[i] = rowIndex % parentDims[i];
+            rowIndex /= parentDims[i];
+        }
+
+        return values;
+    }
+
     /**
      * Finds the intersection of l1 and l2, placing the result in intersect. It is assumed that l1 and l2 are
      * sorted. Intersect is reused, is why it's a parameter.
      */
-    private void findIntersection(List<Integer> l1, List<Integer> l2, List<Integer> intersect) {
+    private int[] findIntersection(int[] l1, int[] l2) {
         int i = 0;
         int j = 0;
-        intersect.clear();
+        List<Integer> intersection = new ArrayList<>();
         boolean column = true;
 
-        while (i < l1.size() - 1 && j < l2.size() - 1) {
-            if ((int) l1.get(i) == l2.get(i)) {
-                intersect.add(l1.get(i));
+        while (i < l1.length && j < l2.length) {
+            if ((int) l1[i] == l2[j]) {
+                intersection.add(l1[i]);
                 i++;
                 j++;
-            } else if (l1.get(i) > l2.get(j)) {
+            } else if (column ? l1[i] > l2[j] : l2[j] > l1[i]) {
                 column = !column;
             } else {
                 if (column) i++;
                 else j++;
             }
         }
+
+        int[] ret = new int[intersection.size()];
+        for (int k = 0; k < intersection.size(); k++) ret[k] = intersection.get(k);
+        return ret;
+    }
+
+    private int findIntersection2(int[] l1, int[] l2, int[] intersection) {
+        int i = 0;
+        int j = 0;
+        int k = 0;
+        boolean column = true;
+
+        while (i < l1.length && j < l2.length && l1[i] != -99 && l2[j] != -99) {
+            if (l1[i] == l2[j]) {
+                intersection[k] = l1[i];
+                i++;
+                j++;
+                k++;
+            } else if (column ? l1[i] > l2[j] : l2[j] > l1[i]) {
+                column = !column;
+            } else {
+                if (column) i++;
+                else j++;
+            }
+        }
+
+        return k;
     }
 
     public double getStructurePrior() {
@@ -336,6 +419,165 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
 
     public void setSamplePrior(double samplePrior) {
         this.samplePrior = samplePrior;
+    }
+
+    private void countData() {
+        boxes = new VariableBox[discreteVariables.size()][discreteVariables.size()];
+
+        for (int i = 0; i < discreteVariables.size(); i++) {
+            for (int j = i; j < discreteVariables.size(); j++) {
+                DiscreteVariable v1 = discreteVariables.get(i);
+                DiscreteVariable v2 = discreteVariables.get(j);
+
+                VariableBox variableBox = new VariableBox(v1, v2, data[i], data[j]);
+
+                if (i == j) {
+                    boxes[i][j] = variableBox;
+                } else {
+                    boxes[i][j] = variableBox;
+                    boxes[j][i] = boxes[i][j].reverse();
+                }
+            }
+        }
+
+        System.out.println("Done counting");
+    }
+
+    private class VariableBox {
+        private int numCategories1;
+        private int numCategories2;
+
+        private int[][][] lists;
+
+        private VariableBox() {
+
+        }
+
+        public VariableBox(DiscreteVariable var1, DiscreteVariable var2, int[] data1, int[] data2) {
+            this.numCategories1 = var1.getNumCategories();
+            this.numCategories2 = var2.getNumCategories();
+
+            lists = new int[numCategories1][numCategories2][data1.length];
+
+            for (int i = 0; i < numCategories1; i++) {
+                for (int j = 0; j < numCategories2; j++) {
+                    lists[i][j] = new int[data1.length];
+                }
+            }
+
+            int[][] bounds = new int[numCategories1][numCategories2];
+
+            for (int i = 0; i < data1.length; i++) {
+                int d1 = data1[i];
+                int d2 = data2[i];
+                lists[d1][d2][bounds[d1][d2]] = i;
+                bounds[d1][d2]++;
+            }
+
+            for (int d1 = 0; d1 < numCategories1; d1++) {
+                for (int d2 = 0; d2 < numCategories2; d2++) {
+                    int[] list = lists[d1][d2];
+                    int[] shorterList = new int[bounds[d1][d2]];
+                    System.arraycopy(list, 0, shorterList, 0, bounds[d1][d2]);
+                    lists[d1][d2] = shorterList;
+                }
+            }
+        }
+
+        public int[] getList(int d1, int d2) {
+            return lists[d1][d2];
+        }
+
+        public VariableBox reverse() {
+            VariableBox box2 = new VariableBox();
+
+            box2.numCategories1 = numCategories2;
+            box2.numCategories2 = numCategories1;
+            box2.lists = transpose(lists);
+
+            return box2;
+        }
+
+        private int[][][] transpose(int[][][] lists) {
+            int[][][] lists2 = new int[lists[0].length][lists.length][];
+
+            for (int i = 0; i < lists[0].length; i++) {
+                for (int j = 0; j < lists.length; j++) {
+                    lists2[i][j] = lists[j][i];
+                }
+            }
+
+            return lists2;
+        }
+    }
+
+    private class VariableBox2 {
+        private int numCategories1;
+        private int numCategories2;
+
+        private int[][][] lists;
+
+        private VariableBox2() {
+
+        }
+
+        public VariableBox2(DiscreteVariable var1, DiscreteVariable var2, int[] data1, int[] data2) {
+            this.numCategories1 = var1.getNumCategories();
+            this.numCategories2 = var2.getNumCategories();
+
+            lists = new int[numCategories1][numCategories2][data1.length];
+
+            for (int i = 0; i < numCategories1; i++) {
+                for (int j = 0; j < numCategories2; j++) {
+                    lists[i][j] = new int[data1.length + 1];
+                }
+            }
+
+            int[][] bounds = new int[numCategories1][numCategories2];
+
+            for (int i = 0; i < data1.length; i++) {
+                int d1 = data1[i];
+                int d2 = data2[i];
+                lists[d1][d2][bounds[d1][d2]] = i;
+                bounds[d1][d2]++;
+            }
+
+            for (int d1 = 0; d1 < numCategories1; d1++) {
+                for (int d2 = 0; d2 < numCategories2; d2++) {
+                    int[] list = lists[d1][d2];
+                    list[bounds[d1][d2]] = -99;
+                    int[] shorterList = new int[bounds[d1][d2] + 1];
+                    System.arraycopy(list, 0, shorterList, 0, bounds[d1][d2] + 1);
+                    lists[d1][d2] = shorterList;
+                }
+            }
+        }
+
+        public int[] getList(int d1, int d2) {
+            return lists[d1][d2];
+        }
+
+        public VariableBox2 reverse() {
+            VariableBox2 box2 = new VariableBox2();
+
+            box2.numCategories1 = numCategories2;
+            box2.numCategories2 = numCategories1;
+            box2.lists = transpose(lists);
+
+            return box2;
+        }
+
+        private int[][][] transpose(int[][][] lists) {
+            int[][][] lists2 = new int[lists[0].length][lists.length][];
+
+            for (int i = 0; i < lists[0].length; i++) {
+                for (int j = 0; j < lists.length; j++) {
+                    lists2[i][j] = lists[j][i];
+                }
+            }
+
+            return lists2;
+        }
     }
 }
 

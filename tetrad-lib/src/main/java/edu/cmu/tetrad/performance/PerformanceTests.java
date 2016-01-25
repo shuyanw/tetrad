@@ -757,7 +757,7 @@ public class PerformanceTests {
 
         System.out.println("Starting simulation");
 
-        BayesPm pm = new BayesPm(dag, 2, 3);
+        BayesPm pm = new BayesPm(dag, 4, 4);
         BayesIm im = new MlBayesIm(pm, MlBayesIm.RANDOM);
 
         DataSet data = im.simulateData(numCases, false);

@@ -1129,14 +1129,19 @@ public final class MlBayesIm implements BayesIm {
         Graph graph = getBayesPm().getDag();
         Dag dag = (Dag) graph;
         List<Node> tierOrdering = dag.getCausalOrdering();
+        System.out.println("Found causal ordering.");
         int[] tiers = new int[tierOrdering.size()];
 
         for (int i = 0; i < tierOrdering.size(); i++) {
             tiers[i] = getNodeIndex(tierOrdering.get(i));
         }
 
+        System.out.println("Constructed tiers.");
+
         // Construct the sample.
         for (int i = 0; i < sampleSize; i++) {
+            System.out.println("i = " + i);
+
             for (int t : tiers) {
                 int[] parentValues = new int[parents[t].length];
 
