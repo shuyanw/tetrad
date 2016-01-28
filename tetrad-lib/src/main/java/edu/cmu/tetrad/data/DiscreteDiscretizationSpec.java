@@ -108,6 +108,21 @@ public final class DiscreteDiscretizationSpec implements TetradSerializable, Dis
             throws IOException, ClassNotFoundException {
         s.defaultReadObject();
     }
+
+    @Override
+    public boolean isEqualIntervals() {
+        return false;
+    }
+
+    @Override
+    public boolean isEqualCounts() {
+        return false;
+    }
+
+    @Override
+    public int getNumCategories() {
+        return categories.size();
+    }
 }
 
 

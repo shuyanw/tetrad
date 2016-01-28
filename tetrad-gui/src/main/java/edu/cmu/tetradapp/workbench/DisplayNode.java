@@ -232,6 +232,11 @@ public class DisplayNode extends JComponent implements Node, TetradSerializableE
             return i1;
         }
     }
+
+    @Override
+    public Object getMissingValueMarker() {
+        return null;
+    }
 }
 
 

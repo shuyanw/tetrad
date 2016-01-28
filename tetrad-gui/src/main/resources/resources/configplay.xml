@@ -1663,9 +1663,9 @@
                     <event id="graph" description="Graph" default="on"/>
                 </logger>
                 <model-class>edu.cmu.tetradapp.model.ImagesRunner</model-class>
-                <editor-class>edu.cmu.tetradapp.editor.ImagesSearchEditor
+                <editor-class>edu.cmu.tetradapp.editor.FgsSearchEditor
                 </editor-class>
-                <params-class>edu.cmu.tetradapp.model.GesParams</params-class>
+                <params-class>edu.cmu.tetradapp.model.FgsParams</params-class>
             </model>
             <!--Heuristic Best Significant Model Search-->
             <model name="BFF" acronym="BFF" help="bff"

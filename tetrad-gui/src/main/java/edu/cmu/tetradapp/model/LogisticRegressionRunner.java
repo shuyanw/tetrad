@@ -33,10 +33,7 @@ import edu.cmu.tetrad.util.TetradSerializableUtils;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Extends AbstractAlgorithmRunner to produce a wrapper for the Regression
@@ -155,6 +152,13 @@ public class LogisticRegressionRunner implements AlgorithmRunner {
 
     public DataModel getDataModel() {
         return this.dataSet;
+    }
+
+    @Override
+    public DataModelList getDataModelList() {
+        DataModelList list = new DataModelList();
+        list.add(this.dataSet);
+        return list;
     }
 
     public void setParams(LogisticRegressionParams params) {

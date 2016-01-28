@@ -26,6 +26,9 @@ package edu.cmu.tetrad.data;
  * @author Joseph Ramsey
  */
 public interface DiscretizationSpec {
+    public boolean isEqualIntervals();
+    public boolean isEqualCounts();
+    public int getNumCategories();
 }
 
 

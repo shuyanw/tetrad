@@ -3037,14 +3037,13 @@ public final class SearchGraphUtils {
         if (dataModel instanceof DataModelList) {
             DataModelList list = (DataModelList) dataModel;
 
-            List<DataModel> dataSets = new ArrayList<>();
+//            List<DataModel> dataSets = new ArrayList<>();
+//
+//            for (DataModel _dataModel : list) {
+//                dataSets.add((DataSet) _dataModel);
+//            }
 
-
-            for (DataModel _dataModel : list) {
-                dataSets.add((DataSet) _dataModel);
-            }
-
-            FastImages images = new FastImages(dataSets);
+            FastImages images = new FastImages(list);
 
             images.setBoundGraph(graph);
             images.setKnowledge(knowledge);

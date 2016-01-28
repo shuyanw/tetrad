@@ -321,6 +321,10 @@ public abstract class AbstractAlgorithmRunner
         }
     }
 
+    public final DataModelList getDataModelList() {
+        return dataWrapper.getDataModelList();
+    }
+
     public final void setResultGraph(Graph resultGraph) {
         this.resultGraph = resultGraph;
     }

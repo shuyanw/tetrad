@@ -147,6 +147,23 @@ public final class ContinuousDiscretizationSpec implements TetradSerializable, D
             this.method = EVENLY_DISTRIBUTED_INTERVALS;
         }
     }
+
+    @Override
+    public boolean isEqualIntervals() {
+        return method == EVENLY_DISTRIBUTED_INTERVALS;
+    }
+
+    @Override
+    public boolean isEqualCounts() {
+        return method == EVENLY_DISTRIBUTED_VALUES;
+    }
+
+    @Override
+    public int getNumCategories() {
+        return categories.size();
+    }
+
+
 }
 
 

@@ -290,6 +290,11 @@ public class GraphNode implements Node, TetradSerializable {
             return i1;
         }
     }
+
+    @Override
+    public Object getMissingValueMarker() {
+        return null;
+    }
 }
 
 

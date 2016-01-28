@@ -106,6 +106,15 @@ public class DiscretizationParams implements Params {
         }
     }
 
+    public Node getNode(String name) {
+        for (Node node : map.keySet()) {
+            if (name.equals(node.getName())) {
+                return node;
+            }
+        }
+
+        return null;
+    }
 }
 
 

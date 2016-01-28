@@ -834,17 +834,18 @@ public class FgsSearchEditor extends AbstractSearchEditor
             throw new NullPointerException();
         }
 
+        AlgorithmRunner algorithmRunner = getAlgorithmRunner();
         if (indTestParams instanceof GesIndTestParams) {
-            if (getAlgorithmRunner() instanceof IGesRunner) {
-                IGesRunner gesRunner = ((IGesRunner) getAlgorithmRunner());
+            if (algorithmRunner instanceof IGesRunner) {
+                IGesRunner gesRunner = ((IGesRunner) algorithmRunner);
                 GesIndTestParams params = (GesIndTestParams) indTestParams;
                 DataModel dataModel = gesRunner.getDataModel();
                 boolean discreteData = dataModel instanceof DataSet && ((DataSet) dataModel).isDiscrete();
                 return new GesIndTestParamsEditor(params, discreteData);
             }
 
-            if (getAlgorithmRunner() instanceof ImagesRunner) {
-                ImagesRunner gesRunner = ((ImagesRunner) getAlgorithmRunner());
+            if (algorithmRunner instanceof ImagesRunner) {
+                ImagesRunner gesRunner = ((ImagesRunner) algorithmRunner);
                 GesIndTestParams params = (GesIndTestParams) indTestParams;
                 DataSet dataSet = (DataSet) gesRunner.getDataModel();
                 boolean discreteData = dataSet.isDiscrete();
@@ -853,11 +854,19 @@ public class FgsSearchEditor extends AbstractSearchEditor
         }
 
         if (indTestParams instanceof FgsIndTestParams) {
-            FgsRunner fgsRunner = ((FgsRunner) getAlgorithmRunner());
-            FgsIndTestParams params = (FgsIndTestParams) indTestParams;
-            DataModel dataModel = fgsRunner.getDataModel();
-            boolean discreteData = dataModel instanceof DataSet && ((DataSet) dataModel).isDiscrete();
-            return new FgsIndTestParamsEditor(params, discreteData);
+            if (algorithmRunner instanceof  FgsRunner) {
+                FgsRunner fgsRunner = ((FgsRunner) algorithmRunner);
+                FgsIndTestParams params = (FgsIndTestParams) indTestParams;
+                DataModel dataModel = fgsRunner.getDataModelList().get(0);
+                boolean discreteData = dataModel instanceof DataSet && ((DataSet) dataModel).isDiscrete();
+                return new FgsIndTestParamsEditor(params, discreteData);
+            } else if (algorithmRunner instanceof ImagesRunner) {
+                ImagesRunner fgsRunner = ((ImagesRunner) algorithmRunner);
+                FgsIndTestParams params = (FgsIndTestParams) indTestParams;
+                DataModel dataModel = fgsRunner.getDataModelList().get(0);
+                boolean discreteData = dataModel instanceof DataSet && ((DataSet) dataModel).isDiscrete();
+                return new FgsIndTestParamsEditor(params, discreteData);
+            }
         }
 
         return new IndTestParamsEditor(indTestParams);

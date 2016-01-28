@@ -22,6 +22,7 @@
 package edu.cmu.tetradapp.model.datamanip;
 
 import edu.cmu.tetrad.data.*;
+import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.util.TetradSerializableUtils;
 import edu.cmu.tetradapp.model.DataWrapper;
 
@@ -70,7 +71,11 @@ public class DiscretizationWrapper extends DataWrapper {
 
             DataSet originalData = (DataSet) dataModel;
 
-            Discretizer discretizer = new Discretizer(originalData, params.getSpecs());
+//            Discretizer discretizer = new Discretizer(originalData, params.getSpecs());
+            Discretizer discretizer = new Discretizer(originalData);
+            for (Node node : originalData.getVariables()) {
+                discretizer.equalCounts(node, params.getSpecs().get(params.getNode(node.getName())).getNumCategories());
+            }
             discretizer.setVariablesCopied(Preferences.userRoot().getBoolean("copyUnselectedColumns", true));
 
             discretizedDataSets.add(discretizer.discretize());

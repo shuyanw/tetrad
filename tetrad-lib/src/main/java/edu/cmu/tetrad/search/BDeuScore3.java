@@ -47,8 +47,8 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
 
     private VariableBox[][] boxes;
 
-    private int[] save1;
-    private int[] save2;
+    private List<Integer> save1;
+    private List<Integer> save2;
 
 
     public BDeuScore3(DataSet dataSet) {
@@ -86,8 +86,8 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
             this.sampleSize = dataSet.getNumRows();
         }
 
-        save1 = new int[data[0].length + 1];
-        save2 = new int[data[0].length + 1];
+        save1 = new ArrayList<>();
+        save2 = new ArrayList<>();
 
 
         final List<Node> variables = dataSet.getVariables();
@@ -140,10 +140,10 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
             int[] parentValues = getParentValues(_q, dims);
 
             for (int _r = 0; _r < r; _r++) {
-                int[] intersection = null;
+                List<Integer> intersection = null;
 
                 if (parentValues.length == 0) {
-                    int count = (int) this.boxes[node][node].getList(_r, _r).length;
+                    int count = (int) this.boxes[node][node].getList(_r, _r).size();
                     n_jk[_q][_r] = count;
                     n_j[_q] += count;
                 } else {
@@ -165,97 +165,8 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
                         throw new NullPointerException();
                     }
 
-                    n_jk[_q][_r] = (int) intersection.length;
-                    n_j[_q] += intersection.length;
-                }
-            }
-        }
-
-        //Finally, compute the score
-        double score = 0.0;
-
-        score += (r - 1) * q * Math.log(getStructurePrior());
-
-        final double cellPrior = getSamplePrior() / (r * q);
-        final double rowPrior = getSamplePrior() / q;
-
-        for (int j = 0; j < q; j++) {
-            score -= ProbUtils.lngamma(rowPrior + n_j[j]);
-
-            for (int k = 0; k < r; k++) {
-                score += ProbUtils.lngamma(cellPrior + n_jk[j][k]);
-            }
-        }
-
-        score += q * ProbUtils.lngamma(rowPrior);
-        score -= r * q * ProbUtils.lngamma(cellPrior);
-
-        lastBumpThreshold = ((r - 1) * q * Math.log(getStructurePrior()));
-
-        return score;
-    }
-
-    public double localScore2(int node, int parents[]) {
-
-        // Number of categories for node.
-        int r = numCategories[node];
-
-        // Numbers of categories of parents.
-        int[] dims = new int[parents.length];
-
-        for (int p = 0; p < parents.length; p++) {
-            dims[p] = numCategories[parents[p]];
-        }
-
-        // Number of parent states.
-        int q = 1;
-
-        for (int p = 0; p < parents.length; p++) {
-            q *= dims[p];
-        }
-
-        // Conditional cell coefs of data for node given parents(node).
-        int n_jk[][] = new int[q][r];
-        int n_j[] = new int[q];
-
-        for (int _q = 0; _q < q; _q++) {
-            int[] parentValues = getParentValues(_q, dims);
-
-            for (int _r = 0; _r < r; _r++) {
-                int[] intersection = null;
-
-                if (parentValues.length == 0) {
-                    int count = this.boxes[node][node].getList(_r, _r).length - 1;
-                    n_jk[_q][_r] = count;
-                    n_j[_q] += count;
-                } else {
-                    int count = 0;
-
-                    for (int i = 0; i < parentValues.length; i++) {
-                        int Pi = parents[i];
-                        int pi = parentValues[i];
-
-                        int[] list = this.boxes[Pi][node].getList(pi, _r);
-
-                        if (i == 0) {
-                            intersection = list;
-                            count = intersection.length - 1;
-                        } else if (i == 1) {
-                            count = findIntersection2(intersection, list, save1);
-                        } else {
-                            count = findIntersection2(save1, list, save2);
-                            int[] temp = save1;
-                            save1 = save2;
-                            save2 = temp;
-                        }
-                    }
-
-                    if (intersection == null) {
-                        throw new NullPointerException();
-                    }
-
-                    n_jk[_q][_r] = count;
-                    n_j[_q] += count;
+                    n_jk[_q][_r] = (int) intersection.size();
+                    n_j[_q] += intersection.size();
                 }
             }
         }
@@ -385,15 +296,15 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
      * Finds the intersection of A and B, placing the result in intersect. It is assumed that A and B are
      * sorted. Intersect is reused, is why it's a parameter.
      */
-    private int[] findIntersection(int[] A, int[] B) {
-        if (B.length > A.length) {
-            int[] temp = A;
+    private List<Integer> findIntersection(List<Integer> A, List<Integer> B) {
+        if (B.size() > A.size()) {
+            List<Integer> temp = A;
             A = B;
             B = temp;
         }
 
-        int n = A.length;
-        int m = B.length;
+        int n = A.size();
+        int m = B.size();
         List<Integer> intersection = new ArrayList<>();
 
         int low = 1;
@@ -401,25 +312,23 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
         for (int i = 0; i < m; i++) {
             int diff = 1;
 
-            while (low + diff <= n && A[low + diff - 1] < B[i]) {
+            while (low + diff <= n && A.get(low + diff - 1) < B.get(i)) {
                 diff *= 2;
             }
 
             int high = Math.min(n, low + diff);
 
             // Returns -1 if not found.
-            int k = binarySearch(A, low, high, B[i]);
+            int k = binarySearch(A, low, high, B.get(i));
 
             if (k != -1) {
-                intersection.add(A[k]);
+                intersection.add(A.get(k));
             }
 
             low = k + 1;
         }
 
-        int[] ret = new int[intersection.size()];
-        for (int k = 0; k < intersection.size(); k++) ret[k] = intersection.get(k);
-        return ret;
+        return intersection;
     }
 
     /**
@@ -436,14 +345,14 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
      * otherwise, -1 if the key is not found.
      * @since 1.6
      */
-    private static int binarySearch(int[] a, int fromIndex, int toIndex,
+    private static int binarySearch(List<Integer> a, int fromIndex, int toIndex,
                                     int key) {
         int low = fromIndex;
         int high = toIndex - 1;
 
         while (low <= high) {
             int mid = (low + high) >>> 1;
-            int midVal = a[mid];
+            int midVal = a.get(mid);
 
             if (midVal < key)
                 low = mid + 1;
@@ -454,31 +363,6 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
         }
 //        return (low + 1);  // key not found.
         return -1;
-    }
-
-    private int findIntersection2(int[] l1, int[] l2, int[] intersection) {
-        int i = 0;
-        int j = 0;
-        int k = 0;
-        boolean column = true;
-
-        while (l1[i] != -99 && l2[j] != -99) {
-            if (l1[i] == l2[j]) {
-                intersection[k] = l1[i];
-                i++;
-                j++;
-                k++;
-            } else if (column ? l1[i] > l2[j] : l2[j] > l1[i]) {
-                column = !column;
-            } else {
-                if (column) i++;
-                else j++;
-            }
-        }
-
-        intersection[k] = -99;
-
-        return k;
     }
 
     public double getStructurePrior() {
@@ -523,7 +407,7 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
         private int numCategories1;
         private int numCategories2;
 
-        private int[][][] lists;
+        private List<List<List<Integer>>> lists;
 
         private VariableBox() {
 
@@ -533,35 +417,31 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
             this.numCategories1 = var1.getNumCategories();
             this.numCategories2 = var2.getNumCategories();
 
-            lists = new int[numCategories1][numCategories2][data1.length];
-
-            for (int i = 0; i < numCategories1; i++) {
-                for (int j = 0; j < numCategories2; j++) {
-                    lists[i][j] = new int[data1.length];
-                }
-            }
-
-            int[][] bounds = new int[numCategories1][numCategories2];
+            lists = emptyLists(this.numCategories1, this.numCategories2);
 
             for (int i = 0; i < data1.length; i++) {
                 int d1 = data1[i];
                 int d2 = data2[i];
-                lists[d1][d2][bounds[d1][d2]] = i;
-                bounds[d1][d2]++;
-            }
-
-            for (int d1 = 0; d1 < numCategories1; d1++) {
-                for (int d2 = 0; d2 < numCategories2; d2++) {
-                    int[] list = lists[d1][d2];
-                    int[] interList = new int[bounds[d1][d2]];
-                    System.arraycopy(list, 0, interList, 0, bounds[d1][d2]);
-                    lists[d1][d2] = interList;
-                }
+                lists.get(d1).get(d2).add(i);
             }
         }
 
-        public int[] getList(int d1, int d2) {
-            return lists[d1][d2];
+        private List<List<List<Integer>>> emptyLists(int m, int n) {
+            lists = new ArrayList<>();
+
+            for (int i = 0; i < m; i++) {
+                lists.add(new ArrayList<List<Integer>>());
+
+                for (int j = 0; j < n; j++) {
+                    lists.get(i).add(new ArrayList<Integer>());
+                }
+            }
+
+            return lists;
+        }
+
+        public List<Integer> getList(int d1, int d2) {
+            return lists.get(d1).get(d2);
         }
 
         public VariableBox reverse() {
@@ -574,12 +454,12 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
             return box2;
         }
 
-        private int[][][] transpose(int[][][] lists) {
-            int[][][] lists2 = new int[lists[0].length][lists.length][];
+        private List<List<List<Integer>>> transpose(List<List<List<Integer>>> lists) {
+            List<List<List<Integer>>> lists2 = emptyLists(lists.get(0).size(), lists.size());
 
-            for (int i = 0; i < lists[0].length; i++) {
-                for (int j = 0; j < lists.length; j++) {
-                    lists2[i][j] = lists[j][i];
+            for (int i = 0; i < lists.get(0).size(); i++) {
+                for (int j = 0; j < lists.size(); j++) {
+                    lists2.get(i).set(j, lists.get(j).get(i));
                 }
             }
 

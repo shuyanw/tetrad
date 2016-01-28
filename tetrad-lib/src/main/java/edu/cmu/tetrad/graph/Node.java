@@ -109,6 +109,8 @@ public interface Node extends TetradSerializable, Comparable {
      * Alphabetical order.
      */
     int compareTo(Object o);
+
+    Object getMissingValueMarker();
 }
 
 

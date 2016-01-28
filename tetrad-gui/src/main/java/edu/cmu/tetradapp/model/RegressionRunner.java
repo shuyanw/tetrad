@@ -153,8 +153,13 @@ public class RegressionRunner implements AlgorithmRunner {
     //===========================PUBLIC METHODS============================//
 
     public DataModel getDataModel() {
-        //return (DataModel) this.dataWrapper.getDataModelList().get(0);
         return this.dataSet;
+    }
+
+    public DataModelList getDataModelList() {
+        DataModelList list = new DataModelList();
+        list.add(getDataModel());
+        return list;
     }
 
     public void resetParams(Object params) {

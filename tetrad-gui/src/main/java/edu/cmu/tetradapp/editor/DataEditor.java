@@ -24,6 +24,7 @@ package edu.cmu.tetradapp.editor;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.Node;
+import edu.cmu.tetrad.graph.NodeType;
 import edu.cmu.tetrad.util.JOptionUtils;
 import edu.cmu.tetradapp.model.DataWrapper;
 import edu.cmu.tetradapp.model.KnowledgeEditable;
@@ -576,16 +577,33 @@ public final class DataEditor extends JPanel implements KnowledgeEditable,
 
                         COLUMN:
                         for (int j = 0; j < dataSet.getNumColumns(); j++) {
-                            double first = dataSet.getDouble(0, j);
+                            Node variable = dataSet.getVariable(j);
 
-                            for (int k = 1; k < dataSet.getNumRows(); k++) {
-                                if (dataSet.getDouble(k, j) != first) {
-                                    continue COLUMN;
+                            if (variable instanceof ContinuousVariable) {
+                                double first = dataSet.getDouble(0, j);
+
+                                for (int k = 1; k < dataSet.getNumRows(); k++) {
+                                    if (dataSet.getDouble(k, j) != first) {
+                                        continue COLUMN;
+                                    }
                                 }
-                            }
 
-                            for (int k = 0; k < dataSet.getNumRows(); k++) {
-                                dataSet.setDouble(k, j, Double.NaN);
+                                for (int k = 0; k < dataSet.getNumRows(); k++) {
+                                     dataSet.setDouble(k, j, (double) variable.getMissingValueMarker());
+                                }
+
+                            } else {
+                                int first = dataSet.getInt(0, j);
+
+                                for (int k = 1; k < dataSet.getNumRows(); k++) {
+                                    if (dataSet.getInt(k, j) != first) {
+                                        continue COLUMN;
+                                    }
+                                }
+
+                                for (int k = 0; k < dataSet.getNumRows(); k++) {
+                                    dataSet.setInt(k, j, (int) variable.getMissingValueMarker());
+                                }
                             }
                         }
 

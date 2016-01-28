@@ -164,6 +164,11 @@ public class KnowledgeModelNode implements Node, TetradSerializableExcluded {
             return i1;
         }
     }
+
+    @Override
+    public Object getMissingValueMarker() {
+        return null;
+    }
 }
 
 

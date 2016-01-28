@@ -62,7 +62,7 @@ public class SemOptimizerPowell implements SemOptimizer {
     //=========================PUBLIC METHODS==========================//
 
     public void optimize(SemIm semIm) {
-        double min = Double.POSITIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
         double[] point = null;
 
         for (int count = 0; count < numRestarts + 1; count++) {
@@ -83,7 +83,7 @@ public class SemOptimizerPowell implements SemOptimizer {
 
             _sem2.setFreeParamValues(p);
 
-            MultivariateOptimizer search = new PowellOptimizer(1e-5, 1e-5);
+            MultivariateOptimizer search = new PowellOptimizer(1e-7, 1e-7);
             PointValuePair pair = search.optimize(
                     new InitialGuess(_sem2.getFreeParamValues()),
                     new ObjectiveFunction(fittingFunction(semIm)),
@@ -91,11 +91,12 @@ public class SemOptimizerPowell implements SemOptimizer {
                     new MaxEval(100000)
             );
 
-            double chisq = _sem2.getChiSquare();
+//            double chisq = _sem2.getChiSquare();
+            double _p = _sem2.getPValue();
 //            System.out.println("chisq = " + chisq);
 
-            if (chisq < min) {
-                min = chisq;
+            if (_p > max) {
+                max = _p;
                 point = pair.getPoint();
             }
         }

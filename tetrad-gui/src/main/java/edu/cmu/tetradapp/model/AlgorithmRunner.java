@@ -22,6 +22,7 @@
 package edu.cmu.tetradapp.model;
 
 import edu.cmu.tetrad.data.DataModel;
+import edu.cmu.tetrad.data.DataModelList;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.search.ImpliedOrientation;
 import edu.cmu.tetrad.search.TripleClassifier;
@@ -44,6 +45,11 @@ public interface AlgorithmRunner extends SessionModel, Executable, GraphSource, 
      * graph.
      */
     DataModel getDataModel();
+
+    /**
+     * @return the data model list, even if it contains only one data model.
+     */
+    DataModelList getDataModelList();
 
     /**
      * @return the search parameters for this algorithm.

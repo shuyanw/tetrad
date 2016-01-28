@@ -24,7 +24,6 @@ package edu.cmu.tetradapp.model;
 import edu.cmu.tetrad.data.DataModel;
 import edu.cmu.tetrad.data.DataModelList;
 import edu.cmu.tetrad.data.DataSet;
-import edu.cmu.tetrad.data.ICovarianceMatrix;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.graph.Node;
@@ -32,7 +31,6 @@ import edu.cmu.tetrad.graph.Triple;
 import edu.cmu.tetrad.search.*;
 import edu.cmu.tetrad.util.TetradSerializableUtils;
 
-import javax.xml.crypto.Data;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -56,27 +54,27 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
 
     //============================CONSTRUCTORS============================//
 
-    public ImagesRunner(DataWrapper dataWrapper, GesParams params, KnowledgeBoxModel knowledgeBoxModel) {
+    public ImagesRunner(DataWrapper dataWrapper, FgsParams params, KnowledgeBoxModel knowledgeBoxModel) {
         super(dataWrapper, params, knowledgeBoxModel);
     }
 
-    public ImagesRunner(DataWrapper dataWrapper, GesParams params) {
+    public ImagesRunner(DataWrapper dataWrapper, FgsParams params) {
         super(dataWrapper, params, null);
     }
 
-    public ImagesRunner(DataWrapper dataWrapper, GraphWrapper graph, GesParams params) {
+    public ImagesRunner(DataWrapper dataWrapper, GraphWrapper graph, FgsParams params) {
         super(dataWrapper, params, null);
         this.graph = graph.getGraph();
     }
 
-    public ImagesRunner(DataWrapper dataWrapper, GraphWrapper graph, GesParams params, KnowledgeBoxModel knowledgeBoxModel) {
+    public ImagesRunner(DataWrapper dataWrapper, GraphWrapper graph, FgsParams params, KnowledgeBoxModel knowledgeBoxModel) {
         super(dataWrapper, params, knowledgeBoxModel);
         this.graph = graph.getGraph();
     }
 
     public ImagesRunner(DataWrapper dataWrapper1,
                         DataWrapper dataWrapper2,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -89,7 +87,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
     public ImagesRunner(DataWrapper dataWrapper1,
                         DataWrapper dataWrapper2,
                         DataWrapper dataWrapper3,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -104,7 +102,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
                         DataWrapper dataWrapper2,
                         DataWrapper dataWrapper3,
                         DataWrapper dataWrapper4,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -121,7 +119,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
                         DataWrapper dataWrapper3,
                         DataWrapper dataWrapper4,
                         DataWrapper dataWrapper5,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -140,7 +138,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
                         DataWrapper dataWrapper4,
                         DataWrapper dataWrapper5,
                         DataWrapper dataWrapper6,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -161,7 +159,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
                         DataWrapper dataWrapper5,
                         DataWrapper dataWrapper6,
                         DataWrapper dataWrapper7,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -184,7 +182,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
                         DataWrapper dataWrapper6,
                         DataWrapper dataWrapper7,
                         DataWrapper dataWrapper8,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -209,7 +207,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
                         DataWrapper dataWrapper7,
                         DataWrapper dataWrapper8,
                         DataWrapper dataWrapper9,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -236,7 +234,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
                         DataWrapper dataWrapper8,
                         DataWrapper dataWrapper9,
                         DataWrapper dataWrapper10,
-                        GesParams params) {
+                        FgsParams params) {
 
         super(new MergeDatasetsWrapper(
                         dataWrapper1,
@@ -274,7 +272,7 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
      */
     public static ImagesRunner serializableInstance() {
         return new ImagesRunner(DataWrapper.serializableInstance(),
-                GesParams.serializableInstance(), KnowledgeBoxModel.serializableInstance());
+                FgsParams.serializableInstance(), KnowledgeBoxModel.serializableInstance());
     }
 
     //============================PUBLIC METHODS==========================//
@@ -284,51 +282,18 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
      * implemented in the extending class.
      */
     public void execute() {
-        DataModel model = getDataModel();
+        DataModelList dataModelList = getDataModelList();
 
-        if (model instanceof  DataSet || model instanceof  ICovarianceMatrix) {
-            DataModelList list = new DataModelList();
-            list.add(model);
-            model = list;
-        }
+        List<String> names = dataModelList.get(0).getVariableNames();
 
-        DataModelList list = (DataModelList) model;
-
-        for (DataModel dataModel : list) {
-            if (!(dataModel instanceof DataSet || dataModel instanceof ICovarianceMatrix)) {
-                throw new IllegalArgumentException("Must provide a list of data sets.");
-            }
-        }
-
-        List<DataModel> dataModels = new ArrayList<DataModel>();
-
-        for (DataModel dataModel : list) {
-            if (dataModel instanceof DataSet) {
-                if (((DataSet)dataModel).isContinuous()) {
-                    dataModels.add(dataModel);
-                }
-                else {
-                    throw new IllegalArgumentException("Must provide covariance matrice or continuous data set.");
-                }
-            }
-            else if (dataModel instanceof ICovarianceMatrix) {
-                dataModels.add(dataModel);
-            }
-            else {
-                throw new IllegalArgumentException("Unrecognized data type.");
-            }
-        }
-
-        List<String> names = dataModels.get(0).getVariableNames();
-
-        for (DataModel dataSet : dataModels) {
+        for (DataModel dataSet : dataModelList) {
             if (!dataSet.getVariableNames().equals(names)) {
                 throw new IllegalArgumentException("The variable names must be the same " +
                         "for all data sets.");
             }
         }
 
-        for (DataModel dataModel : dataModels) {
+        for (DataModel dataModel : dataModelList) {
             if (dataModel instanceof DataSet) {
                 DataSet dataSet = (DataSet) dataModel;
 
@@ -352,13 +317,15 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
             }
         }
 
-        double penalty = ((GesParams) getParams()).getComplexityPenalty();
+        double penalty = ((FgsParams) getParams()).getComplexityPenalty();
+        double structurePrior = ((FgsParams) getParams()).getStructurePrior();
+        double samplePrior = ((FgsParams) getParams()).getSamplePrior();
 
-        GesParams gesParams = (GesParams) getParams();
-        GesIndTestParams indTestParams = (GesIndTestParams) gesParams.getIndTestParams();
+        FgsParams FgsParams = (FgsParams) getParams();
+        FgsIndTestParams indTestParams = (FgsIndTestParams) FgsParams.getIndTestParams();
 
         if (graph != null) {
-            Graph reoreinted = SearchGraphUtils.reorient(graph, getDataModel(), gesParams.getKnowledge());
+            Graph reoreinted = SearchGraphUtils.reorient(graph, getDataModel(), FgsParams.getKnowledge());
             setResultGraph(reoreinted);
             this.topGraphs = Collections.singletonList(new ScoredGraph(reoreinted, 1.0));
             setIndex(topGraphs.size() - 1);
@@ -367,14 +334,20 @@ public class ImagesRunner extends AbstractAlgorithmRunner implements GraphSource
         }
 
         if (indTestParams.isFirstNontriangular()) {
-            final FastImages fastImages = new FastImages(dataModels);
+            final FastImages fastImages = new FastImages(dataModelList);
             fastImages.setPenaltyDiscount(penalty);
+            fastImages.setStructurePrior(structurePrior);
+            fastImages.setSamplePrior(samplePrior);
             fastImages.setOtherDof(true);
             images = fastImages;
         }
         else {
-            images = new FastImages(dataModels);
-            images.setPenaltyDiscount(penalty);
+            final FastImages fastImages = new FastImages(dataModelList);
+            fastImages.setPenaltyDiscount(penalty);
+            fastImages.setStructurePrior(structurePrior);
+            fastImages.setSamplePrior(samplePrior);
+            fastImages.setOtherDof(true);
+            images = fastImages;
         }
 
         images.addPropertyChangeListener(this);

@@ -55,11 +55,12 @@ class FgsIndTestParamsEditor extends JComponent {
         this.params = params;
         this.discreteData = discreteData;
 
-        NumberFormat nf = new DecimalFormat("0.0####");
+        NumberFormat nf = new DecimalFormat("0.0##");
+        NumberFormat smallNf = new DecimalFormat("0.0##E0");
 
         if (this.discreteData) {
             this.cellPriorField = new DoubleTextField(
-                    getFgsIndTestParams().getSamplePrior(), 5, nf);
+                    getFgsIndTestParams().getSamplePrior(), 5, nf, smallNf, 1e-3);
 
             this.cellPriorField.setFilter(new DoubleTextField.Filter() {
                 public double filter(double value, double oldValue) {
@@ -74,7 +75,7 @@ class FgsIndTestParamsEditor extends JComponent {
             });
 
             this.structurePriorField = new DoubleTextField(
-                    getFgsIndTestParams().getStructurePrior(), 5, nf);
+                    getFgsIndTestParams().getStructurePrior(), 5, nf, smallNf, 1e-3);
             this.structurePriorField.setFilter(new DoubleTextField.Filter() {
                 public double filter(double value, double oldValue) {
                     try {

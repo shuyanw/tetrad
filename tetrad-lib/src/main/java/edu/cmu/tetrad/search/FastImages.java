@@ -104,7 +104,7 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
     /**
      * Penalty discount--the BIC penalty is multiplied by this (for continuous variables).
      */
-    private double penaltyDiscount = 1.0;
+    private double penaltyDiscount = 2.0;
 
     /**
      * The depth of search for the forward reevaluation step.
@@ -116,10 +116,7 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
      */
     private int cycleBound = -1;
 
-    /**
-     * The score for discrete searches.
-     */
-    private LocalDiscreteScore discreteScore;
+    private List<GesScore> gesScores = new ArrayList<>();
 
     /**
      * The logger for this class. The config needs to be set.
@@ -182,22 +179,65 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
 
     //===========================CONSTRUCTORS=============================//
 
-    /**
-     * The data set must either be all continuous or coariance matrices, or all discrete.
-     */
-    public FastImages(List<DataSet> dataSets, boolean allContinuous) {
-        List<DataModel> dataModels = new ArrayList<>();
-
-        for (DataSet dataSet : dataSets) {
-            dataModels.add(dataSet);
-        }
-
-        setDataModels(dataModels);
-    }
+//    /**
+//     * The data set must either be all continuous or coariance matrices, or all discrete.
+//     */
+//    public FastImages(List<DataSet> dataModels, boolean allContinuous) {
+//        List<DataModel> dataModels = new ArrayList<>();
+//
+//        for (DataSet dataSet : dataModels) {
+//            dataModels.add(dataSet);
+//        }
+//
+//        setDataModels(dataModels);
+//    }
 
     public FastImages(List<DataModel> dataModels) {
-        setDataModels(dataModels);
+        if (verbose) {
+            out.println("GES constructor");
+        }
+
+        this.dataModels = dataModels;
+
+        DataModel firstModel = dataModels.get(0);
+
+        if (firstModel instanceof DataSet) {
+            DataSet dataSet = (DataSet) firstModel;
+            this.variables = dataSet.getVariables();
+            this.sampleSize = dataSet.getNumRows();
+            this.discrete = dataSet.isDiscrete();
+        } else if (firstModel instanceof CovarianceMatrix) {
+            CovarianceMatrix dataSet = (CovarianceMatrix) firstModel;
+            this.variables = dataSet.getVariables();
+            this.sampleSize = dataSet.getSampleSize();
+            this.discrete = false;
+        }
+
+        for (DataModel dataModel : dataModels) {
+            if (dataModel instanceof DataSet) {
+                DataSet dataSet = (DataSet) dataModel;
+
+                if (dataSet.isDiscrete()) {
+                    gesScores.add(new BDeuScore2(dataSet));
+                } else {
+                    gesScores.add(new SemBicScore(new CovarianceMatrixOnTheFly(dataSet)));
+                }
+            } else if (dataModel instanceof CovarianceMatrix) {
+                CovarianceMatrix cov = (CovarianceMatrix) dataModel;
+                gesScores.add(new SemBicScore(cov));
+            } else {
+                throw new IllegalArgumentException("Unrecognized data model type: " + dataModel.getClass());
+            }
+        }
+
+        if (verbose) {
+            out.println("GES constructor done");
+        }
     }
+
+//    public FastImages(List<DataModel> dataModels) {
+//        setDataModels(dataModels);
+//    }
 
     /**
      * Array of variable names from the data set, in order.
@@ -207,7 +247,7 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
     /**
      * The data set, various variable subsets of which are to be scored.
      */
-    private List<DataSet> dataSets;
+    private List<DataModel> dataModels;
 
     private ArrayList<ICovarianceMatrix> covarianceMatrices = new ArrayList<>();
     private Map<DataModel, Set<Node>> missingVariables;
@@ -233,12 +273,12 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
             this.variables = dataModels.get(0).getVariables();
 
             if (((DataSet) model0).isDiscrete()) {
-                this.dataSets = new ArrayList<>();
+                this.dataModels = new ArrayList<>();
                 this.discrete = true;
 
                 for (DataModel dataModel : dataModels) {
                     if (((DataSet) dataModel).isDiscrete()) {
-                        this.dataSets.add((DataSet) dataModel);
+                        this.dataModels.add((DataSet) dataModel);
                     } else {
                         throw new IllegalArgumentException();
                     }
@@ -404,8 +444,10 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
      * For BDeu score for discrete search; see Chickering (2002).
      */
     public void setStructurePrior(double structurePrior) {
-        if (getDiscreteScore() != null) {
-            getDiscreteScore().setStructurePrior(structurePrior);
+        for (GesScore score : gesScores) {
+            if (score instanceof BDeuScore2) {
+                ((BDeuScore2)score).setStructurePrior(structurePrior);
+            }
         }
     }
 
@@ -413,8 +455,10 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
      * For BDeu score for discrete search; see Chickering (2002).
      */
     public void setSamplePrior(double samplePrior) {
-        if (getDiscreteScore() != null) {
-            getDiscreteScore().setSamplePrior(samplePrior);
+        for (GesScore score : gesScores) {
+            if (score instanceof BDeuScore2) {
+                ((BDeuScore2)score).setSamplePrior(samplePrior);
+            }
         }
     }
 
@@ -449,6 +493,12 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
         }
 
         this.penaltyDiscount = penaltyDiscount;
+
+        for (GesScore score : gesScores) {
+            if (score instanceof SemBicScore) {
+                ((SemBicScore) score).setPenaltyDiscount(penaltyDiscount);
+            }
+        }
     }
 
     @Override
@@ -536,20 +586,6 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
     @Override
     public String gesCountsString() {
         return null;
-    }
-
-    /**
-     * @return the discrete scoring function being used. By default, BDeu.
-     */
-    public LocalDiscreteScore getDiscreteScore() {
-        return discreteScore;
-    }
-
-    /**
-     * Sets the discrete scoring function to use.
-     */
-    public void setDiscreteScore(LocalDiscreteScore discreteScore) {
-        this.discreteScore = discreteScore;
     }
 
     /**
@@ -701,13 +737,7 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
 
                             double bump;
 
-                            if (covariances != null) {
-                                double s1 = localSemScore(hashIndices.get(y), new int[]{hashIndices.get(x)});
-                                double s2 = localSemScore(hashIndices.get(y), new int[]{});
-                                bump = s1 - s2;
-                            } else {
-                                bump = scoreGraphChange(y, Collections.singleton(x), emptySet);
-                            }
+                            bump = scoreGraphChange(y, Collections.singleton(x), emptySet);
 //
                             if (bump > -getPenaltyDiscount() * Math.log(sampleSize())) {
                                 final Edge edge = Edges.undirectedEdge(x, y);
@@ -1117,6 +1147,13 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
 
     public void setOtherDof(boolean otherDof) {
         this.otherDof = otherDof;
+    }
+
+    /**
+     * The score for discrete searches.
+     */
+    public List<GesScore> getGesScores() {
+        return gesScores;
     }
 
     // Basic data structure for an arrow a->b considered for additiom or removal from the graph, together with
@@ -1645,6 +1682,8 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
      * Scores the given DAG, up to a constant.
      */
     public double scoreDag(Graph dag) {
+        double score = 0;
+
         for (Node y : dag.getNodes()) {
             Set<Node> parents = new HashSet<>(dag.getParents(y));
             int index = hashIndices.get(y);
@@ -1656,46 +1695,23 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
                 parentIndices[count++] = hashIndices.get(nextParent);
             }
 
-            double _score;
+            for (int d = 0; d < gesScores.size(); d++) {
+                double _score = gesScores.get(d).localScore(index, parentIndices);
 
-            if (this.isDiscrete()) {
-                _score = localDiscreteScore(index, parentIndices);
-            } else {
-                _score = localSemScore(index, parentIndices);
+                if (!Double.isNaN(_score)) {
+                    score += _score;
+                }
             }
-
-            if (!Double.isNaN(_score))
-                score += _score;
         }
+
         return score;
     }
 
-    /**
-     * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model.
-     */
-    private double localSemScore(int i, int[] parents) {
-        double sum = 0.0;
-
-        for (int d = 0; d < numDataSets(); d++) {
-            double score = localSemScoreOneDataSet(d, i, parents);
-
-            if (!Double.isNaN(score)) {
-                sum += score;
-            }
-        }
-
-        return sum;
-    }
-
     private int numDataSets() {
-        return getCovMatrices().size();
+        return gesScores.size();
     }
 
     private double trimAlpha = 0.0;
-
-    public double getTrimAlpha() {
-        return trimAlpha;
-    }
 
     public void setTrimAlpha(double trimAlpha) {
         if (trimAlpha < 0.0) {// || trimAlpha > 0.5) {
@@ -1723,114 +1739,38 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
             parentIndices2[count2++] = (hashIndices.get(aParents2));
         }
 
-        List<Double> diffs = new ArrayList<Double>();
+        List<Double> diffs = new ArrayList<>();
 
-        int numDataSets = numDataSets();
-
-        for (int d = 0; d < numDataSets; d++) {
-            double score1 = localSemScoreOneDataSet(d, yIndex, parentIndices1);
-            double score2 = localSemScoreOneDataSet(d, yIndex, parentIndices2);
-            double diff = score1 - score2;
-            diffs.add(diff);
-        }
-
-        Collections.sort(diffs);
-
+//        int numDataSets = numDataSets();
         double sum = 0.0;
-        int _count = 0;
 
-        int from = (int) Math.floor(((double) (numDataSets - 1)) * (trimAlpha));
-//        int to = (int) Math.ceil(((double) (numDataSets - 1)) * (1.0 - trimAlpha));
-        int to = numDataSets - 1; //(int) Math.ceil(((double) (numDataSets - 1)) * (1.0 - trimAlpha));
-
-        for (int m = from; m <= to; m++) {
-            double diff = diffs.get(m);
-
-            if (diff != 0) {
-                sum += diff;
-                _count++;
-            }
+        for (int d = 0; d < numDataSets(); d++) {
+            double score1 = gesScores.get(d).localScore(yIndex, parentIndices1);
+            double score2 = gesScores.get(d).localScore(yIndex, parentIndices2);
+            double diff = score1 - score2;
+            sum += diff;
+//            diffs.add(diff);
         }
 
-        return sum / _count;
-    }
+//        Collections.sort(diffs);
+//
+//        double sum = 0.0;
+//        int _count = 0;
+//
+//        int from = (int) Math.floor(((double) (numDataSets - 1)) * (trimAlpha));
+////        int to = (int) Math.ceil(((double) (numDataSets - 1)) * (1.0 - trimAlpha));
+//        int to = numDataSets - 1; //(int) Math.ceil(((double) (numDataSets - 1)) * (1.0 - trimAlpha));
+//
+//        for (int m = from; m <= to; m++) {
+//            double diff = diffs.get(m);
+//
+//            if (diff != 0) {
+//                sum += diff;
+//                _count++;
+//            }
+//        }
 
-    private double localSemScoreOneDataSet(int dataIndex, int i, int[] parents) {
-        TetradMatrix cov = getCovMatrices().get(dataIndex);
-        double residualVariance = cov.get(i, i);
-        int n = sampleSize();
-        int p = parents.length;
-
-        if (containsMissingVariables) {
-            DataSet data = dataSets.get(dataIndex);
-
-            if (missingVariables.get(data).contains(data.getVariable(i))) {
-                return 0;
-            }
-        }
-
-        try {
-            TetradMatrix covxx = cov.getSelection(parents, parents);
-            TetradMatrix covxxInv = covxx.inverse();
-            TetradVector covxy = cov.getSelection(parents, new int[]{i}).getColumn(0);
-            TetradVector b = covxxInv.times(covxy);
-            residualVariance -= covxy.dotProduct(b);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throwMinimalLinearDependentSet(parents, cov);
-        }
-
-        if (residualVariance <= 0) {
-            if (verbose) {
-                List<Node> _parents = new ArrayList<Node>();
-
-                for (int k : parents) {
-                    _parents.add(variables.get(k));
-                }
-
-                System.out.println("Negative residual variance: " + residualVariance +
-                        " for " + variables.get(i) + " given " + _parents);
-            }
-            return Double.NaN;
-        }
-
-        double c = getPenaltyDiscount();
-        return score(residualVariance, n, p, c);
-    }
-
-    // Calculates the BIC score.
-    private double score(double residualVariance, int n, int p, double c) {
-//        return -n * Math.log(residualVariance) - n * Math.log(2 * Math.PI) - n - dof(n, p) * c * (Math.log(n));
-        return -n * Math.log(residualVariance) - c * dof(n, p) * Math.log(n);
-    }
-
-    private int dof(int n, int p) {
-        if (otherDof) {
-            return (p + 1) * (p + 2) / 2;
-        } else {
-            return 1 + 2 * p;
-        }
-    }
-
-    private void throwMinimalLinearDependentSet(int[] parents, TetradMatrix cov) {
-        List<Node> _parents = new ArrayList<Node>();
-        for (int p : parents) _parents.add(variables.get(p));
-
-        DepthChoiceGenerator gen = new DepthChoiceGenerator(_parents.size(), _parents.size());
-        int[] choice;
-
-        while ((choice = gen.next()) != null) {
-            int[] sel = new int[choice.length];
-            List<Node> _sel = getSel(parents, choice, sel);
-
-            TetradMatrix m = cov.getSelection(sel, sel);
-
-            try {
-                m.inverse();
-            } catch (Exception e2) {
-                throw new RuntimeException("Linear dependence among variables: " + _sel);
-            }
-        }
+        return sum / numDataSets();
     }
 
     private List<Node> getSel(int[] parents, int[] choice, int[] sel) {
@@ -1845,40 +1785,6 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
 
     private List<TetradMatrix> getCovMatrices() {
         return covariances;
-    }
-
-    // Compute the local BDeu score of (i, parents(i)). See (Chickering, 2002).
-    private double localDiscreteScore(int i, int parents[]) {
-        return getDiscreteScore().localScore(i, parents);
-    }
-
-    private TetradMatrix getSelection1(ICovarianceMatrix cov, int[] rows) {
-//        return cov.getSelection(rows, rows);
-//
-        TetradMatrix m = new TetradMatrix(rows.length, rows.length);
-
-        for (int i = 0; i < rows.length; i++) {
-            for (int j = i; j < rows.length; j++) {
-                final double value = cov.getValue(rows[i], rows[j]);
-                m.set(i, j, value);
-                m.set(j, i, value);
-            }
-        }
-
-        return m;
-    }
-
-    private TetradVector getSelection2(ICovarianceMatrix cov, int[] rows, int k) {
-//        return cov.getSelection(rows, new int[]{k}).getColumn(0);
-//
-        TetradVector m = new TetradVector(rows.length);
-
-        for (int i = 0; i < rows.length; i++) {
-            final double value = cov.getValue(rows[i], k);
-            m.set(i, value);
-        }
-
-        return m;
     }
 
     // This is supposed to print a smallest subset of parents that causes a singular matrix exception.
@@ -1946,21 +1852,25 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
         Graph dag = SearchGraphUtils.dagFromPattern(graph);
         Map<Edge, Double> coefs = new HashMap<Edge, Double>();
 
-        for (DataSet dataSet : dataSets) {
-            SemPm pm = new SemPm(dag);
-            Graph _graph = pm.getGraph();
-            SemEstimator estimator = new SemEstimator(dataSet, pm);
-            SemIm im = estimator.estimate();
-            StandardizedSemIm im2 = new StandardizedSemIm(im);
+        for (DataModel dataModel : dataModels) {
+            if (dataModel instanceof DataSet) {
+                DataSet dataSet = (DataSet) dataModel;
 
-            for (Edge edge : _graph.getEdges()) {
-                edge = translateEdge(edge, dag);
+                SemPm pm = new SemPm(dag);
+                Graph _graph = pm.getGraph();
+                SemEstimator estimator = new SemEstimator(dataSet, pm);
+                SemIm im = estimator.estimate();
+                StandardizedSemIm im2 = new StandardizedSemIm(im);
 
-                if (coefs.get(edge) == null) {
-                    coefs.put(edge, 0.0);
+                for (Edge edge : _graph.getEdges()) {
+                    edge = translateEdge(edge, dag);
+
+                    if (coefs.get(edge) == null) {
+                        coefs.put(edge, 0.0);
+                    }
+
+                    coefs.put(edge, coefs.get(edge) + im2.getParameterValue(edge));
                 }
-
-                coefs.put(edge, coefs.get(edge) + im2.getParameterValue(edge));
             }
         }
 
