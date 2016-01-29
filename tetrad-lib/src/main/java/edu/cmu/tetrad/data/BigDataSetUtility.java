@@ -388,7 +388,7 @@ public class BigDataSetUtility {
             }
         }
 
-        int[][] data = new int[numOfRows][numOfCols];
+        int[][] data = new int[numOfCols][numOfRows];
         int row = 0;
         int col = 0;
         int colIndex = 0;
@@ -426,7 +426,7 @@ public class BigDataSetUtility {
                     if (!discreteVars[col].excluded) {
                         String value = dataBuilder.toString().trim();
                         if (value.length() > 0) {
-                            data[row][colIndex++] = discreteVars[col].getEncodeValue(value);
+                            data[colIndex++][row] = discreteVars[col].getEncodeValue(value);
                         } else {
                             colIndex++;
                         }
@@ -449,11 +449,11 @@ public class BigDataSetUtility {
             // take care of cases where there's no newline at the end of the file
             String value = dataBuilder.toString().trim();
             if (value.length() > 0) {
-                data[row][colIndex++] = discreteVars[col].getEncodeValue(value);
+                data[colIndex++][row] = discreteVars[col].getEncodeValue(value);
             }
         }
 
-        return new BoxDataSet(new IntDataBox(data), nodes);
+        return new BoxDataSet(new VerticalIntDataBox(data), nodes);
     }
 
     private static DataSet readInDiscreteData(File file, char delimiter) throws IOException {
@@ -469,7 +469,7 @@ public class BigDataSetUtility {
             nodes.add(new DiscreteVariable(discreteVar.name, discreteVar.categories));
         }
 
-        int[][] data = new int[numOfRows][numOfCols];
+        int[][] data = new int[numOfCols][numOfRows];
         int row = 0;
         int col = 0;
         byte delim = (byte) delimiter;
@@ -505,7 +505,7 @@ public class BigDataSetUtility {
                 if (currentChar == delim || (currentChar == NEW_LINE && prevChar != NEW_LINE)) {
                     String value = dataBuilder.toString().trim();
                     if (value.length() > 0) {
-                        data[row][col] = discreteVars[col].getEncodeValue(value);
+                        data[col][row] = discreteVars[col].getEncodeValue(value);
                     }
 
                     col++;
@@ -524,11 +524,11 @@ public class BigDataSetUtility {
             // take care of cases where there's no newline at the end of the file
             String value = dataBuilder.toString().trim();
             if (value.length() > 0) {
-                data[row][col] = discreteVars[col].getEncodeValue(value);
+                data[col][row] = discreteVars[col].getEncodeValue(value);
             }
         }
 
-        return new BoxDataSet(new IntDataBox(data), nodes);
+        return new BoxDataSet(new VerticalIntDataBox(data), nodes);
     }
 
     /**

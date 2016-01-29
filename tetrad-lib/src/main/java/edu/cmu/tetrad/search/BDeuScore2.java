@@ -24,6 +24,7 @@ package edu.cmu.tetrad.search;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.util.ProbUtils;
+import org.apache.commons.math3.special.Gamma;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -184,15 +185,15 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         final double rowPrior = getSamplePrior() / q;
 
         for (int j = 0; j < q; j++) {
-            score -= ProbUtils.lngamma(rowPrior + n_j[j]);
+            score -= Gamma.logGamma(rowPrior + n_j[j]);
 
             for (int k = 0; k < r; k++) {
-                score += ProbUtils.lngamma(cellPrior + n_jk[j][k]);
+                score += Gamma.logGamma(cellPrior + n_jk[j][k]);
             }
         }
 
-        score += q * ProbUtils.lngamma(rowPrior);
-        score -= r * q * ProbUtils.lngamma(cellPrior);
+        score += q * Gamma.logGamma(rowPrior);
+        score -= r * q * Gamma.logGamma(cellPrior);
 
         lastBumpThreshold = ((r - 1) * q * Math.log(getStructurePrior()));
 
@@ -418,6 +419,8 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         boxes = new VariableBox[discreteVariables.size()][discreteVariables.size()];
 
         for (int i = 0; i < discreteVariables.size(); i++) {
+            System.out.println("counting i = " + i);
+
             for (int j = i; j < discreteVariables.size(); j++) {
                 DiscreteVariable v1 = discreteVariables.get(i);
                 DiscreteVariable v2 = discreteVariables.get(j);
@@ -493,7 +496,8 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
             int[][][] lists2 = new int[lists[0].length][lists.length][];
 
             for (int i = 0; i < lists[0].length; i++) {
-                for (int j = 0; j < lists.length; j++) {
+                for (int j = 0; j
+                        < lists.length; j++) {
                     lists2[i][j] = lists[j][i];
                 }
             }

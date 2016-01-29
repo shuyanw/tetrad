@@ -757,7 +757,7 @@ public class PerformanceTests {
 
         System.out.println("Starting simulation");
 
-        BayesPm pm = new BayesPm(dag, 4, 4);
+        BayesPm pm = new BayesPm(dag, 3, 3);
         BayesIm im = new MlBayesIm(pm, MlBayesIm.RANDOM);
 
         DataSet data = im.simulateData(numCases, false);
@@ -768,13 +768,19 @@ public class PerformanceTests {
 
         out.println("Elapsed (simulating the data): " + (time2 - time1) + " ms");
 
+//        out.println("Elapsed (calculating cov): " + (time3 - time2) + " ms\n");
+
+        long time3 = System.currentTimeMillis();
+
         BDeuScore score = new BDeuScore(data);
         score.setSamplePrior(1);
         score.setStructurePrior(0.1);
 
-        long time3 = System.currentTimeMillis();
+        long time4 = System.currentTimeMillis();
 
-        out.println("Elapsed (calculating cov): " + (time3 - time2) + " ms\n");
+        out.println("Elapsed (simulating the data): " + (time4 - time3) + " ms");
+
+        System.out.println("\nStarting FGS");
 
         Fgs fgs = new Fgs(score);
         fgs.setVerbose(false);
@@ -787,8 +793,6 @@ public class PerformanceTests {
 //        IKnowledge knowledge = new Knowledge2();
 //        knowledge.setForbidden("X1", "X2");
 
-        System.out.println("\nStarting FGS");
-
         Graph estPattern = fgs.search();
 
         System.out.println("Done with FGS");
@@ -797,7 +801,7 @@ public class PerformanceTests {
 
         out.println(estPattern);
 
-        long time4 = System.currentTimeMillis();
+        long time5 = System.currentTimeMillis();
 
         out.println(new Date());
 
@@ -808,7 +812,7 @@ public class PerformanceTests {
         out.println("Sample prior = " + samplePrior);
 
         out.println("Elapsed (simulating the data): " + (time2 - time1) + " ms");
-        out.println("Elapsed (running FGS) " + (time4 - time3) + " ms");
+        out.println("Elapsed (running FGS) " + (time5 - time3) + " ms");
 
 //        graphComparison(estPattern, SearchGraphUtils.patternForDag(dag));
 
