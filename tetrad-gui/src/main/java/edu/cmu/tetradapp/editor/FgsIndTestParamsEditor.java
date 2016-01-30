@@ -26,7 +26,6 @@ import edu.cmu.tetradapp.util.DoubleTextField;
 import edu.cmu.tetradapp.util.IntTextField;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
@@ -40,8 +39,7 @@ import java.text.NumberFormat;
 
 class FgsIndTestParamsEditor extends JComponent {
     private FgsIndTestParams params;
-    private DoubleTextField cellPriorField, structurePriorField;
-    private JButton uniformStructurePrior;
+    private DoubleTextField samplePriorField, expectedNumParentsField;
     private boolean discreteData;
     private DoubleTextField penaltyDiscount;
     private IntTextField numPatternsToSave;
@@ -59,10 +57,10 @@ class FgsIndTestParamsEditor extends JComponent {
         NumberFormat smallNf = new DecimalFormat("0.0##E0");
 
         if (this.discreteData) {
-            this.cellPriorField = new DoubleTextField(
+            this.samplePriorField = new DoubleTextField(
                     getFgsIndTestParams().getSamplePrior(), 5, nf, smallNf, 1e-3);
 
-            this.cellPriorField.setFilter(new DoubleTextField.Filter() {
+            this.samplePriorField.setFilter(new DoubleTextField.Filter() {
                 public double filter(double value, double oldValue) {
                     try {
                         getFgsIndTestParams().setSamplePrior(value);
@@ -74,9 +72,9 @@ class FgsIndTestParamsEditor extends JComponent {
                 }
             });
 
-            this.structurePriorField = new DoubleTextField(
+            this.expectedNumParentsField = new DoubleTextField(
                     getFgsIndTestParams().getStructurePrior(), 5, nf, smallNf, 1e-3);
-            this.structurePriorField.setFilter(new DoubleTextField.Filter() {
+            this.expectedNumParentsField.setFilter(new DoubleTextField.Filter() {
                 public double filter(double value, double oldValue) {
                     try {
                         getFgsIndTestParams().setStructurePrior(value);
@@ -90,24 +88,14 @@ class FgsIndTestParamsEditor extends JComponent {
 
 //            this.defaultStructurePrior =
 //                    new JButton("Default structure prior = 0.05");
-            Font font = new Font("Dialog", Font.BOLD, 10);
+//            Font font = new Font("Dialog", Font.BOLD, 10);
 //            this.defaultStructurePrior.setFont(font);
 //            this.defaultStructurePrior.setBorder(null);
 //            this.defaultStructurePrior.addActionListener(new ActionListener() {
 //                public void actionPerformed(ActionEvent e) {
-//                    structurePriorField.setValue(0.05);
+//                    expectedNumParentsField.setValue(0.05);
 //                }
 //            });
-
-            this.uniformStructurePrior =
-                    new JButton("Default structure prior = 1.0");
-            this.uniformStructurePrior.setFont(font);
-            this.uniformStructurePrior.setBorder(null);
-            this.uniformStructurePrior.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    structurePriorField.setValue(1.0);
-                }
-            });
         } else {
             this.penaltyDiscount = new DoubleTextField(
                     getFgsIndTestParams().getPenaltyDiscount(), 5, nf);
@@ -164,15 +152,15 @@ class FgsIndTestParamsEditor extends JComponent {
             b2.add(Box.createHorizontalStrut(5));
             b2.add(new JLabel("Sample prior:"));
             b2.add(Box.createHorizontalGlue());
-            b2.add(this.cellPriorField);
+            b2.add(this.samplePriorField);
             add(b2);
             add(Box.createVerticalStrut(5));
 
             Box b3 = Box.createHorizontalBox();
             b3.add(Box.createHorizontalStrut(5));
-            b3.add(new JLabel("Structure prior:"));
+            b3.add(new JLabel("Expected # Parents:"));
             b3.add(Box.createHorizontalGlue());
-            b3.add(this.structurePriorField);
+            b3.add(this.expectedNumParentsField);
             add(b3);
 
 //            Box b4 = Box.createHorizontalBox();
@@ -180,11 +168,6 @@ class FgsIndTestParamsEditor extends JComponent {
 //            b4.add(this.defaultStructurePrior);
 //            add(b4);
 
-            Box b5 = Box.createHorizontalBox();
-            b5.add(Box.createHorizontalGlue());
-            b5.add(this.uniformStructurePrior);
-            add(b5);
-            add(Box.createVerticalStrut(10));
         } else {
             Box b7 = Box.createHorizontalBox();
             b7.add(new JLabel("Penalty Discount"));

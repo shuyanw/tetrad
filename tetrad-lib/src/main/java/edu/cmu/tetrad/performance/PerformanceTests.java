@@ -774,7 +774,7 @@ public class PerformanceTests {
 
         BDeuScore score = new BDeuScore(data);
         score.setSamplePrior(1);
-        score.setStructurePrior(0.1);
+        score.setExpectedNumParents(0.1);
 
         long time4 = System.currentTimeMillis();
 

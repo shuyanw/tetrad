@@ -194,8 +194,8 @@ public class ImagesFirstNontriangular implements GraphSearch, IImages {
         return images.scoreDag(dag);
     }
 
-//    public void setStructurePrior(double structurePrior) {
-//        images.setStructurePrior(structurePrior);
+//    public void setExpectedNumParents(double structurePrior) {
+//        images.setExpectedNumParents(structurePrior);
 //    }
 //
 //    public void setSamplePrior(double samplePrior) {

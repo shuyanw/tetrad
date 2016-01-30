@@ -1004,7 +1004,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     public void setStructurePrior(double structurePrior) {
         if (gesScore instanceof LocalDiscreteScore) {
-            ((LocalDiscreteScore) gesScore).setStructurePrior(structurePrior);
+            ((LocalDiscreteScore) gesScore).setExpectedNumParents(structurePrior);
         }
     }
 
@@ -1186,7 +1186,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         if (verbose) {
             String label = trueGraph != null && trueEdge != null ? "*" : "";
             out.println(graph.getNumEdges() + ". INSERT " + graph.getEdge(x, y) +
-                    " " + t + " " + bump + " " + label);
+                    " " + t + " " + bump + " " + label + " degree = " + GraphUtils.getDegree(graph));
         }
 
         for (Node _t : t) {
@@ -1232,7 +1232,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
             TetradLogger.getInstance().log("deletedEdges", (graph.getNumEdges() - 1) + ". DELETE " + oldxy +
                     " " + subset + " (" + bump + ") " + label);
             out.println((graph.getNumEdges()) + ". DELETE " + oldxy +
-                    " " + subset + " (" + bump + ") " + label);
+                    " " + subset + " (" + bump + ") " + label + " degree = " + GraphUtils.getDegree(graph));
         }
 
         for (Node h : subset) {

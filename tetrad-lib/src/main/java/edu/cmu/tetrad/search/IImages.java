@@ -49,7 +49,7 @@ public interface IImages extends GraphScorer {
 
     double scoreDag(Graph dag);
 
-//    void setStructurePrior(double structurePrior);
+//    void setExpectedNumParents(double structurePrior);
 //
 //    void setSamplePrior(double samplePrior);
 //

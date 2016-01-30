@@ -148,7 +148,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
                 double structurePrior = ((FgsParams) getParams()).getStructurePrior();
                 BDeuScore score = new BDeuScore(dataSet);
                 score.setSamplePrior(samplePrior);
-                score.setStructurePrior(structurePrior);
+                score.setExpectedNumParents(structurePrior);
 //                BDeuScore score = new BDeuScore(dataSet);
                 ges = new Fgs(score);
                 ges.setVerbose(true);

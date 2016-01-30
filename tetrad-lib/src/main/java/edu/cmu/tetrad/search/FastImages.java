@@ -446,7 +446,7 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
     public void setStructurePrior(double structurePrior) {
         for (GesScore score : gesScores) {
             if (score instanceof BDeuScore2) {
-                ((BDeuScore2)score).setStructurePrior(structurePrior);
+                ((BDeuScore2)score).setExpectedNumParents(structurePrior);
             }
         }
     }

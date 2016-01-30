@@ -21,7 +21,6 @@
 
 package edu.cmu.tetradapp.model;
 
-import edu.cmu.tetrad.data.CovarianceMatrixOnTheFly;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.ICovarianceMatrix;
 import edu.cmu.tetrad.graph.Graph;
@@ -125,7 +124,7 @@ public class GesRunner extends AbstractAlgorithmRunner implements GraphSource,
                 double structurePrior = ((GesParams) getParams()).getStructurePrior();
                 BDeuScore score = new BDeuScore(dataSet);
                 score.setSamplePrior(samplePrior);
-                score.setStructurePrior(structurePrior);
+                score.setExpectedNumParents(structurePrior);
                 ges = new Ges((DataSet) source);
                 ges.setVerbose(true);
                 ges.setLog(true);

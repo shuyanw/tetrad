@@ -170,7 +170,7 @@ public class BDeScore implements LocalDiscreteScore {
         return dataSet;
     }
 
-    public void setStructurePrior(double structurePrior) {
+    public void setExpectedNumParents(double structurePrior) {
     }
 
     public void setSamplePrior(double samplePrior) {

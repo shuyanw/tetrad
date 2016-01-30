@@ -23,9 +23,7 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Node;
-import edu.cmu.tetrad.util.ProbUtils;
 import org.apache.commons.math3.special.Gamma;
-import org.apache.commons.math3.util.FastMath;
 
 import java.util.List;
 
@@ -35,11 +33,10 @@ import java.util.List;
 public class BDeuScore implements LocalDiscreteScore, GesScore {
     private List<Node> variables;
     private int[][] data;
-    //    private final LocalScoreCache localScoreCache = new LocalScoreCache();
     private int sampleSize;
 
     private double samplePrior = 1;
-    private double structurePrior = 1;
+    private double expectedNumParents = 1;
 
     private int[] numCategories;
 
@@ -143,7 +140,9 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         //Finally, compute the score
         double score = 0.0;
 
-        score += r * q * FastMath.log(getStructurePrior());
+//        score += (r) * q * FastMath.log(getExpectedNumParents());
+
+        score = getPriorForStructure(parents.length);
 
         final double cellPrior = getSamplePrior() / (r * q);
         final double rowPrior = getSamplePrior() / q;
@@ -159,9 +158,16 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         score += q * Gamma.logGamma(rowPrior);
         score -= r * q * Gamma.logGamma(cellPrior);
 
-        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
+        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getExpectedNumParents()));
 
         return score;
+    }
+
+    private double getPriorForStructure(int numParents) {
+        double e = getExpectedNumParents();
+        double k = numParents;
+        double n = data.length;
+        return k * Math.log(e / n) + (n - k) * Math.log(1 - (e / n));
     }
 
     @Override
@@ -202,7 +208,9 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         //Finally, compute the score
         double score = 0.0;
 
-        score += (r) * q * FastMath.log(getStructurePrior());
+//        score += (r) * q * FastMath.log(getExpectedNumParents());
+
+        score = getPriorForStructure(1);
 
         final double cellPrior = getSamplePrior() / (r * q);
         final double rowPrior = getSamplePrior() / q;
@@ -218,7 +226,7 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         score += q * Gamma.logGamma(rowPrior);
         score -= r * q * Gamma.logGamma(cellPrior);
 
-        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
+        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getExpectedNumParents()));
 
         return score;
     }
@@ -244,7 +252,9 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         //Finally, compute the score
         double score = 0.0;
 
-        score += (r) * FastMath.log(getStructurePrior());
+//        score += (r) * q * FastMath.log(getExpectedNumParents());
+
+        score = getPriorForStructure(0);
 
         final double cellPrior = getSamplePrior() / r;
         final double rowPrior = getSamplePrior();
@@ -258,7 +268,7 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         score += Gamma.logGamma(rowPrior);
         score -= r * Gamma.logGamma(cellPrior);
 
-        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
+        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getExpectedNumParents()));
 
         return score;
     }
@@ -299,29 +309,16 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         return rowIndex;
     }
 
-    private static int getRowIndex2(int[] dim, int[] values) {
-        int rowIndex = 0;
-
-        int pow = 1;
-
-        for (int i = 0; i < dim.length; i++) {
-            rowIndex += (values[i]) * pow;
-            pow *= dim[i];
-        }
-
-        return rowIndex;
-    }
-
-    public double getStructurePrior() {
-        return structurePrior;
+    public double getExpectedNumParents() {
+        return expectedNumParents;
     }
 
     public double getSamplePrior() {
         return samplePrior;
     }
 
-    public void setStructurePrior(double structurePrior) {
-        this.structurePrior = structurePrior;
+    public void setExpectedNumParents(double expectedNumParents) {
+        this.expectedNumParents = expectedNumParents;
     }
 
     public void setSamplePrior(double samplePrior) {

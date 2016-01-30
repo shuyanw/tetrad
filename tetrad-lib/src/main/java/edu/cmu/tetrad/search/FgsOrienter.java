@@ -196,7 +196,7 @@ public final class FgsOrienter implements GraphSearch, GraphScorer, Reorienter {
             setDataSet(dataSet1);
             BDeuScore score = new BDeuScore(dataSet1);
             score.setSamplePrior(10);
-            score.setStructurePrior(0.001);
+            score.setExpectedNumParents(0.001);
             setDiscreteScore(score);
             setStructurePrior(0.001);
             setSamplePrior(10.);
@@ -334,7 +334,7 @@ public final class FgsOrienter implements GraphSearch, GraphScorer, Reorienter {
      */
     public void setStructurePrior(double structurePrior) {
         if (getDiscreteScore() != null) {
-            getDiscreteScore().setStructurePrior(structurePrior);
+            getDiscreteScore().setExpectedNumParents(structurePrior);
         }
     }
 

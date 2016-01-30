@@ -166,7 +166,7 @@ public final class Ges implements GraphSearch, GraphScorer {
         if (dataSet.isDiscrete()) {
             BDeuScore score = new BDeuScore(dataSet);
             score.setSamplePrior(10);
-            score.setStructurePrior(0.001);
+            score.setExpectedNumParents(0.001);
             this.discreteScore = score;
         }
         setStructurePrior(0.001);
@@ -311,7 +311,7 @@ public final class Ges implements GraphSearch, GraphScorer {
 
     public void setStructurePrior(double structurePrior) {
         if (getDiscreteScore() != null) {
-            getDiscreteScore().setStructurePrior(structurePrior);
+            getDiscreteScore().setExpectedNumParents(structurePrior);
         }
     }
 
