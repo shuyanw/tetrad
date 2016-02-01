@@ -838,8 +838,8 @@ public class PerformanceTests {
 //            String path = "/Users/josephramsey/Documents/LAB_NOTEBOOK.2012.04.20/data/tgen_10kvars.txt";
 //            String path = "tgen_1kvars.txt";
 
-            DataSet dataSet = BigDataSetUtility.readInDiscreteData(new File(path), ',', new HashSet<String>());
-//            DataSet dataSet = BigDataSetUtility.readInContinuousData(new File(path), ',', new HashSet<String>());
+//            DataSet dataSet = BigDataSetUtility.readInDiscreteData(new File(path), ',', new HashSet<String>());
+            DataSet dataSet = BigDataSetUtility.readInContinuousData(new File(path), ',', new HashSet<String>());
 //            dataSet = DataUtils.getNonparanormalTransformed(dataSet);
 
             out.println("data set # vars = " + dataSet.getNumColumns() + " # rows = " + dataSet.getNumRows());
@@ -859,7 +859,7 @@ public class PerformanceTests {
             fgs.setOut(out);
             fgs.setFaithfulnessAssumed(false);
             fgs.setIgnoreLinearDependent(true);
-            fgs.setDepth(-1);
+            fgs.setDepth(3);
             fgs.setExpectedNumParents(expectedNumParents);
             fgs.setSamplePrior(samplePrior);
 

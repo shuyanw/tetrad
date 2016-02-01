@@ -852,12 +852,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
         final Set<Node> naYX = getNaYX(a, b, graph);
         List<Node> t = getTNeighbors(a, b, graph);
 
-//        final int _depth = Math.min(t.size(), depth == -1 ? 1000 : depth);
+        final int _depth = Math.min(t.size(), depth == -1 ? 1000 : depth);
 
         clearArrow(a, b);
         List<Set<Node>> lastSubsets = null;
 
-        for (int i = 0; i <= t.size(); i++) {
+        for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(t.size(), i);
             int[] choice;
             boolean found = false;
@@ -906,36 +906,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
             if (!found) break;
             lastSubsets = subsets;
         }
-
-//        final DepthChoiceGenerator gen = new DepthChoiceGenerator(t.size(), _depth);
-//
-//        int[] choice;
-//
-//        // Try parallelizing this.
-//        while ((choice = gen.next()) != null) {
-//            Set<Node> s = GraphUtils.asSet(choice, t);
-//
-//            Set<Node> union = new HashSet<>(s);
-//            union.addAll(naYX);
-//
-//            // Necessary condition for it to be a clique later (after possible edge removals) is that it be a clique
-//            // now.
-//            if (!isClique(union, graph)) continue;
-//
-//            if (existsKnowledge()) {
-//                if (!validSetByKnowledge(b, union)) {
-//                    continue;
-//                }
-//            }
-//
-//            double bump = insertEval(a, b, s, naYX, graph, hashIndices);
-//
-//            if (bump > 0.0) {
-//                Arrow arrow = new Arrow(bump, a, b, s, naYX);
-//                sortedArrows.add(arrow);
-//                addLookupArrow(a, b, arrow);
-//            }
-//        }
     }
 
     // Reevaluates arrows after removing an edge from the graph.
