@@ -123,8 +123,7 @@ public class GFciRunner extends AbstractAlgorithmRunner
             fci.setPenaltyDiscount(indTestParams.getPenaltyDiscount());
             fci.setSamplePrior(indTestParams.getSamplePrior());
             fci.setStructurePrior(indTestParams.getStructurePrior());
-            fci.setCompleteRuleSetUsed(false);
-            fci.setPenaltyDiscount(indTestParams.getPenaltyDiscount());
+            fci.setCompleteRuleSetUsed(indTestParams.isCompleteRuleSetUsed());
             fci.setFaithfulnessAssumed(indTestParams.isFaithfulnessAssumed());
             graph = fci.search();
         }

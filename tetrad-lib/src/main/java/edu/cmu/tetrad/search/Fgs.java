@@ -155,7 +155,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     private Graph adjacencies = null;
 
     // True if it is assumed that zero effect adjacencies are not in the graph.
-    private boolean faithfulnessAssumed = true;
+    private boolean faithfulnessAssumed = false;
 
     // A utility map to help with orientation.
     private WeakHashMap<Node, Set<Node>> neighbors = new WeakHashMap<>();
@@ -317,9 +317,10 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
         if (gesScore instanceof SemBicScore) {
             ((SemBicScore) gesScore).setPenaltyDiscount(penaltyDiscount);
-        } else {
-            throw new UnsupportedOperationException("Penalty discount supported only for SemBicScore.");
         }
+//        else {
+//            throw new UnsupportedOperationException("Penalty discount supported only for SemBicScore.");
+//        }
     }
 
     /**
@@ -561,12 +562,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
                             double s2 = gesScore.localScore(hashIndices.get(y));
                             bump = s1 - s2;
 
-                            if (isFaithfulnessAssumed() && gesScore.isEffectEdge(bump)) {
-                                final Edge edge = Edges.undirectedEdge(x, y);
-                                if (boundGraph != null && !boundGraph.isAdjacentTo(edge.getNode1(), edge.getNode2()))
-                                    continue;
-                                effectEdgesGraph.addEdge(edge);
-                            }
+//                            if (isFaithfulnessAssumed() && gesScore.isEffectEdge(bump)) {
+//                                final Edge edge = Edges.undirectedEdge(x, y);
+//                                if (boundGraph != null && !boundGraph.isAdjacentTo(edge.getNode1(), edge.getNode2()))
+//                                    continue;
+//                                effectEdgesGraph.addEdge(edge);
+//                            }
 
                             if (bump > 0.0) {
                                 Arrow arrow1 = new Arrow(bump, x, y, emptySet, emptySet);
@@ -774,11 +775,11 @@ public final class Fgs implements GraphSearch, GraphScorer {
         for (final Node x : _nodes) {
             List<Node> adj;
 
-            if (isFaithfulnessAssumed()) {
-                adj = effectEdgesGraph.getAdjacentNodes(x);
-            } else {
+//            if (isFaithfulnessAssumed()) {
+//                adj = effectEdgesGraph.getAdjacentNodes(x);
+//            } else {
                 adj = variables;
-            }
+//            }
 
             for (Node w : adj) {
                 pairs.add(new OrderedPair<>(w, x));
@@ -839,7 +840,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Calculates the new arrows for an a->b edge.
     private void calculateArrowsForward(final Node a, final Node b, final Graph graph) {
-        if (isFaithfulnessAssumed() && !effectEdgesGraph.isAdjacentTo(a, b)) return;
+//        if (isFaithfulnessAssumed() && !effectEdgesGraph.isAdjacentTo(a, b)) return;
         if (adjacencies != null && !adjacencies.isAdjacentTo(a, b)) return;
 
         if (existsKnowledge()) {
@@ -851,12 +852,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
         final Set<Node> naYX = getNaYX(a, b, graph);
         List<Node> t = getTNeighbors(a, b, graph);
 
-        final int _depth = Math.min(t.size(), depth == -1 ? 1000 : depth);
+//        final int _depth = Math.min(t.size(), depth == -1 ? 1000 : depth);
 
         clearArrow(a, b);
         List<Set<Node>> lastSubsets = null;
 
-        for (int i = 0; i <= _depth; i++) {
+        for (int i = 0; i <= t.size(); i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(t.size(), i);
             int[] choice;
             boolean found = false;

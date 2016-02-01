@@ -73,11 +73,11 @@ class FgsIndTestParamsEditor extends JComponent {
             });
 
             this.expectedNumParentsField = new DoubleTextField(
-                    getFgsIndTestParams().getStructurePrior(), 5, nf, smallNf, 1e-3);
+                    getFgsIndTestParams().getExpectedNumParents(), 5, nf, smallNf, 1e-3);
             this.expectedNumParentsField.setFilter(new DoubleTextField.Filter() {
                 public double filter(double value, double oldValue) {
                     try {
-                        getFgsIndTestParams().setStructurePrior(value);
+                        getFgsIndTestParams().setExpectedNumParents(value);
                         return value;
                     }
                     catch (IllegalArgumentException e) {

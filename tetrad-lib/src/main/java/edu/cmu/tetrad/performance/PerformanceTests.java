@@ -684,11 +684,11 @@ public class PerformanceTests {
 //        cov = cov.getSubmatrix(names);
 
         Fgs fgs = new Fgs(cov);
-        fgs.setVerbose(false);
+        fgs.setVerbose(true);
         fgs.setNumPatternsToStore(0);
         fgs.setPenaltyDiscount(penaltyDiscount);
         fgs.setOut(System.out);
-        fgs.setFaithfulnessAssumed(true);
+//        fgs.setFaithfulnessAssumed(true);
         fgs.setDepth(-1);
         fgs.setCycleBound(5);
 
@@ -714,7 +714,8 @@ public class PerformanceTests {
 //        out.println("# Vars = " + numVars);
 //        out.println("# Edges = " + numEdges);
         out.println("# Cases = " + numCases);
-        out.println("Penalty discount = " + (double) numEdges);
+        out.println("# Edges = " + numEdges);
+        out.println("Penaty Discount = " + penaltyDiscount);
 
         out.println("Elapsed (simulating the data): " + (time2 - time1) + " ms");
         out.println("Elapsed (calculating cov): " + (time3 - time2) + " ms");
