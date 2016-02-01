@@ -537,6 +537,8 @@ public final class GraphUtils {
                 children.put(m, new HashSet<Node>());
             }
 
+            if (G.isAdjacentTo(nodes.get(v), nodes.get(w))) continue;
+
             G.addDirectedEdge(nodes.get(v), nodes.get(w));
 
             parents.get(nodes.get(w)).add(nodes.get(v));

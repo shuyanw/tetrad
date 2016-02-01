@@ -829,29 +829,17 @@ public class PerformanceTests {
         System.out.println("See output file.");
     }
 
-    public void testFgsDiscrete(String path, double structurePrior, double samplePrior) {
-//        numVars = 2000;
-//        edgeFactor = 1.0;
-//        numCases = 1000;
-//        double structurePrior = .01;
-//        double samplePrior = 10;
-
-        if (writeToFile) {
-            try {
-                File _path = new File(path);
-                final File file = new File("long.FGSDiscrete." + _path.getName() + ".txt");
-                out = new PrintStream(file);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        }
+    public void testFgsDiscrete(String path, double expectedNumParents, double samplePrior) {
+        File _path = new File(path);
+        init(new File("long.FGSDiscrete." + _path.getName() + ".txt"), "Tests performance of the FGS algorithm");
 
         try {
 //            String path = "/Users/josephramsey/Documents/LAB_NOTEBOOK.2012.04.20/data/tgen_10kvars.txt";
 //            String path = "tgen_1kvars.txt";
 
-            DataSet dataSet = BigDataSetUtility.readInContinuousData(new File(path), '\t');
+            DataSet dataSet = BigDataSetUtility.readInDiscreteData(new File(path), ',', new HashSet<String>());
+//            DataSet dataSet = BigDataSetUtility.readInContinuousData(new File(path), ',', new HashSet<String>());
+//            dataSet = DataUtils.getNonparanormalTransformed(dataSet);
 
             out.println("data set # vars = " + dataSet.getNumColumns() + " # rows = " + dataSet.getNumRows());
 
@@ -864,13 +852,14 @@ public class PerformanceTests {
             long time2 = System.currentTimeMillis();
 
             Fgs fgs = new Fgs(dataSet);
-            fgs.setVerbose(false);
+            fgs.setVerbose(true);
             fgs.setNumPatternsToStore(0);
-            fgs.setPenaltyDiscount(4);
+            fgs.setPenaltyDiscount(10);
             fgs.setOut(out);
-            fgs.setFaithfulnessAssumed(true);
-            fgs.setDepth(2);
-            fgs.setStructurePrior(structurePrior);
+            fgs.setFaithfulnessAssumed(false);
+            fgs.setIgnoreLinearDependent(true);
+            fgs.setDepth(-1);
+            fgs.setExpectedNumParents(expectedNumParents);
             fgs.setSamplePrior(samplePrior);
 
             Graph graph = fgs.search();
@@ -883,6 +872,17 @@ public class PerformanceTests {
             out.println("Discretize elapsed " + (time2 - time1) + "ms");
             out.println("FGS elapsed " + (time3 - time2) + "ms");
             out.println("Total elapsed " + (time3 - time1) + "ms");
+
+            try {
+                File path2 = new File(path);
+                final File file = new File("long.FGSDiscrete." + path2.getName() + ".graph.txt");
+                PrintStream _out = new PrintStream(file);
+                _out.println(graph);
+                _out.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
 
             printDegreeDistribution(graph, out);
 
@@ -2033,9 +2033,9 @@ public class PerformanceTests {
                     break;
                 case "FGSDiscrete":
                     String path = args[1];
-                    final double structurePrior = Double.parseDouble(args[2]);
+                    final double expectedNumParents = Double.parseDouble(args[2]);
                     final double samplePrior = Double.parseDouble(args[3]);
-                    performanceTests.testFgsDiscrete(path, structurePrior, samplePrior);
+                    performanceTests.testFgsDiscrete(path, expectedNumParents, samplePrior);
                     break;
                 default:
                     throw new IllegalArgumentException("Not a configuration!");

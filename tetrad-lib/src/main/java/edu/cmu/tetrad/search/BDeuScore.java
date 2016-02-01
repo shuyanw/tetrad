@@ -142,7 +142,7 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
 
 //        score += (r) * q * FastMath.log(getExpectedNumParents());
 
-        score = getPriorForStructure(parents.length);
+        score += getPriorForStructure(parents.length);
 
         final double cellPrior = getSamplePrior() / (r * q);
         final double rowPrior = getSamplePrior() / q;
@@ -167,7 +167,7 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         double e = getExpectedNumParents();
         double k = numParents;
         double n = data.length;
-        return k * Math.log(e / n) + (n - k) * Math.log(1 - (e / n));
+        return k * Math.log(e / n) + (n - k) * Math.log(1.0 - (e / n));
     }
 
     @Override
@@ -210,7 +210,7 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
 
 //        score += (r) * q * FastMath.log(getExpectedNumParents());
 
-        score = getPriorForStructure(1);
+        score += getPriorForStructure(1);
 
         final double cellPrior = getSamplePrior() / (r * q);
         final double rowPrior = getSamplePrior() / q;
@@ -254,7 +254,7 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
 
 //        score += (r) * q * FastMath.log(getExpectedNumParents());
 
-        score = getPriorForStructure(0);
+        score += getPriorForStructure(0);
 
         final double cellPrior = getSamplePrior() / r;
         final double rowPrior = getSamplePrior();

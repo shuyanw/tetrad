@@ -213,8 +213,8 @@ public final class GFci {
             ges.setKnowledge(getKnowledge());
             ges.setPenaltyDiscount(penaltyDiscount);
             ges.setSamplePrior(samplePrior);
-            ges.setStructurePrior(structurePrior);
-            ges.setStructurePrior(1);
+            ges.setExpectedNumParents(structurePrior);
+            ges.setExpectedNumParents(1);
             ges.setVerbose(false);
             ges.setDepth(getDepth());
             ges.setNumPatternsToStore(0);

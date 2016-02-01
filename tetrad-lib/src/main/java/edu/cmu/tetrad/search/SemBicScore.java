@@ -90,12 +90,11 @@ public class SemBicScore implements GesScore {
         try {
             covxxInv = covxx.inverse();
         } catch (Exception e) {
-            if (isIgnoreLinearDependent()) {
-                return Double.NaN;
-            } else {
+            if (!isIgnoreLinearDependent()) {
                 printMinimalLinearlyDependentSet(parents, getCovariances());
-                return Double.NaN;
             }
+
+            return Double.NaN;
         }
 
         TetradVector covxy = getSelection2(getCovariances(), parents, i);
@@ -269,6 +268,7 @@ public class SemBicScore implements GesScore {
                 m.inverse();
             } catch (Exception e2) {
                 out.println("### Linear dependence among variables: " + _sel);
+                break;
             }
         }
     }

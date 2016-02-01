@@ -37,7 +37,6 @@ import edu.cmu.tetrad.search.SearchGraphUtils;
 import edu.cmu.tetrad.sem.LargeSemSimulator;
 import edu.cmu.tetrad.sem.SemIm;
 import edu.cmu.tetrad.sem.SemPm;
-import edu.cmu.tetrad.util.MatrixUtils;
 import edu.cmu.tetrad.util.RandomUtil;
 import org.junit.Test;
 
@@ -154,7 +153,7 @@ public class TestFgs {
         ges.setFaithfulnessAssumed(false);
 //        ges.setDepth(3);
 
-        ges.setStructurePrior(structurePrior);
+        ges.setExpectedNumParents(structurePrior);
         ges.setSamplePrior(samplePrior);
 
         Graph estPattern = ges.search();

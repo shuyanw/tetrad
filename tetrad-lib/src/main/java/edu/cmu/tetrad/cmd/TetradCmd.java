@@ -668,7 +668,7 @@ public final class TetradCmd {
 
         ges.setPenaltyDiscount(penaltyDiscount);
         ges.setSamplePrior(samplePrior);
-        ges.setStructurePrior(structurePrior);
+        ges.setExpectedNumParents(structurePrior);
 
         ges.setKnowledge(getKnowledge());
 

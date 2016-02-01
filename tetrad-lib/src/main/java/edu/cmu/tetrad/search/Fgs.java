@@ -23,6 +23,7 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.*;
+import edu.cmu.tetrad.util.ChoiceGenerator;
 import edu.cmu.tetrad.util.DepthChoiceGenerator;
 import edu.cmu.tetrad.util.ForkJoinPoolInstance;
 import edu.cmu.tetrad.util.TetradLogger;
@@ -560,7 +561,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
                             double s2 = gesScore.localScore(hashIndices.get(y));
                             bump = s1 - s2;
 
-                            if (gesScore.isEffectEdge(bump)) {
+                            if (isFaithfulnessAssumed() && gesScore.isEffectEdge(bump)) {
                                 final Edge edge = Edges.undirectedEdge(x, y);
                                 if (boundGraph != null && !boundGraph.isAdjacentTo(edge.getNode1(), edge.getNode2()))
                                     continue;
@@ -848,42 +849,92 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
 
         final Set<Node> naYX = getNaYX(a, b, graph);
-        final List<Node> t = getTNeighbors(a, b, graph);
+        List<Node> t = getTNeighbors(a, b, graph);
 
         final int _depth = Math.min(t.size(), depth == -1 ? 1000 : depth);
 
         clearArrow(a, b);
+        List<Set<Node>> lastSubsets = null;
 
-        final DepthChoiceGenerator gen = new DepthChoiceGenerator(t.size(), _depth);
+        for (int i = 0; i <= _depth; i++) {
+            final ChoiceGenerator gen = new ChoiceGenerator(t.size(), i);
+            int[] choice;
+            boolean found = false;
+            List<Set<Node>> subsets = new ArrayList<>();
 
-        int[] choice;
+            while ((choice = gen.next()) != null) {
+                Set<Node> s = GraphUtils.asSet(choice, t);
 
-        // Try parallelizing this.
-        while ((choice = gen.next()) != null) {
-            Set<Node> s = GraphUtils.asSet(choice, t);
+                if (lastSubsets != null) {
+                    boolean foundASubset = false;
 
-            Set<Node> union = new HashSet<>(s);
-            union.addAll(naYX);
+                    for (Set<Node> set : lastSubsets) {
+                        if (s.containsAll(set)) {
+                            foundASubset = true;
+                            break;
+                        }
+                    }
 
-            // Necessary condition for it to be a clique later (after possible edge removals) is that it be a clique
-            // now.
-            if (!isClique(union, graph)) continue;
+                    if (!foundASubset) continue;
+                }
 
-            if (existsKnowledge()) {
-                if (!validSetByKnowledge(b, s)) {
-                    continue;
+                Set<Node> union = new HashSet<>(s);
+                union.addAll(naYX);
+
+                // Necessary condition for it to be a clique later (after possible edge removals) is that it be a clique
+                // now.
+                if (!isClique(union, graph)) continue;
+
+                if (existsKnowledge()) {
+                    if (!validSetByKnowledge(b, s)) {
+                        continue;
+                    }
+                }
+
+                double bump = insertEval(a, b, s, naYX, graph, hashIndices);
+
+                if (bump > 0.0) {
+                    Arrow arrow = new Arrow(bump, a, b, s, naYX);
+                    sortedArrows.add(arrow);
+                    addLookupArrow(a, b, arrow);
+                    found = true;
+                    subsets.add(s);
                 }
             }
 
-
-            double bump = insertEval(a, b, s, naYX, graph, hashIndices);
-
-            if (bump > 0.0) {
-                Arrow arrow = new Arrow(bump, a, b, s, naYX);
-                sortedArrows.add(arrow);
-                addLookupArrow(a, b, arrow);
-            }
+            if (!found) break;
+            lastSubsets = subsets;
         }
+
+//        final DepthChoiceGenerator gen = new DepthChoiceGenerator(t.size(), _depth);
+//
+//        int[] choice;
+//
+//        // Try parallelizing this.
+//        while ((choice = gen.next()) != null) {
+//            Set<Node> s = GraphUtils.asSet(choice, t);
+//
+//            Set<Node> union = new HashSet<>(s);
+//            union.addAll(naYX);
+//
+//            // Necessary condition for it to be a clique later (after possible edge removals) is that it be a clique
+//            // now.
+//            if (!isClique(union, graph)) continue;
+//
+//            if (existsKnowledge()) {
+//                if (!validSetByKnowledge(b, union)) {
+//                    continue;
+//                }
+//            }
+//
+//            double bump = insertEval(a, b, s, naYX, graph, hashIndices);
+//
+//            if (bump > 0.0) {
+//                Arrow arrow = new Arrow(bump, a, b, s, naYX);
+//                sortedArrows.add(arrow);
+//                addLookupArrow(a, b, arrow);
+//            }
+//        }
     }
 
     // Reevaluates arrows after removing an edge from the graph.
@@ -1002,9 +1053,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
     }
 
-    public void setStructurePrior(double structurePrior) {
+    public void setExpectedNumParents(double expectedNumParents) {
         if (gesScore instanceof LocalDiscreteScore) {
-            ((LocalDiscreteScore) gesScore).setExpectedNumParents(structurePrior);
+            ((LocalDiscreteScore) gesScore).setExpectedNumParents(expectedNumParents);
         }
     }
 
@@ -1237,7 +1288,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
         for (Node h : subset) {
             Edge oldyh = graph.getEdge(y, h);
-//
+
             if (oldyh != null && Edges.isUndirectedEdge(oldyh)) {
                 if (!graph.isAdjacentTo(y, h)) throw new IllegalArgumentException("Not adjacent: " + y + ", " + h);
 
