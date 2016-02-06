@@ -1024,7 +1024,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
     }
 
-    public void setExpectedNumParents(double expectedNumParents) {
+    public void setStructurePrior(double expectedNumParents) {
         if (gesScore instanceof LocalDiscreteScore) {
             ((LocalDiscreteScore) gesScore).setStructurePrior(expectedNumParents);
         }

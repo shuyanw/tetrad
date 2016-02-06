@@ -56,31 +56,6 @@ public class GraphScore implements GesScore {
         this.variables = dag.getNodes();
     }
 
-    @Override
-    public double localScore(int i, int[] parents, int[] all) {
-        Node child = variables.get(i);
-        List<Node> scoreParents = getVariableList(parents);
-        int numAgreements = 0;
-
-        List<Node> P = dag.getParents(child);
-
-        for (int j = 0; j < scoreParents.size(); j++) {
-            Node x = scoreParents.get(j);
-
-            if (dag.isDConnectedTo(x, child, P)) {
-                numAgreements++;
-            } else {
-                numAgreements--;
-            }
-        }
-
-        int score = numAgreements;
-
-        System.out.println("Score for " + variables.get(i) + " | " + getVariableSet(parents) + " is " + (score));
-
-        return score;
-    }
-
     /**
      * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model
      */

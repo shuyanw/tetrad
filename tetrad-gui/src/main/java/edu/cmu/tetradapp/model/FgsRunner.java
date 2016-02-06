@@ -104,9 +104,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
     public void execute() {
         Object source = getDataModel();
 
-        if (source instanceof DataModelList) {
-            source = ((DataModelList) source).getSelectedModel();
-        } else if (getSourceGraph() != null) {
+        if (source == null && getSourceGraph() != null) {
             source = getSourceGraph();
         }
 
@@ -131,7 +129,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
             ges.setPenaltyDiscount(penalty);
             ges.setDepth(2);
             ges.setNumPatternsToStore(indTestParams.getNumPatternsToSave());
-//            ges.setFaithfulnessAssumed(faithfulnessAssumed);
+            ges.setFaithfulnessAssumed(faithfulnessAssumed);
             ges.setVerbose(true);
 
         } else if (source instanceof DataSet) {
@@ -161,7 +159,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
                 ges.setKnowledge(getParams().getKnowledge());
 //                ges.setDepth(2);
                 ges.setNumPatternsToStore(indTestParams.getNumPatternsToSave());
-//                ges.setFaithfulnessAssumed(faithfulnessAssumed);
+                ges.setFaithfulnessAssumed(faithfulnessAssumed);
             }
             else {
                 throw new IllegalStateException("Data set must either be continuous or discrete.");

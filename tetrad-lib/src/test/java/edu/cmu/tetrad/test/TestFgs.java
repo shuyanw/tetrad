@@ -153,7 +153,7 @@ public class TestFgs {
         ges.setFaithfulnessAssumed(false);
 //        ges.setDepth(3);
 
-        ges.setExpectedNumParents(structurePrior);
+        ges.setStructurePrior(structurePrior);
         ges.setSamplePrior(samplePrior);
 
         Graph estPattern = ges.search();

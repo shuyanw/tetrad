@@ -86,11 +86,6 @@ public class BDeuScore4 implements LocalDiscreteScore, GesScore {
     }
 
     @Override
-    public double localScore(int i, int[] parents, int[] all) {
-        return 0;
-    }
-
-    @Override
     public double localScore(int node, int parents[]) {
 
         // Number of categories for node.
