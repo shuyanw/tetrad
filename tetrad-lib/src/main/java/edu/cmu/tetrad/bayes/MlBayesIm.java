@@ -585,7 +585,7 @@ public final class MlBayesIm implements BayesIm {
 
         for (int i = 0; i < size; i++) {
             double v = RandomUtil.getInstance().nextUniform(0, 1);
-            row[i] = v > 0.5 ? 3 * v : v;
+            row[i] = v;
             sum += row[i];
         }
 
@@ -601,7 +601,7 @@ public final class MlBayesIm implements BayesIm {
      * Double.NaN value in it.
      *
      * @param nodeIndex the node for the table whose incomplete rows are to be
-     *                  randomized.
+     *                  randomized.ñ˜˜
      */
     public void randomizeIncompleteRows(int nodeIndex) {
         for (int rowIndex = 0; rowIndex < getNumRows(nodeIndex); rowIndex++) {

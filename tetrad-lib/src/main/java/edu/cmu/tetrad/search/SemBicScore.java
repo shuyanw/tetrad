@@ -78,9 +78,6 @@ public class SemBicScore implements GesScore {
      * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model
      */
     public double localScore(int i, int[] parents) {
-        if (parents.length == 0) return localScore(i);
-        else if (parents.length == 1) return localScore(i, parents[0]);
-
         double residualVariance = getCovariances().getValue(i, i);
         int n = getSampleSize();
         int p = parents.length;
@@ -128,51 +125,53 @@ public class SemBicScore implements GesScore {
      * Specialized scoring method for a single parent. Used to speed up the effect edges search.
      */
     public double localScore(int i, int parent) {
-        double residualVariance = getCovariances().getValue(i, i);
-        int n = getSampleSize();
-        int p = 1;
-        final double covXX = getCovariances().getValue(parent, parent);
-
-        if (covXX == 0) {
-            if (isVerbose()) {
-                out.println("Dividing by zero");
-            }
-            return Double.NaN;
-        }
-
-        double covxxInv = 1.0 / covXX;
-        double covxy = getCovariances().getValue(i, parent);
-        double b = covxxInv * covxy;
-        residualVariance -= covxy * b;
-
-        if (residualVariance <= 0) {
-            if (isVerbose()) {
-                out.println("Nonpositive residual varianceY: resVar / varianceY = " + (residualVariance / getCovariances().getValue(i, i)));
-            }
-            return Double.NaN;
-        }
-
-        double c = getPenaltyDiscount();
-        return score(residualVariance, n, p, c);
+        return localScore(i, new int[]{parent});
+//        double residualVariance = getCovariances().getValue(i, i);
+//        int n = getSampleSize();
+//        int p = 1;
+//        final double covXX = getCovariances().getValue(parent, parent);
+//
+//        if (covXX == 0) {
+//            if (isVerbose()) {
+//                out.println("Dividing by zero");
+//            }
+//            return Double.NaN;
+//        }
+//
+//        double covxxInv = 1.0 / covXX;
+//        double covxy = getCovariances().getValue(i, parent);
+//        double b = covxxInv * covxy;
+//        residualVariance -= covxy * b;
+//
+//        if (residualVariance <= 0) {
+//            if (isVerbose()) {
+//                out.println("Nonpositive residual varianceY: resVar / varianceY = " + (residualVariance / getCovariances().getValue(i, i)));
+//            }
+//            return Double.NaN;
+//        }
+//
+//        double c = getPenaltyDiscount();
+//        return score(residualVariance, n, p, c);
     }
 
     /**
      * Specialized scoring method for no parents. Used to speed up the effect edges search.
      */
     public double localScore(int i) {
-        double residualVariance = getCovariances().getValue(i, i);
-        int n = getSampleSize();
-        int p = 0;
-
-        if (residualVariance <= 0) {
-            if (isVerbose()) {
-                out.println("Nonpositive residual varianceY: resVar / varianceY = " + (residualVariance / getCovariances().getValue(i, i)));
-            }
-            return Double.NaN;
-        }
-
-        double c = getPenaltyDiscount();
-        return score(residualVariance, n, p, c);
+        return localScore(i, new int[]{});
+//        double residualVariance = getCovariances().getValue(i, i);
+//        int n = getSampleSize();
+//        int p = 0;
+//
+//        if (residualVariance <= 0) {
+//            if (isVerbose()) {
+//                out.println("Nonpositive residual varianceY: resVar / varianceY = " + (residualVariance / getCovariances().getValue(i, i)));
+//            }
+//            return Double.NaN;
+//        }
+//
+//        double c = getPenaltyDiscount();
+//        return score(residualVariance, n, p, c);
     }
 
     /**

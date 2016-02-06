@@ -153,11 +153,11 @@ public final class FgsParams implements MeekSearchParams {
     }
 
     public double getStructurePrior() {
-        return indTestParams.getExpectedNumParents();
+        return indTestParams.getStructurePrior();
     }
 
     public void setStructurePrior(double structurePrior) {
-        indTestParams.setExpectedNumParents(structurePrior);
+        indTestParams.setStructurePrior(structurePrior);
     }
 
     public double getComplexityPenalty() {

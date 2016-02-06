@@ -775,7 +775,7 @@ public class PerformanceTests {
 
         BDeuScore score = new BDeuScore(data);
         score.setSamplePrior(1);
-        score.setExpectedNumParents(0.1);
+        score.setStructurePrior(0.1);
 
         long time4 = System.currentTimeMillis();
 
@@ -830,7 +830,7 @@ public class PerformanceTests {
         System.out.println("See output file.");
     }
 
-    public void testFgsDiscrete(String path, double expectedNumParents, double samplePrior) {
+    public void testFgsDiscrete(String path, double structurePrior, double samplePrior) {
         File _path = new File(path);
         init(new File("long.FGSDiscrete." + _path.getName() + ".txt"), "Tests performance of the FGS algorithm");
 
@@ -860,7 +860,6 @@ public class PerformanceTests {
             fgs.setFaithfulnessAssumed(false);
             fgs.setIgnoreLinearDependent(true);
             fgs.setDepth(3);
-            fgs.setExpectedNumParents(expectedNumParents);
             fgs.setSamplePrior(samplePrior);
 
             Graph graph = fgs.search();
@@ -2034,9 +2033,9 @@ public class PerformanceTests {
                     break;
                 case "FGSDiscrete":
                     String path = args[1];
-                    final double expectedNumParents = Double.parseDouble(args[2]);
+                    final double structurePrior = Double.parseDouble(args[2]);
                     final double samplePrior = Double.parseDouble(args[3]);
-                    performanceTests.testFgsDiscrete(path, expectedNumParents, samplePrior);
+                    performanceTests.testFgsDiscrete(path, structurePrior, samplePrior);
                     break;
                 default:
                     throw new IllegalArgumentException("Not a configuration!");

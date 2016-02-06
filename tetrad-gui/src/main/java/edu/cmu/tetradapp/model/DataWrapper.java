@@ -80,6 +80,9 @@ public class DataWrapper implements SessionModel, KnowledgeEditable, KnowledgeBo
      */
     private Params params = null;
 
+    private String removeColumnsInit = "";
+    private String selectedColumnsInit = "";
+
     //==============================CONSTRUCTORS===========================//
 
     /**
@@ -431,6 +434,24 @@ public class DataWrapper implements SessionModel, KnowledgeEditable, KnowledgeBo
 		}
 		return variableNames;
 	}
+
+    public String getRemoveColumnsInit() {
+        return removeColumnsInit;
+    }
+
+    public String getSelectedColumnsInit() {
+        return selectedColumnsInit;
+    }
+
+    public void setRemoveColumnsInit(String removeColumnsInit) {
+        if (removeColumnsInit == null) throw new NullPointerException();
+        this.removeColumnsInit = removeColumnsInit;
+    }
+
+    public void setSelectedColumnsInit(String selectedColumnsInit) {
+        if (selectedColumnsInit == null) throw new NullPointerException();
+        this.selectedColumnsInit = selectedColumnsInit;
+    }
 }
 
 

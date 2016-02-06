@@ -855,6 +855,9 @@ public class FgsSearchEditor extends AbstractSearchEditor
 
         if (indTestParams instanceof FgsIndTestParams) {
             if (algorithmRunner instanceof  FgsRunner) {
+                if (algorithmRunner.getDataModelList() == null) {
+                    return new JPanel();
+                }
                 FgsRunner fgsRunner = ((FgsRunner) algorithmRunner);
                 FgsIndTestParams params = (FgsIndTestParams) indTestParams;
                 DataModel dataModel = fgsRunner.getDataModelList().get(0);

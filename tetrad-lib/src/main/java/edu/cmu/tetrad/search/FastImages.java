@@ -218,7 +218,7 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
                 DataSet dataSet = (DataSet) dataModel;
 
                 if (dataSet.isDiscrete()) {
-                    gesScores.add(new BDeuScore2(dataSet));
+                    gesScores.add(new BDeuScore3(dataSet));
                 } else {
                     gesScores.add(new SemBicScore(new CovarianceMatrixOnTheFly(dataSet)));
                 }
@@ -445,8 +445,8 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
      */
     public void setStructurePrior(double structurePrior) {
         for (GesScore score : gesScores) {
-            if (score instanceof BDeuScore2) {
-                ((BDeuScore2)score).setExpectedNumParents(structurePrior);
+            if (score instanceof BDeuScore3) {
+                ((BDeuScore3)score).setStructurePrior(structurePrior);
             }
         }
     }
@@ -456,8 +456,8 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
      */
     public void setSamplePrior(double samplePrior) {
         for (GesScore score : gesScores) {
-            if (score instanceof BDeuScore2) {
-                ((BDeuScore2)score).setSamplePrior(samplePrior);
+            if (score instanceof BDeuScore3) {
+                ((BDeuScore3)score).setSamplePrior(samplePrior);
             }
         }
     }
@@ -1740,6 +1740,8 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
         }
 
         List<Double> diffs = new ArrayList<>();
+
+        int[] all = parentIndices1.length > parentIndices2.length ? parentIndices1 : parentIndices2;
 
 //        int numDataSets = numDataSets();
         double sum = 0.0;

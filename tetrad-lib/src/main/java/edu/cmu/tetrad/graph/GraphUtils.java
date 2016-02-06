@@ -422,11 +422,11 @@ public final class GraphUtils {
 //
 //        References
 //                ----------
-//        .. [1] B. Bollob{\'a}s, C. Borgs, J. Chayes, and O. Riordan,
-//            Directed scale-free graphs,
-//                    Proceedings of the fourteenth annual ACM-SIAM symposium on
-//            Discrete algorithms, 132--139, 2003.
-//            """
+    //        .. [1] B. Bollob{\'a}s, C. Borgs, J. Chayes, and O. Riordan,
+    //            Directed scale-free graphs,
+    //                    Proceedings of the fourteenth annual ACM-SIAM symposium on
+    //            Discrete algorithms, 132--139, 2003.
+    //            """
 //
 //            def _choose_node(G,distribution,delta):
 //            cumsum=0.0

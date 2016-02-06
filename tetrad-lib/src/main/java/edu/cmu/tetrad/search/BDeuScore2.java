@@ -23,12 +23,10 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Node;
-import edu.cmu.tetrad.util.ProbUtils;
 import org.apache.commons.math3.special.Gamma;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Calculates the BDeu score.
@@ -407,7 +405,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
         return samplePrior;
     }
 
-    public void setExpectedNumParents(double structurePrior) {
+    public void setStructurePrior(double structurePrior) {
         this.structurePrior = structurePrior;
     }
 

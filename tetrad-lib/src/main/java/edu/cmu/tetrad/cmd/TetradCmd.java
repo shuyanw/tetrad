@@ -363,8 +363,8 @@ public final class TetradCmd {
             } else if ("-rfci".equalsIgnoreCase(token)) {
                 this.rfciUsed = true;
             } else if ("-nodsep".equalsIgnoreCase(token)) {
-                this.nodsep = true;            } 
-            else if ("-silent".equalsIgnoreCase(token)) {
+                this.nodsep = true;
+            } else if ("-silent".equalsIgnoreCase(token)) {
                 this.silent = true;
             } else {
                 throw new IllegalArgumentException(
@@ -668,7 +668,6 @@ public final class TetradCmd {
 
         ges.setPenaltyDiscount(penaltyDiscount);
         ges.setSamplePrior(samplePrior);
-        ges.setExpectedNumParents(structurePrior);
 
         ges.setKnowledge(getKnowledge());
 

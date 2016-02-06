@@ -168,7 +168,7 @@ public class SemDataWrapper extends DataWrapper implements SessionModel {
         boolean latentDataSaved = params.isLatentDataSaved();
 
         for (int i = 0; i < params.getNumDataSets(); i++) {
-            DataSet dataSet = simulator.simulateData(sampleSize, seed, latentDataSaved);
+            DataSet dataSet = simulator.simulateData(sampleSize, latentDataSaved);
             dataSet.setName("data" + (i + 1));
             dataModelList.add(dataSet);
         }

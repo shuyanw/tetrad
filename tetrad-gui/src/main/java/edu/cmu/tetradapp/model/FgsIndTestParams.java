@@ -36,7 +36,7 @@ public class FgsIndTestParams implements IndTestParams {
     /**
      * @serial Range (-inf, +inf?).
      */
-    private double expectedNumParents = 1;
+    private double structurePrior = 1;
 
     /**
      * @serial Range (0, +inf).
@@ -140,16 +140,16 @@ public class FgsIndTestParams implements IndTestParams {
         this.samplePrior = samplePrior;
     }
 
-    public double getExpectedNumParents() {
-        return this.expectedNumParents;
+    public double getStructurePrior() {
+        return this.structurePrior;
     }
 
-    public void setExpectedNumParents(double expectedNumParents) {
-        if (expectedNumParents < 0.0) {
+    public void setStructurePrior(double structurePrior) {
+        if (structurePrior < 0.0) {
             throw new IllegalArgumentException("Should be non-negative.");
         }
 
-        this.expectedNumParents = expectedNumParents;
+        this.structurePrior = structurePrior;
     }
 
     public IKnowledge getKnowledge() {

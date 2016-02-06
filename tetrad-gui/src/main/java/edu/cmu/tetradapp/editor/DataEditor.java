@@ -24,7 +24,6 @@ package edu.cmu.tetradapp.editor;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.Node;
-import edu.cmu.tetrad.graph.NodeType;
 import edu.cmu.tetrad.util.JOptionUtils;
 import edu.cmu.tetradapp.model.DataWrapper;
 import edu.cmu.tetradapp.model.KnowledgeEditable;
@@ -37,6 +36,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -453,8 +453,12 @@ public final class DataEditor extends JPanel implements KnowledgeEditable,
 
         final ActionListener removeNamedColumnsActionListener = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                String init = dataWrapper.getRemoveColumnsInit();
+
                 String variables = JOptionPane.showInputDialog(JOptionUtils.getCenteringFrame(),
-                        "Type a space-separated list of variable names.");
+                        "Type a space-separated list of variable names.", init);
+
+                dataWrapper.setRemoveColumnsInit(variables);
 
                 String[] tokens = variables.split(" ");
 
@@ -490,16 +494,18 @@ public final class DataEditor extends JPanel implements KnowledgeEditable,
 
         final ActionListener selectNamedColumnsActionListener = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                String init = dataWrapper.getSelectedColumnsInit();
+
                 String variables = JOptionPane.showInputDialog(JOptionUtils.getCenteringFrame(),
-                        "Type a space-separated list of variable names.");
+                        "Type a space-separated list of variable names.", init);
+
+                dataWrapper.setSelectedColumnsInit(variables);
 
                 String[] tokens = variables.split(" ");
 
-                Set _tokens = new HashSet<String>();
+                Set<String> _tokens = new HashSet<String>();
 
-                for (String token : tokens) {
-                    _tokens.add(token);
-                }
+                Collections.addAll(_tokens, tokens);
 
                 for (int i = 0; i < getNumJTables(); i++) {
                     JTable jTable = getJTableAt(i);
@@ -511,10 +517,8 @@ public final class DataEditor extends JPanel implements KnowledgeEditable,
                         DataSet dataSet = tableTabular.getDataSet();
 
                         for (Node node : dataSet.getVariables()) {
-                            for (String token : tokens) {
-                                if (!_tokens.contains(node.getName())) {
-                                    dataSet.removeColumn(node);
-                                }
+                            if (!_tokens.contains(node.getName())) {
+                                dataSet.removeColumn(dataSet.getVariable(node.getName()));
                             }
                         }
 
@@ -589,7 +593,7 @@ public final class DataEditor extends JPanel implements KnowledgeEditable,
                                 }
 
                                 for (int k = 0; k < dataSet.getNumRows(); k++) {
-                                     dataSet.setDouble(k, j, (double) variable.getMissingValueMarker());
+                                    dataSet.setDouble(k, j, (double) variable.getMissingValueMarker());
                                 }
 
                             } else {

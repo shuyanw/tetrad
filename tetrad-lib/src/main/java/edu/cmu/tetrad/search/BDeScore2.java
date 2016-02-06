@@ -302,7 +302,7 @@ public class BDeScore2 implements LocalDiscreteScore, GesScore {
         return samplePrior;
     }
 
-    public void setExpectedNumParents(double structurePrior) {
+    public void setStructurePrior(double structurePrior) {
         this.structurePrior = structurePrior;
     }
 

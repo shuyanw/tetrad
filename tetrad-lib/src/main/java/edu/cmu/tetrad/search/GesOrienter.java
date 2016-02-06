@@ -166,7 +166,7 @@ public final class GesOrienter implements GraphSearch, GraphScorer, Reorienter {
         if (dataSet.isDiscrete()) {
             BDeuScore score = new BDeuScore(dataSet);
             score.setSamplePrior(10);
-            score.setExpectedNumParents(0.001);
+            score.setStructurePrior(0.001);
         }
         setStructurePrior(0.001);
         setSamplePrior(10.);
@@ -304,7 +304,7 @@ public final class GesOrienter implements GraphSearch, GraphScorer, Reorienter {
 
     public void setStructurePrior(double structurePrior) {
         if (getDiscreteScore() != null) {
-            getDiscreteScore().setExpectedNumParents(structurePrior);
+            getDiscreteScore().setStructurePrior(structurePrior);
         }
     }
 

@@ -59,6 +59,10 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
 
     //============================CONSTRUCTORS============================//
 
+    public FgsRunner(GraphWrapper graphWrapper, FgsParams params) {
+        super(graphWrapper.getGraph(), params, null);
+    }
+
     public FgsRunner(DataWrapper dataWrapper, FgsParams params) {
         super(dataWrapper, params, null);
     }
@@ -102,6 +106,8 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
 
         if (source instanceof DataModelList) {
             source = ((DataModelList) source).getSelectedModel();
+        } else if (getSourceGraph() != null) {
+            source = getSourceGraph();
         }
 
         if (source == null) {
@@ -138,7 +144,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
                 ges = new Fgs(gesScore);
                 ges.setKnowledge(getParams().getKnowledge());
                 ges.setPenaltyDiscount(penalty);
-                ges.setDepth(2);
+//                ges.setDepth(2);
                 ges.setNumPatternsToStore(indTestParams.getNumPatternsToSave());
 //                ges.setFaithfulnessAssumed(faithfulnessAssumed);
                 ges.setVerbose(true);
@@ -146,20 +152,29 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
             else if (dataSet.isDiscrete()) {
                 double samplePrior = ((FgsParams) getParams()).getSamplePrior();
                 double structurePrior = ((FgsParams) getParams()).getStructurePrior();
-                BDeuScore score = new BDeuScore(dataSet);
+                BDeuScore3 score = new BDeuScore3(dataSet);
                 score.setSamplePrior(samplePrior);
-                score.setExpectedNumParents(structurePrior);
+                score.setStructurePrior(structurePrior);
 //                BDeuScore score = new BDeuScore(dataSet);
                 ges = new Fgs(score);
                 ges.setVerbose(true);
                 ges.setKnowledge(getParams().getKnowledge());
-                ges.setDepth(2);
+//                ges.setDepth(2);
                 ges.setNumPatternsToStore(indTestParams.getNumPatternsToSave());
 //                ges.setFaithfulnessAssumed(faithfulnessAssumed);
             }
             else {
                 throw new IllegalStateException("Data set must either be continuous or discrete.");
             }
+        } else if (source instanceof Graph) {
+            GraphScore gesScore = new GraphScore((Graph) source);
+            ges = new Fgs(gesScore);
+            ges.setKnowledge(getParams().getKnowledge());
+            ges.setPenaltyDiscount(penalty);
+//                ges.setDepth(2);
+            ges.setNumPatternsToStore(indTestParams.getNumPatternsToSave());
+//                ges.setFaithfulnessAssumed(faithfulnessAssumed);
+            ges.setVerbose(true);
         } else {
             throw new RuntimeException(
                     "GES does not accept this type of data input.");

@@ -39,7 +39,7 @@ import java.text.NumberFormat;
 
 class FgsIndTestParamsEditor extends JComponent {
     private FgsIndTestParams params;
-    private DoubleTextField samplePriorField, expectedNumParentsField;
+    private DoubleTextField samplePriorField, structurePriorField;
     private boolean discreteData;
     private DoubleTextField penaltyDiscount;
     private IntTextField numPatternsToSave;
@@ -72,15 +72,14 @@ class FgsIndTestParamsEditor extends JComponent {
                 }
             });
 
-            this.expectedNumParentsField = new DoubleTextField(
-                    getFgsIndTestParams().getExpectedNumParents(), 5, nf, smallNf, 1e-3);
-            this.expectedNumParentsField.setFilter(new DoubleTextField.Filter() {
+            this.structurePriorField = new DoubleTextField(
+                    getFgsIndTestParams().getStructurePrior(), 5, nf, smallNf, 1e-3);
+            this.structurePriorField.setFilter(new DoubleTextField.Filter() {
                 public double filter(double value, double oldValue) {
                     try {
-                        getFgsIndTestParams().setExpectedNumParents(value);
+                        getFgsIndTestParams().setStructurePrior(value);
                         return value;
-                    }
-                    catch (IllegalArgumentException e) {
+                    } catch (IllegalArgumentException e) {
                         return oldValue;
                     }
                 }
@@ -93,7 +92,7 @@ class FgsIndTestParamsEditor extends JComponent {
 //            this.defaultStructurePrior.setBorder(null);
 //            this.defaultStructurePrior.addActionListener(new ActionListener() {
 //                public void actionPerformed(ActionEvent e) {
-//                    expectedNumParentsField.setValue(0.05);
+//                    structurePriorField.setValue(0.05);
 //                }
 //            });
         } else {
@@ -158,9 +157,9 @@ class FgsIndTestParamsEditor extends JComponent {
 
             Box b3 = Box.createHorizontalBox();
             b3.add(Box.createHorizontalStrut(5));
-            b3.add(new JLabel("Expected # Parents:"));
+            b3.add(new JLabel("Structure Prior:"));
             b3.add(Box.createHorizontalGlue());
-            b3.add(this.expectedNumParentsField);
+            b3.add(this.structurePriorField);
             add(b3);
 
 //            Box b4 = Box.createHorizontalBox();

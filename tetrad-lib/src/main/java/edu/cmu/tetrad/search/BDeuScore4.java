@@ -23,14 +23,13 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Node;
-import org.apache.commons.math3.special.Gamma;
 
 import java.util.List;
 
 /**
  * Calculates the BDeu score.
  */
-public class BDeuScore implements LocalDiscreteScore, GesScore {
+public class BDeuScore4 implements LocalDiscreteScore, GesScore {
     private List<Node> variables;
     private int[][] data;
     private int sampleSize;
@@ -42,7 +41,7 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
 
     private double lastBumpThreshold = 0.0;
 
-    public BDeuScore(DataSet dataSet) {
+    public BDeuScore4(DataSet dataSet) {
         if (dataSet == null) {
             throw new NullPointerException();
         }
@@ -145,25 +144,25 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         //Finally, compute the score
         double score = 0.0;
 
-//        score += r * q * FastMath.log(getStructurePrior());
-
-        score += Math.log(1.0 / r) * sampleSize;
-//
-//        score += getPriorForStructure(parents.length);
-
-        final double cellPrior = getSamplePrior() / (r * q);
-        final double rowPrior = getSamplePrior() / q;
+        final double cellPrior = getSamplePrior();
+        final double rowPrior = r * getSamplePrior();
 
         for (int j = 0; j < q; j++) {
-            score -= Gamma.logGamma(rowPrior + n_j[j]);
+            double rowSum = rowPrior + n_j[j];
 
             for (int k = 0; k < r; k++) {
-                score += Gamma.logGamma(cellPrior + n_jk[j][k]);
+                double alpha = cellPrior + n_jk[j][k];
+                double pk = (alpha) / rowSum;
+                double _score = (alpha - 1) * Math.log(pk);
+                score += _score;
             }
+
+//            score -= .5 * q * (r - 1) * Math.log(sampleSize);
         }
 
-        score += q * Gamma.logGamma(rowPrior);
-        score -= r * q * Gamma.logGamma(cellPrior);
+        double h = Math.log(1.0 / r) * sampleSize;
+
+        System.out.println("(1/r)^N = " + h + " score = " + score);
 
         lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
 
@@ -191,93 +190,88 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
 
     @Override
     public double localScore(int node, int parent) {
+        return localScore(node, new int[]{parent});
 
-        // Number of categories for node.
-        int r = numCategories[node];
-
-        // Numbers of categories of parents.
-        int q = numCategories[parent];
-
-        // Conditional cell coefs of data for node given parents(node).
-        int n_jk[][] = new int[q][r];
-        int n_j[] = new int[q];
-
-        int[] parentData = data[parent];
-        int[] childData = data[node];
-
-        for (int i = 0; i < sampleSize; i++) {
-            int parentValue = parentData[i];
-            int childValue = childData[i];
-            n_jk[parentValue][childValue]++;
-            n_j[parentValue]++;
-        }
-
-        //Finally, compute the score
-        double score = 0.0;
-
-//        score += (r) * q * FastMath.log(getStructurePrior());
-
-        score += getPriorForStructure(1);
-
-        final double cellPrior = getSamplePrior() / (r * q);
-        final double rowPrior = getSamplePrior() / q;
-
-        for (int j = 0; j < q; j++) {
-            score -= Gamma.logGamma(rowPrior + n_j[j]);
-
-            for (int k = 0; k < r; k++) {
-                score += Gamma.logGamma(cellPrior + n_jk[j][k]);
-            }
-        }
-
-        score += q * Gamma.logGamma(rowPrior);
-        score -= r * q * Gamma.logGamma(cellPrior);
-
-        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
-
-        return score;
+//        // Number of categories for node.
+//        int r = numCategories[node];
+//
+//        // Numbers of categories of parents.
+//        int q = numCategories[parent];
+//
+//        // Conditional cell coefs of data for node given parents(node).
+//        int n_jk[][] = new int[q][r];
+//        int n_j[] = new int[q];
+//
+//        int[] parentData = data[parent];
+//        int[] childData = data[node];
+//
+//        for (int i = 0; i < sampleSize; i++) {
+//            int parentValue = parentData[i];
+//            int childValue = childData[i];
+//            n_jk[parentValue][childValue]++;
+//            n_j[parentValue]++;
+//        }
+//
+//        //Finally, compute the score
+//        double score = r * q * Math.log(getStructurePrior());
+//
+//        final double cellPrior = getSamplePrior() / (r * q);
+//        final double rowPrior = getSamplePrior() / q;
+//
+//        for (int j = 0; j < q; j++) {
+//            score -= Gamma.logGamma(rowPrior + n_j[j]);
+//
+//            for (int k = 0; k < r; k++) {
+//                score += Gamma.logGamma(cellPrior + n_jk[j][k]);
+//            }
+//        }
+//
+//        score += q * Gamma.logGamma(rowPrior);
+//        score -= r * q * Gamma.logGamma(cellPrior);
+//
+//        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
+//
+//        return score;
     }
 
     @Override
     public double localScore(int node) {
+        return localScore(node, new int[0]);
 
-        // Number of categories for node.
-        int r = numCategories[node];
-
-        // Conditional cell coefs of data for node given parents(node).
-        int n_jk[] = new int[numCategories[node]];
-        int n_j = 0;
-
-        int[] childData = data[node];
-
-        for (int i = 0; i < sampleSize; i++) {
-            int childValue = childData[i];
-            n_jk[childValue]++;
-            n_j++;
-        }
-
-        //Finally, compute the score
-        double score = 0.0;
-
-//        score += (r) * q * FastMath.log(getStructurePrior());
-
-        score += getPriorForStructure(0);
-
-        final double cellPrior = getSamplePrior() / r;
-        final double rowPrior = getSamplePrior();
-
-        score -= Gamma.logGamma(rowPrior + n_j);
-
-        for (int k = 0; k < r; k++) {
-            score += Gamma.logGamma(cellPrior + n_jk[k]);
-        }
-
-        score += Gamma.logGamma(rowPrior);
-        score -= r * Gamma.logGamma(cellPrior);
-
-        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
-
-        return score;
+//        // Number of categories for node.
+//        int r = numCategories[node];
+//
+//        // Conditional cell coefs of data for node given parents(node).
+//        int n_jk[] = new int[numCategories[node]];
+//        int n_j = 0;
+//
+//        int[] childData = data[node];
+//
+//        for (int i = 0; i < sampleSize; i++) {
+//            int childValue = childData[i];
+//            n_jk[childValue]++;
+//            n_j++;
+//        }
+//
+//        //Finally, compute the score
+//        int q = 1;
+//        double score = r * q * Math.log(getStructurePrior());
+//
+//        final double cellPrior = getSamplePrior() / r;
+//        final double rowPrior = getSamplePrior();
+//
+//        score -= Gamma.logGamma(rowPrior + n_j);
+//
+//        for (int k = 0; k < r; k++) {
+//            score += Gamma.logGamma(cellPrior + n_jk[k]);
+//        }
+//
+//        score += Gamma.logGamma(rowPrior);
+//        score -= r * Gamma.logGamma(cellPrior);
+//
+//        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
+//
+//        return score;
     }
 
     @Override

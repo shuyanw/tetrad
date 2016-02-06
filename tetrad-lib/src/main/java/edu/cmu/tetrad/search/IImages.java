@@ -49,11 +49,6 @@ public interface IImages extends GraphScorer {
 
     double scoreDag(Graph dag);
 
-//    void setExpectedNumParents(double structurePrior);
-//
-//    void setSamplePrior(double samplePrior);
-//
-
     long getElapsedTime();
 
     void setElapsedTime(long elapsedTime);

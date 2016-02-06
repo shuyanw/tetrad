@@ -124,7 +124,7 @@ public class GesRunner extends AbstractAlgorithmRunner implements GraphSource,
                 double structurePrior = ((GesParams) getParams()).getStructurePrior();
                 BDeuScore score = new BDeuScore(dataSet);
                 score.setSamplePrior(samplePrior);
-                score.setExpectedNumParents(structurePrior);
+                score.setStructurePrior(structurePrior);
                 ges = new Ges((DataSet) source);
                 ges.setVerbose(true);
                 ges.setLog(true);

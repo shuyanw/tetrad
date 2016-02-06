@@ -194,14 +194,6 @@ public class ImagesFirstNontriangular implements GraphSearch, IImages {
         return images.scoreDag(dag);
     }
 
-//    public void setExpectedNumParents(double structurePrior) {
-//        images.setExpectedNumParents(structurePrior);
-//    }
-//
-//    public void setSamplePrior(double samplePrior) {
-//        images.setSamplePrior(samplePrior);
-//    }
-
     private boolean containsTriangle(Graph graph) {
         int numNodes = graph.getNumNodes();
         List<Node> nodes = graph.getNodes();

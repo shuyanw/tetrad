@@ -42,7 +42,7 @@ This is effective for PC, CPC, FCI, and CFCI, not GES.
 "-samplePrior" is by detault 10 but may be set to any positive number; this
 is used for GES.
 
-"-expectedNumParents" is by default 1 but may be set to any positive number; this
+"-structurePrior" is by default 1 but may be set to any positive number; this
 is used for GES.
 
 "-penaltydiscount" is by default 1 but may be set to any positive number; this

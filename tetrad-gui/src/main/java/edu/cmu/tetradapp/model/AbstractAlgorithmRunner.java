@@ -322,6 +322,7 @@ public abstract class AbstractAlgorithmRunner
     }
 
     public final DataModelList getDataModelList() {
+        if (dataWrapper == null) return null;
         return dataWrapper.getDataModelList();
     }
 

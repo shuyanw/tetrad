@@ -28,7 +28,7 @@ import edu.cmu.tetrad.data.DataSet;
  * Settings | File Templates.
  */
 public interface LocalDiscreteScore extends GesScore {
-    void setExpectedNumParents(double structurePrior);
+    void setStructurePrior(double structurePrior);
 
     void setSamplePrior(double samplePrior);
 

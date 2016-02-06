@@ -138,15 +138,6 @@ public class GraphScore implements GesScore {
             diff = 1;
         }
 
-//        for (Node node : allvars) {
-//            List<Node> nodeParents = dag.getParents(node);
-//            nodeParents.retainAll(allvars);
-//
-//            if (dag.isDSeparatedFrom(newVar, node, nodeParents)) {
-//                diff = -1;
-//            }
-//        }
-
         System.out.println("Score diff for " + newVar + "-->" + child + " given " + scoreParents + " = " + diff);
 
         return diff;
