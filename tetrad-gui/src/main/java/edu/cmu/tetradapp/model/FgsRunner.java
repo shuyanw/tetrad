@@ -170,7 +170,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
             ges.setKnowledge(getParams().getKnowledge());
             ges.setPenaltyDiscount(penalty);
 //                ges.setDepth(2);
-            ges.setNumPatternsToStore(indTestParams.getNumPatternsToSave());
+            ges.setNumPatternsToStore(50);
 //                ges.setFaithfulnessAssumed(faithfulnessAssumed);
             ges.setVerbose(true);
         } else {

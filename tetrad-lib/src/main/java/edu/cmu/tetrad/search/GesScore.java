@@ -21,6 +21,7 @@
 
 package edu.cmu.tetrad.search;
 
+import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.Node;
 
 import java.util.List;
@@ -31,7 +32,7 @@ import java.util.List;
 public interface GesScore {
     double localScore(int node, int parents[]);
 
-    double localScoreDiff(int i, int[] parents, int extra);
+    double localScoreDiff(int i, int[] parents, int extra, Graph graph);
 
     double localScore(int node, int parent);
 

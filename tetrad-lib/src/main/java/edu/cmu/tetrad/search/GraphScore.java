@@ -22,15 +22,10 @@
 package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.DataSet;
-import edu.cmu.tetrad.data.ICovarianceMatrix;
 import edu.cmu.tetrad.graph.Graph;
-import edu.cmu.tetrad.graph.IndependenceFact;
 import edu.cmu.tetrad.graph.Node;
-import edu.cmu.tetrad.util.DepthChoiceGenerator;
-import edu.cmu.tetrad.util.TetradMatrix;
-import edu.cmu.tetrad.util.TetradVector;
+import edu.cmu.tetrad.graph.NodeType;
 
-import java.io.PrintStream;
 import java.util.*;
 
 /**
@@ -53,7 +48,14 @@ public class GraphScore implements GesScore {
      */
     public GraphScore(Graph dag) {
         this.dag = dag;
-        this.variables = dag.getNodes();
+
+        this.variables = new ArrayList<>();
+
+        for (Node node : dag.getNodes()) {
+            if (node.getNodeType() == NodeType.MEASURED) {
+                this.variables.add(node);
+            }
+        }
     }
 
     /**
@@ -96,26 +98,54 @@ public class GraphScore implements GesScore {
 
 
     @Override
-    public double localScoreDiff(int i, int[] parents, int extra) {
+    public double localScoreDiff(int i, int[] parents, int extra, Graph graph) {
 
 
-        Node child = variables.get(i);
-        Node newVar = variables.get(extra);
+        Node y = variables.get(i);
+        Node x = variables.get(extra);
         List<Node> scoreParents = getVariableList(parents);
         List<Node> allvars = new ArrayList<>(scoreParents);
+        allvars.add(x);
+//        allvars.add(y);
 
-        double diff = -1;
+        double diff = 0;
 
-        List<Node> childParents = dag.getParents(child);
-        childParents.retainAll(allvars);
+        List<Node> parentsInDag = getParentsInDag(y, scoreParents);
+//        parentsInDag.addAll(scoreParents);
 
-        if (!dag.isDSeparatedFrom(newVar, child, childParents)) {
-            diff = 1;
+        if (dag.isDConnectedTo(x, y, parentsInDag)) {
+            diff += 1;
         }
 
-        System.out.println("Score diff for " + newVar + "-->" + child + " given " + scoreParents + " = " + diff);
+        System.out.println("x = " + x + " y = " + y + " diff0 = " + diff);
+
+        for (Node z : scoreParents) {
+            if (
+                    dag.isDConnectedTo(x, y, parentsInDag) &&
+                            dag.isDConnectedTo(z, y, parentsInDag) &&
+//                            !dag.isDConnectedTo(x, z, Collections.EMPTY_LIST) &&
+                            dag.isDConnectedTo(x, z, Collections.singletonList(y))
+                    ) {
+                System.out.println("found dependency " + x + "-->" + y + "<--" + z + ", conditioning on " + y);
+                diff += 1;
+            }
+        }
+
+        System.out.println("x = " + x + " y = " + y + " diff1 = " + diff);
+
+        if (diff == 0) diff = -1;
+
+        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
 
         return diff;
+    }
+
+    private List<Node> getParentsInDag(Node y, List<Node> allvars) {
+        return allvars;
+//        Set<Node> parents = new HashSet<>();
+//        parents.addAll(dag.getParents(y));
+//        parents.retainAll(allvars);
+//        return new ArrayList<>(parents);
     }
 
     int[] append(int[] parents, int extra) {

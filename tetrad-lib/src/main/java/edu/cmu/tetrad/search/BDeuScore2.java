@@ -22,6 +22,7 @@
 package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
+import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.Node;
 import org.apache.commons.math3.special.Gamma;
 
@@ -199,7 +200,7 @@ public class BDeuScore2 implements LocalDiscreteScore, GesScore {
     }
 
     @Override
-    public double localScoreDiff(int i, int[] parents, int extra) {
+    public double localScoreDiff(int i, int[] parents, int extra, Graph graph) {
         return localScore(i, append(parents, extra)) - localScore(i, parents);
     }
 
