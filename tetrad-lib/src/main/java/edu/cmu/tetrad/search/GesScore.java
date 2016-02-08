@@ -32,7 +32,7 @@ import java.util.List;
 public interface GesScore {
     double localScore(int node, int parents[]);
 
-    double localScoreDiff(int i, int[] parents, int extra, Graph graph);
+    double localScoreDiff(int i, int[] parents, int extra);
 
     double localScore(int node, int parent);
 

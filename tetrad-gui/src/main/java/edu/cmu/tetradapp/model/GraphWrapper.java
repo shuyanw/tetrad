@@ -97,6 +97,8 @@ public class GraphWrapper implements SessionModel, GraphSource, KnowledgeBoxInpu
             }
 //            GraphUtils.addTwoCycles(graph, editor.getMinNumCycles());
 
+            System.out.println("Graph = " + graph);
+
             this.graph = graph;
         }
         log();

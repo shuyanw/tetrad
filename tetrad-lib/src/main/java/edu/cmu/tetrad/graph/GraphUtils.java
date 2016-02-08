@@ -287,6 +287,7 @@ public final class GraphUtils {
                     numLatentConfounders);
         }
 
+
         final Graph dag = new EdgeListGraphSingleConnections(nodes);
 
         final List<Node> nodes2 = dag.getNodes(); // new ArrayList<Node>(nodes);

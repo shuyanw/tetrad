@@ -266,6 +266,14 @@ public final class TabularComparison implements SessionModel {
         this.edgesReorientedFrom = comparison.getEdgesReorientedFrom();
         this.edgesReorientedTo = comparison.getEdgesReorientedTo();
 
+        if (!(adjFn == 0 && adjFp == 0 && arrowptFn == 0 && arrowptFp == 0)) {
+            System.out.println("ERROR!");
+//            System.out.println("Reference graph = " + referenceGraph);
+            System.out.println("Target graph = " + targetGraph);
+            System.out.println("adj fn = " + adjFn + " adj fp = " + adjFp + " arrowptfn = " + arrowptFn +
+                    " arrowptfp = "+ arrowptFp);
+        }
+
         if (this.params != null) {
             this.params.addRecord(getAdjCorrect(), getAdjFn(), getAdjFp(),
                     getArrowptCorrect(), getArrowptFn(), getArrowptFp(),

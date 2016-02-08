@@ -98,7 +98,7 @@ public class GraphScore implements GesScore {
 
 
     @Override
-    public double localScoreDiff(int i, int[] parents, int extra, Graph graph) {
+    public double localScoreDiff(int i, int[] parents, int extra) {
 
 
         Node y = variables.get(i);
@@ -106,36 +106,31 @@ public class GraphScore implements GesScore {
         List<Node> scoreParents = getVariableList(parents);
         List<Node> allvars = new ArrayList<>(scoreParents);
         allvars.add(x);
-//        allvars.add(y);
 
         double diff = 0;
 
-        List<Node> parentsInDag = getParentsInDag(y, scoreParents);
-//        parentsInDag.addAll(scoreParents);
-
-        if (dag.isDConnectedTo(x, y, parentsInDag)) {
+        if (dag.isDConnectedTo(x, y, scoreParents)) {
             diff += 1;
         }
 
-        System.out.println("x = " + x + " y = " + y + " diff0 = " + diff);
+//        System.out.println("x = " + x + " y = " + y + " diff0 = " + diff);
 
         for (Node z : scoreParents) {
             if (
-                    dag.isDConnectedTo(x, y, parentsInDag) &&
-                            dag.isDConnectedTo(z, y, parentsInDag) &&
-//                            !dag.isDConnectedTo(x, z, Collections.EMPTY_LIST) &&
+                    dag.isDConnectedTo(x, y, scoreParents) &&
+                            dag.isDConnectedTo(z, y, scoreParents) &&
                             dag.isDConnectedTo(x, z, Collections.singletonList(y))
                     ) {
-                System.out.println("found dependency " + x + "-->" + y + "<--" + z + ", conditioning on " + y);
+//                System.out.println("found dependency " + x + "-->" + y + "<--" + z + ", conditioning on " + y);
                 diff += 1;
             }
         }
 
-        System.out.println("x = " + x + " y = " + y + " diff1 = " + diff);
+//        System.out.println("x = " + x + " y = " + y + " diff1 = " + diff);
 
         if (diff == 0) diff = -1;
 
-        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
+//        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
 
         return diff;
     }

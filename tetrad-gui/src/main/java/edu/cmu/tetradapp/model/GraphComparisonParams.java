@@ -21,9 +21,7 @@
 
 package edu.cmu.tetradapp.model;
 
-import edu.cmu.tetrad.data.ColtDataSet;
-import edu.cmu.tetrad.data.ContinuousVariable;
-import edu.cmu.tetrad.data.DataSet;
+import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.session.ExecutionRestarter;
 import edu.cmu.tetrad.session.SessionAdapter;
@@ -167,7 +165,7 @@ public class GraphComparisonParams extends SessionAdapter
             variables.add(twoCycleFn);
             variables.add(twoCycleFp);
 
-            dataSet = new ColtDataSet(0, variables);
+            dataSet = new BoxDataSet(new VerticalIntDataBox(0, variables.size()), variables);
             dataSet.setNumberFormat(new DecimalFormat("0"));
 
             Map<String, String> columnToTooltip = new Hashtable<String, String>();

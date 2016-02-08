@@ -23,7 +23,6 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.ICovarianceMatrix;
-import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.util.DepthChoiceGenerator;
 import edu.cmu.tetrad.util.TetradMatrix;
@@ -111,7 +110,7 @@ public class SemBicScore implements GesScore {
     }
 
     @Override
-    public double localScoreDiff(int i, int[] parents, int extra, Graph graph) {
+    public double localScoreDiff(int i, int[] parents, int extra) {
         return localScore(i, append(parents, extra)) - localScore(i, parents);
     }
 
