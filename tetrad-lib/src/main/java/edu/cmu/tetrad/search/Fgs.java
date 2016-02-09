@@ -115,7 +115,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     /**
      * The top n graphs found by the algorithm, where n is numPatternsToStore.
      */
-    private SortedSet<ScoredGraph> topGraphs = new TreeSet<>();
+    private LinkedList<ScoredGraph> topGraphs = new LinkedList<>();
 
     /**
      * The number of top patterns to store.
@@ -349,7 +349,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     /**
      * @return the list of top scoring graphs.
      */
-    public SortedSet<ScoredGraph> getTopGraphs() {
+    public LinkedList<ScoredGraph> getTopGraphs() {
         return topGraphs;
     }
 
@@ -737,6 +737,8 @@ public final class Fgs implements GraphSearch, GraphScorer {
             HashSet<Node> diff = new HashSet<>(getNaYX(x, y));
             diff.removeAll(arrow.getHOrT());
 
+            if (!isClique(diff)) continue;
+
             Set<Node> h = arrow.getHOrT();
             double bump = arrow.getBump();
 
@@ -769,11 +771,11 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
             reevaluateBackward(x, y);
 
-//            for (Node node : toProcess) {
-//                for (Node p : graph.getAdjacentNodes(node)) {
-//                    reevaluateBackward(node, p);
-//                }
-//            }
+            for (Node node : toProcess) {
+                for (Node p : graph.getAdjacentNodes(node)) {
+                    reevaluateBackward(node, p);
+                }
+            }
         }
     }
 
@@ -1345,7 +1347,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
             out.println(message);
         }
 
-        if (true) {//isClique(diff)) {
+        if (isClique(diff)) {
             for (Node h : H) {
                 Edge oldyh = graph.getEdge(y, h);
 
@@ -1394,15 +1396,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
     private boolean validInsert(Node x, Node y, Set<Node> s, Set<Node> naYX) {
         Set<Node> union = new HashSet<>(s);
         union.addAll(naYX);
-
-        if (true) return true;
-
-//        if (!isClique(union)) return false;
-
-        // Note s U NaYX must be a clique, but this has already been checked. Nevertheless, at this
-        // point it must be verified that all nodes in s U NaYX are neighbors of Y, since some of
-        // the edges g---Y may have been oriented in the interim.
-        return !existsUnblockedSemiDirectedPath(y, x, union, cycleBound);
+        if (!isClique(union)) return false;
+        if (existsUnblockedSemiDirectedPath(y, x, union, cycleBound)) {
+            System.out.println("Semidirected path from " + y + " to " + x);
+            return false;
+        }
+        return true;
 
     }
 
@@ -1748,16 +1747,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Stores the graph, if its score knocks out one of the top ones.
     private void storeGraph() {
-        if (numPatternsToStore < 1) return;
-
-        if (topGraphs.isEmpty() || score > topGraphs.first().getScore()) {
+        if (getNumPatternsToStore() > 0) {
             Graph graphCopy = new EdgeListGraphSingleConnections(graph);
+            topGraphs.addLast(new ScoredGraph(graphCopy, score));
+        }
 
-            topGraphs.add(new ScoredGraph(graphCopy, score));
-
-            if (topGraphs.size() > getNumPatternsToStore()) {
-                topGraphs.remove(topGraphs.first());
-            }
+        if (topGraphs.size() == getNumPatternsToStore() + 1) {
+            topGraphs.removeFirst();
         }
     }
 }

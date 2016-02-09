@@ -196,13 +196,13 @@ public class FgsRunner extends AbstractAlgorithmRunner implements GraphSource,
             topGraphs.add(new ScoredGraph(getResultGraph(), Double.NaN));
         }
 
-        this.topGraphs = new ArrayList<ScoredGraph>(ges.getTopGraphs());
+        this.topGraphs = new ArrayList<>(ges.getTopGraphs());
 
         if (this.topGraphs.isEmpty()) {
             this.topGraphs.add(new ScoredGraph(getResultGraph(), Double.NaN));
         }
 
-        this.allDagsToScores = new ArrayList<Map<Graph, Double>>();
+        this.allDagsToScores = new ArrayList<>();
 
         for (ScoredGraph scoredGraph : topGraphs) {
             Map<Graph, Double> dagsToScores = scoreGraphs(ges, scoredGraph.getGraph());

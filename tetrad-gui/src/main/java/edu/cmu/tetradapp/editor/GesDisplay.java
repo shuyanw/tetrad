@@ -79,7 +79,7 @@ public class GesDisplay extends JPanel implements GraphEditable {
 
         model.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                getIndexable().setIndex((Integer) model.getValue() - 1);
+                getIndexable().setIndex((Integer) model.getValue());
                 setPattern();
             }
         });
