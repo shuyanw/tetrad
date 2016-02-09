@@ -98,7 +98,7 @@ public class GraphScore implements GesScore {
 
 
     @Override
-    public double localScoreDiff(int i, int[] parents, int extra) {
+    public synchronized double localScoreDiff(int i, int[] parents, int extra) {
 
 
         Node y = variables.get(i);
@@ -115,11 +115,16 @@ public class GraphScore implements GesScore {
 
 //        System.out.println("x = " + x + " y = " + y + " diff0 = " + diff);
 
+        List<Node> yUnionScoreParents = new ArrayList<>();
+        yUnionScoreParents.add(y);
+        yUnionScoreParents.addAll(scoreParents);
+
         for (Node z : scoreParents) {
             if (
                     dag.isDConnectedTo(x, y, scoreParents) &&
+                            !dag.isDConnectedTo(x, z, scoreParents) &&
                             dag.isDConnectedTo(z, y, scoreParents) &&
-                            dag.isDConnectedTo(x, z, Collections.singletonList(y))
+                            dag.isDConnectedTo(x, z, yUnionScoreParents)
                     ) {
 //                System.out.println("found dependency " + x + "-->" + y + "<--" + z + ", conditioning on " + y);
                 diff += 1;
@@ -128,7 +133,7 @@ public class GraphScore implements GesScore {
 
 //        System.out.println("x = " + x + " y = " + y + " diff1 = " + diff);
 
-        if (diff == 0) diff = -1;
+//        if (diff == 0) diff = -1;
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
 

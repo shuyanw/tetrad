@@ -1202,6 +1202,32 @@ public final class SearchGraphUtils {
     }
 
     public static void basicPatternRestricted2(Graph graph, Node node) {
+//        List<Node> adj = graph.getAdjacentNodes(node);
+//
+//        if (adj.size() < 2) return;
+//
+//        ChoiceGenerator gen = new ChoiceGenerator(adj.size(), 2);
+//        int[] choice;
+//
+//        while((choice = gen.next()) != null) {
+//            List<Node> pair = GraphUtils.asList(choice, adj);
+//            Node x = pair.get(0);
+//            Node y = pair.get(1);
+//
+//            if (!graph.isAdjacentTo(x, y)) {
+//                graph.removeEdge(x, node);
+//                graph.removeEdge(y, node);
+//                graph.addDirectedEdge(x, node);
+//                graph.addDirectedEdge(y, node);
+//            }
+//        }
+//
+//        for (Node _node : adj) {
+//            if (!graph.isAdjacentTo(_node, node)) {
+//                graph.addUndirectedEdge(_node, node);
+//            }
+//        }
+//
         Set<Edge> undirectedEdges = new HashSet<Edge>();
 
         NEXT_EDGE:
@@ -2493,35 +2519,35 @@ public final class SearchGraphUtils {
             }
         }
 
-        for (int i = 0; i < nodes.size(); i++) {
-            for (int j = i + 1; j < nodes.size(); j++) {
-                if (i == j) continue;
-
-                Node x = nodes.get(i);
-                Node y = nodes.get(j);
-
-                Node _x = graph.getNode(x.getName());
-                Node _y = graph.getNode(y.getName());
-
-                Edge edge = trueGraph.getEdge(x, y);
-                Edge _edge = graph.getEdge(_x, _y);
-
-                boolean existsArrow = edge != null && edge.getDistalEndpoint(y) == Endpoint.ARROW;
-                boolean _existsArrow = _edge != null && _edge.getDistalEndpoint(_y) == Endpoint.ARROW;
-
-                if (existsArrow && !_existsArrow) {
-                    arrowptFn++;
-                }
-
-                if (!existsArrow && _existsArrow) {
-                    arrowptFp++;
-                }
-
-                if (existsArrow && _existsArrow) {
-                    arrowptCorrect++;
-                }
-            }
-        }
+//        for (int i = 0; i < nodes.size(); i++) {
+//            for (int j = i + 1; j < nodes.size(); j++) {
+//                if (i == j) continue;
+//
+//                Node x = nodes.get(i);
+//                Node y = nodes.get(j);
+//
+//                Node _x = graph.getNode(x.getName());
+//                Node _y = graph.getNode(y.getName());
+//
+//                Edge edge = trueGraph.getEdge(x, y);
+//                Edge _edge = graph.getEdge(_x, _y);
+//
+//                boolean existsArrow = edge != null && edge.getDistalEndpoint(y) == Endpoint.ARROW;
+//                boolean _existsArrow = _edge != null && _edge.getDistalEndpoint(_y) == Endpoint.ARROW;
+//
+//                if (existsArrow && !_existsArrow) {
+//                    arrowptFn++;
+//                }
+//
+//                if (!existsArrow && _existsArrow) {
+//                    arrowptFp++;
+//                }
+//
+//                if (existsArrow && _existsArrow) {
+//                    arrowptCorrect++;
+//                }
+//            }
+//        }
 
         for (Edge edge : trueGraph.getEdges()) {
             if (graph.containsEdge(edge)) {
