@@ -557,7 +557,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
                         Node y = nodes.get(i);
 
-                        for (int j = 0; j < nodes.size(); j++) {
+                        for (int j = i + 1; j < nodes.size(); j++) {
                             if (i == j) continue;
                             Node x = nodes.get(j);
 //
@@ -579,21 +579,21 @@ public final class Fgs implements GraphSearch, GraphScorer {
                             int parent = hashIndices.get(x);
                             double bump = gesScore.localScoreDiff(child, new int[]{}, parent);
 
-//                            double s1 = gesScore.localScore(hashIndices.get(y), hashIndices.get(x));
-//                            double s2 = gesScore.localScore(hashIndices.get(y));
-//                            bump = s1 - s2;
-
-//                            if (isFaithfulnessAssumed() && gesScore.isEffectEdge(bump)) {
-//                                final Edge edge = Edges.undirectedEdge(x, y);
-//                                if (boundGraph != null && !boundGraph.isAdjacentTo(edge.getNode1(), edge.getNode2()))
-//                                    continue;
-//                                effectEdgesGraph.addEdge(edge);
-//                            }
+                            if (isFaithfulnessAssumed() && gesScore.isEffectEdge(bump)) {
+                                final Edge edge = Edges.undirectedEdge(x, y);
+                                if (boundGraph != null && !boundGraph.isAdjacentTo(edge.getNode1(), edge.getNode2()))
+                                    continue;
+                                effectEdgesGraph.addEdge(edge);
+                            }
 
                             if (bump > 0.0) {
                                 Arrow arrow1 = new Arrow(bump, x, y, emptySet, emptySet);
                                 sortedArrows.add(arrow1);
                                 addLookupArrow(x, y, arrow1);
+
+                                Arrow arrow2 = new Arrow(bump, y, x, emptySet, emptySet);
+                                sortedArrows.add(arrow2);
+                                addLookupArrow(y, x, arrow2);
                             }
                         }
                     }
@@ -612,7 +612,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
                     return true;
                 }
             }
-
         }
 
         buildIndexing(nodes);
@@ -645,7 +644,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
             }
 
             if (!arrow.getNaYX().equals(getNaYX(x, y))) {
-                reevaluateForward(Collections.singleton(y));
                 continue;
             }
 
@@ -659,16 +657,11 @@ public final class Fgs implements GraphSearch, GraphScorer {
             if (!insert(x, y, t, bump)) {
                 continue;
             }
+
             score += bump;
 
             clearArrow(x, y);
             clearArrow(y, x);
-
-            for (Node node : graph.getNodes()) {
-                SearchGraphUtils.basicPatternRestricted2(graph, node);
-            }
-
-            new MeekRules().orientImplied(graph);
 
             Set<Node> visited = rebuildPatternRestricted(x, y);
             Set<Node> toProcess = new HashSet<>();
@@ -683,28 +676,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
                 }
             }
 
-            Edge xy = graph.getEdge(x, y);
-
-            if (xy.pointsTowards(x)) {
-                toProcess.add(x);
-            } else if (xy.pointsTowards(y)) {
-                toProcess.add(y);
-            }
+            toProcess.add(x);
+            toProcess.add(y);
 
             reevaluateForward(toProcess);
 
             storeGraph();
         }
-    }
-
-    // Returns the set of nodes {x} U {y} U adj(x) U adj(y).
-    private Set<Node> adjNodes(Node x, Node y) {
-        Set<Node> adj = new HashSet<>();
-        adj.addAll(graph.getAdjacentNodes(x));
-        adj.addAll(graph.getAdjacentNodes(y));
-        adj.add(x);
-        adj.add(y);
-        return adj;
     }
 
     /**
@@ -728,7 +706,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
             Node y = arrow.getB();
 
             if (!arrow.getNaYX().equals(getNaYX(x, y))) {
-                reevaluateBackward(x, y);
                 continue;
             }
 
@@ -751,31 +728,21 @@ public final class Fgs implements GraphSearch, GraphScorer {
             Set<Node> toProcess = new HashSet<>();
 
             for (Node node : visited) {
-                final Set<Node> nayx = getNeighbors(node);
-                final Set<Node> storedNayx = this.neighbors.get(node);
+                final Set<Node> neighbors = getNeighbors(node);
+                final Set<Node> storedNeighbors = this.neighbors.get(node);
 
-                if (!nayx.equals(storedNayx)) {
+                if (!neighbors.equals(storedNeighbors)) {
                     toProcess.add(node);
-
-//                    toProcess.addAll(graph.getAdjacentNodes(node));
-
-                    for (Node m : new ArrayList<>(toProcess)) {
-                        toProcess.addAll(graph.getAdjacentNodes(m));
-                    }
-
-                    this.neighbors.put(node, nayx);
+                    this.neighbors.put(node, neighbors);
                 }
             }
+
+            toProcess.add(x);
+            toProcess.add(y);
 
             storeGraph();
 
-            reevaluateBackward(x, y);
-
-            for (Node node : toProcess) {
-                for (Node p : graph.getAdjacentNodes(node)) {
-                    reevaluateBackward(node, p);
-                }
-            }
+            reevaluateBackward(toProcess);
         }
     }
 
@@ -816,11 +783,11 @@ public final class Fgs implements GraphSearch, GraphScorer {
         for (final Node x : _nodes) {
             List<Node> adj;
 
-//            if (isFaithfulnessAssumed()) {
-//                adj = effectEdgesGraph.getAdjacentNodes(x);
-//            } else {
-            adj = variables;
-//            }
+            if (isFaithfulnessAssumed()) {
+                adj = effectEdgesGraph.getAdjacentNodes(x);
+            } else {
+                adj = variables;
+            }
 
             for (Node w : adj) {
                 pairs.add(new OrderedPair<>(w, x));
@@ -882,7 +849,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Calculates the new arrows for an a->b edge.
     private void calculateArrowsForward(final Node a, final Node b) {
-//        if (isFaithfulnessAssumed() && !effectEdgesGraph.isAdjacentTo(a, b)) return;
+        if (isFaithfulnessAssumed() && !effectEdgesGraph.isAdjacentTo(a, b)) return;
         if (adjacencies != null && !adjacencies.isAdjacentTo(a, b)) return;
 
         if (existsKnowledge()) {
@@ -951,51 +918,39 @@ public final class Fgs implements GraphSearch, GraphScorer {
     }
 
     // Reevaluates arrows after removing an edge from the graph.
-    private void reevaluateBackward(final Node x, final Node y) {
+    private void reevaluateBackward(Set<Node> toProcess) {
         class BackwardTask extends RecursiveTask<Boolean> {
-            private List<Node> nodes;
+            private final Node r;
+            private List<Node> adj;
             private Map<Node, Integer> hashIndices;
             private int chunk;
             private int from;
             private int to;
 
-            public BackwardTask(List<Node> nodes, int chunk, int from, int to,
+            public BackwardTask(Node r, List<Node> adj, int chunk, int from, int to,
                                 Map<Node, Integer> hashIndices) {
-                this.nodes = new ArrayList<>(nodes);
-                this.hashIndices = new HashMap<>(hashIndices);
+                this.adj = adj;
+                this.hashIndices = hashIndices;
                 this.chunk = chunk;
                 this.from = from;
                 this.to = to;
+                this.r = r;
             }
 
             @Override
             protected Boolean compute() {
                 if (to - from <= chunk) {
                     for (int _w = from; _w < to; _w++) {
-                        final Node w = nodes.get(_w);
+                        final Node w = adj.get(_w);
 
-                        if (w == x) continue;
-                        if (w == y) continue;
+                        if (graph.isAdjacentTo(w, r)) {
+                            Edge edge = graph.getEdge(w, r);
 
-                        if (graph.isAdjacentTo(w, x)) {
-                            Edge xEdge = graph.getEdge(w, x);
-
-                            if (Edges.isDirectedEdge(xEdge) && xEdge.pointsTowards(x)) {
-                                calculateArrowsBackward(w, x);
+                            if (Edges.isDirectedEdge(edge) && edge.pointsTowards(r)) {
+                                calculateArrowsBackward(w, r);
                             } else {
-                                calculateArrowsBackward(w, x);
-                                calculateArrowsBackward(x, w);
-                            }
-                        }
-
-                        if (graph.isAdjacentTo(w, y)) {
-                            Edge yEdge = graph.getEdge(w, y);
-
-                            if (Edges.isDirectedEdge(yEdge) && yEdge.pointsTowards(y)) {
-                                calculateArrowsBackward(w, y);
-                            } else {
-                                calculateArrowsBackward(w, y);
-                                calculateArrowsBackward(y, w);
+                                calculateArrowsBackward(w, r);
+                                calculateArrowsBackward(r, w);
                             }
                         }
                     }
@@ -1006,8 +961,8 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
                     List<BackwardTask> tasks = new ArrayList<>();
 
-                    tasks.add(new BackwardTask(nodes, chunk, from, from + mid, hashIndices));
-                    tasks.add(new BackwardTask(nodes, chunk, from + mid, to, hashIndices));
+                    tasks.add(new BackwardTask(r, adj, chunk, from, from + mid, hashIndices));
+                    tasks.add(new BackwardTask(r, adj, chunk, from + mid, to, hashIndices));
 
                     invokeAll(tasks);
 
@@ -1016,10 +971,10 @@ public final class Fgs implements GraphSearch, GraphScorer {
             }
         }
 
-        Set<Node> _adj = adjNodes(x, y);
-        final List<Node> adj = new ArrayList<>(_adj);
-
-        pool.invoke(new BackwardTask(adj, minChunk, 0, adj.size(), hashIndices));
+        for (Node r : toProcess) {
+            List<Node> adjacentNodes = graph.getAdjacentNodes(r);
+            pool.invoke(new BackwardTask(r, adjacentNodes, minChunk, 0, adjacentNodes.size(), hashIndices));
+        }
     }
 
     // Calculates the arrows for the removal in the backward direction.
@@ -1156,7 +1111,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
     }
 
-    // Get all nodes that are connected to Y by an undirected edge and not adjacent to X.
+    // Get all adj that are connected to Y by an undirected edge and not adjacent to X.
     private List<Node> getTNeighbors(Node x, Node y) {
         List<Edge> yEdges = graph.getEdges(y);
         List<Node> tNeighbors = new ArrayList<>();
@@ -1178,7 +1133,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return tNeighbors;
     }
 
-    // Get all nodes that are connected to Y by an undirected edge, except x.
+    // Get all adj that are connected to Y by an undirected edge, except x.
     private Set<Node> getNeighbors(Node x, Node y) {
         List<Edge> yEdges = graph.getEdges(y);
         Set<Node> neighbors = new HashSet<>();
@@ -1198,7 +1153,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return neighbors;
     }
 
-    // Get all nodes that are connected to Y.
+    // Get all adj that are connected to Y.
     private Set<Node> getNeighbors(Node y) {
         List<Edge> yEdges = graph.getEdges(y);
         Set<Node> neighbors = new HashSet<>();
@@ -1299,18 +1254,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
             if (boundGraph != null && !boundGraph.isAdjacentTo(_t, y)) continue;
 
             Edge newEdge = Edges.directedEdge(_t, y);
-
             graph.addEdge(newEdge);
 
-            if (!graph.containsEdge(edge)) {
-                throw new IllegalArgumentException();
-            }
-
             if (verbose) {
-                TetradLogger.getInstance().log("directedEdges", "--- Directing " + oldEdge + " to " +
-                        graph.getEdge(_t, y));
-                out.println("--- Directing " + oldEdge + " to " +
-                        graph.getEdge(_t, y));
+                String message = "--- Directing " + oldEdge + " to " + newEdge;
+                TetradLogger.getInstance().log("directedEdges", message);
+                out.println(message);
             }
         }
 
@@ -1319,8 +1268,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Do an actual deletion (Definition 13 from Chickering, 2002).
     private void delete(Node x, Node y, Set<Node> H, double bump, Set<Node> naYX) {
-//        System.out.println("In delete H = " + H);
-
         Edge trueEdge = null;
 
         if (trueGraph != null) {
@@ -1495,7 +1442,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return true;
     }
 
-    // Find all nodes that are connected to Y by an undirected edge that are adjacent to X (that is, by undirected or
+    // Find all adj that are connected to Y by an undirected edge that are adjacent to X (that is, by undirected or
     // directed edge).
     private synchronized Set<Node> getNaYX(Node x, Node y) {
 //        if (true) return getNeighbors(x, y);
@@ -1591,7 +1538,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return null;
     }
 
-    // Runs the Meek rules on just the changed nodes.
+    // Runs the Meek rules on just the changed adj.
     private Set<Node> rebuildPatternRestricted(Node x, Node y) {
         Set<Node> visited = new HashSet<>();
 
@@ -1605,7 +1552,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return visited;
     }
 
-    // Runs Meek rules on just the changed nodes.
+    // Runs Meek rules on just the changed adj.
     private Set<Node> reorientNode(Node a) {
         List<Node> nodes = graph.getAdjacentNodes(a);
         nodes.add(a);
@@ -1628,7 +1575,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return visited;
     }
 
-    // Runs Meek rules on just the changed nodes.
+    // Runs Meek rules on just the changed adj.
     private Set<Node> meekOrientRestricted(List<Node> nodes, IKnowledge knowledge) {
         MeekRulesRestricted rules = new MeekRulesRestricted();
         rules.setOrientInPlace(false);
@@ -1637,9 +1584,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return rules.getVisitedNodes();
     }
 
-    // Maps nodes to their indices for quick lookup.
+    // Maps adj to their indices for quick lookup.
     private void buildIndexing(List<Node> nodes) {
-        this.hashIndices = new ConcurrentHashMap<>();
+        this.hashIndices = new ConcurrentSkipListMap<>();
         for (Node node : nodes) {
             this.hashIndices.put(node, variables.indexOf(node));
         }
@@ -1696,34 +1643,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
         return score;
     }
-
-    // Scores the difference between y with 'parents1' as parents an y with 'parents2' as parents.
-//    private double scoreGraphChange(Node y, Set<Node> parents1,
-//                                    Set<Node> parents2, Map<Node, Integer> hashIndices) {
-//        int yIndex = hashIndices.get(y);
-//
-//        double score1, score2;
-//
-//        int[] parentIndices1 = new int[parents1.size()];
-//
-//        int count = -1;
-//        for (Node parent : parents1) {
-//            parentIndices1[++count] = hashIndices.get(parent);
-//        }
-//
-//        score1 = gesScore.localScore(yIndex, parentIndices1);
-//
-//        int[] parentIndices2 = new int[parents2.size()];
-//
-//        int count2 = -1;
-//        for (Node parent : parents2) {
-//            parentIndices2[++count2] = hashIndices.get(parent);
-//        }
-//
-//        score2 = gesScore.localScore(yIndex, parentIndices2);
-//
-//        return score1 - score2;
-//    }
 
     private double scoreGraphChange(Node y, Set<Node> parents,
                                     Node x, Map<Node, Integer> hashIndices) {

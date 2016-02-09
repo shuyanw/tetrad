@@ -2,13 +2,13 @@ This is an algorithm for listing all of the cliques for an undirected graph G.
 
 J Ramsey 12/2006
 
-Graph G is an undirected graph over nodes 1,...,n. L1 and L2 are perpetually
-sorted lists of integers. adj(k) is a procedure that returns the list of nodes
+Graph G is an undirected graph over adj 1,...,n. L1 and L2 are perpetually
+sorted lists of integers. adj(k) is a procedure that returns the list of adj
 adjacent to n in G. addable(k, L1) is a function that returns true just in case
 k is adjacent to every node in L1 in graph G.
 
 PROCEDURE cliques(G).
-1. nodes <- the nodes of G
+1. adj <- the adj of G
 2. cliques <- {}
 3. for each node i in increasing order:
 4.    L1 <- i.
@@ -51,14 +51,14 @@ But no y in N can be added to c; this is explicitly checked. So c is maximal.
 
 Let c = <x1,...,xn> be a clique. Note that the moveLastBack operation moves the
 last node from L1 back to L2, noting which node m was moved. On the subsequent
-call to addNodesToRight, nodes are only added greater than m. If this is
+call to addNodesToRight, adj are only added greater than m. If this is
 successful, the effect is to replace m by the next node up that can be added.
 If it is unsuccessful, on the next round another node is moved from L1 to L2.
 The effect of this is to iterate through all possible initial segments for L1.
 
 Thus, addNodesToRight will consider a sequence beginning with <x1, x2>, since
 if if x2 was not the second node in the first L1 constructed by addNodesToRight,
-moveLastBack will at some node have moved all of the subsequent nodes back to
+moveLastBack will at some node have moved all of the subsequent adj back to
 L1 and then (perhaps after some iterations) have placed x2 in the second
 position. Similarly for each node to the right of x2. So c will have been
 constructed as a candidate completely connected set for testing by isMaximal.
