@@ -767,11 +767,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
             storeGraph();
 
-            for (Node node : toProcess) {
-                for (Node p : graph.getAdjacentNodes(node)) {
-                    reevaluateBackward(node, p);
-                }
-            }
+            reevaluateBackward(x, y);
+
+//            for (Node node : toProcess) {
+//                for (Node p : graph.getAdjacentNodes(node)) {
+//                    reevaluateBackward(node, p);
+//                }
+//            }
         }
     }
 
@@ -898,15 +900,31 @@ public final class Fgs implements GraphSearch, GraphScorer {
         final int _depth = Math.min(_union.size(), depth == -1 ? 1000 : depth);
 
         clearArrow(a, b);
+        List<Set<Node>> lastSubsets = null;
 
         for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(_union.size(), i);
             int[] choice;
+            boolean found = false;
+            List<Set<Node>> subsets = new ArrayList<>();
 
             while ((choice = gen.next()) != null) {
                 Set<Node> unionSubset = GraphUtils.asSet(choice, _union);
                 Set<Node> s = new HashSet<>(unionSubset);
                 s.retainAll(t);
+
+                if (lastSubsets != null) {
+                    boolean foundASubset = false;
+
+                    for (Set<Node> set : lastSubsets) {
+                        if (s.containsAll(set)) {
+                            foundASubset = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundASubset) continue;
+                }
 
                 if (existsKnowledge()) {
                     if (!validSetByKnowledge(b, unionSubset)) {
@@ -920,8 +938,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
                     Arrow arrow = new Arrow(bump, a, b, unionSubset, getNaYX(a, b));
                     sortedArrows.add(arrow);
                     addLookupArrow(a, b, arrow);
+                    found = true;
+                    subsets.add(s);
                 }
             }
+
+            if (!found) break;
+            lastSubsets = subsets;
         }
     }
 
@@ -1017,7 +1040,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
         List<Node> _naYX = new ArrayList<>(getNaYX(a, b));
 
-        DepthChoiceGenerator gen = new DepthChoiceGenerator(_naYX.size(), _naYX.size());
+        DepthChoiceGenerator gen = new DepthChoiceGenerator(_naYX.size(), 4);//_naYX.size());
         int[] choice;
 
         while ((choice = gen.next()) != null) {
@@ -1476,7 +1499,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     // Find all nodes that are connected to Y by an undirected edge that are adjacent to X (that is, by undirected or
     // directed edge).
     private synchronized Set<Node> getNaYX(Node x, Node y) {
-        if (true) return getNeighbors(x, y);
+//        if (true) return getNeighbors(x, y);
 
         List<Edge> yEdges = graph.getEdges(y);
         Set<Node> nayx = new HashSet<>();
