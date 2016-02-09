@@ -135,7 +135,7 @@ public class GraphScore implements GesScore {
 
 //        if (diff == 0) diff = -1;
 
-//        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
+        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
 
         return diff;
     }

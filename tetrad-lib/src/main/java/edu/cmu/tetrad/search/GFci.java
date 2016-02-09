@@ -267,9 +267,14 @@ public final class GFci {
             j.retainAll(gesGraph.getAdjacentNodes(k));
 
             if (!j.isEmpty()) {
-                sepsets.getSepset(i, k);
+////                List<Node> sepset = sepsets.getSepset(i, k);
+//                double p = getIndependenceTest().getPValue();
+//
+//                if (p > getIndependenceTest().getAlpha()) {
+//                    graph.removeEdge(edge);
+//                }
 
-                if (sepsets.getPValue() > getIndependenceTest().getAlpha()) {
+                if (getIndependenceTest().isIndependent(i, k)) {
                     graph.removeEdge(edge);
                 }
             }

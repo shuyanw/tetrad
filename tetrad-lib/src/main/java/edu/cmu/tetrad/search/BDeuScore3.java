@@ -144,20 +144,30 @@ public class BDeuScore3 implements LocalDiscreteScore, GesScore {
 
         for (int j = 0; j < q; j++) {
             double rowSum = rowPrior + n_j[j];
+            int cellCount = 0;
+            double rowScore = 0;
 
             for (int k = 0; k < r; k++) {
                 double alpha = cellPrior + n_jk[j][k];
                 double pk = (alpha) / rowSum;
+                if (Double.isInfinite(pk)) continue;
                 double _score = (alpha - 1) * Math.log(pk);
-                score += _score;
+                rowScore += _score;
+                cellCount++;
             }
 
-//            score -= .5 * q * (r - 1) * Math.log(sampleSize);
+            if (rowScore == 0) continue;
+            score += rowScore;
+
+            score -= 2 * cellCount;
+
+//            score -= .5 * cellCount * Math.log(sampleSize);
         }
 
-        double h = Math.log(1.0 / r) * sampleSize;
 
-        System.out.println("(1/r)^N = " + h + " score = " + score);
+//        double h = Math.log(1.0 / r) * sampleSize;
+
+//        System.out.println("(1/r)^N = " + h + " score = " + score);
 
         lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
 

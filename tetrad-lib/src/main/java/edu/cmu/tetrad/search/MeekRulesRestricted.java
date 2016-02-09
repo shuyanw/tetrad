@@ -194,7 +194,7 @@ public class MeekRulesRestricted implements ImpliedOrientation {
      */
     private void meekR1Locally(Node a, Graph graph, IKnowledge knowledge) {
         List<Node> adjacentNodes = graph.getAdjacentNodes(a);
-        visitedNodes.add(a);
+//        visitedNodes.add(a);
 
         if (adjacentNodes.size() < 2) {
             return;
@@ -266,7 +266,7 @@ public class MeekRulesRestricted implements ImpliedOrientation {
      */
     private void meekR2(Node a, Graph graph, IKnowledge knowledge) {
         List<Node> adjacentNodes = graph.getAdjacentNodes(a);
-        visitedNodes.add(a);
+//        visitedNodes.add(a);
 
         if (adjacentNodes.size() < 2) {
             return;
@@ -324,7 +324,7 @@ public class MeekRulesRestricted implements ImpliedOrientation {
      */
     private void meekR3(Node a, Graph graph, IKnowledge knowledge) {
         List<Node> adjacentNodes = graph.getAdjacentNodes(a);
-        visitedNodes.add(a);
+//        visitedNodes.add(a);
 
         if (adjacentNodes.size() < 3) {
             return;
@@ -391,7 +391,7 @@ public class MeekRulesRestricted implements ImpliedOrientation {
         }
 
         List<Node> adjacentNodes = graph.getAdjacentNodes(a);
-        visitedNodes.add(a);
+//        visitedNodes.add(a);
 
         if (adjacentNodes.size() < 3) {
             return;
@@ -467,6 +467,8 @@ public class MeekRulesRestricted implements ImpliedOrientation {
     private Edge direct(Node a, Node c, Graph graph) {
         Edge before = graph.getEdge(a, c);
         Edge after = Edges.directedEdge(a, c);
+        visitedNodes.add(a);
+        visitedNodes.add(c);
 
         graph.removeEdge(before);
         graph.addEdge(after);
