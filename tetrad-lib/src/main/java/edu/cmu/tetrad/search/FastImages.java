@@ -1616,7 +1616,7 @@ public final class FastImages implements GraphSearch, GraphScorer, IImages {
         nodes.add(a);
 
         List<Edge> edges = graph.getEdges(a);
-        SearchGraphUtils.basicPatternRestricted2(graph, a);
+        SearchGraphUtils.basicPatternRestricted2(a, graph);
         addRequiredEdges(graph);
         Set<Node> visited = meekOrientRestricted(graph, nodes, getKnowledge());
 

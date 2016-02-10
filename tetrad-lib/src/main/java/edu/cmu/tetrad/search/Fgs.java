@@ -646,24 +646,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
             score += bump;
 
-            Set<Node> visited = rebuildPatternRestricted(x, y);
-            Set<Node> toProcess = new HashSet<>();
-
-            for (Node node : visited) {
-                final Set<Node> neighbors = getNeighbors(node);
-                final Set<Node> storedNeighbors = this.neighbors.get(node);
-
-                if (!(neighbors.equals(storedNeighbors))) {
-                    toProcess.add(node);
-                }
-            }
-
-            toProcess.add(x);
-            toProcess.add(y);
-
-            reevaluateForward(toProcess);
-
+            Set<Node> toProcess = reapplyOrientation(x, y);
             storeGraph();
+            reevaluateForward(toProcess);
         }
     }
 
@@ -698,25 +683,28 @@ public final class Fgs implements GraphSearch, GraphScorer {
             delete(x, y, h, bump, arrow.getNaYX());
             score += bump;
 
-            Set<Node> visited = rebuildPatternRestricted(x, y);
-            Set<Node> toProcess = new HashSet<>();
-
-            for (Node node : visited) {
-                final Set<Node> neighbors = getNeighbors(node);
-                final Set<Node> storedNeighbors = this.neighbors.get(node);
-
-                if (!neighbors.equals(storedNeighbors)) {
-                    toProcess.add(node);
-                }
-            }
-
-            toProcess.add(x);
-            toProcess.add(y);
-
+            Set<Node> toProcess = reapplyOrientation(x, y);
             storeGraph();
-
             reevaluateBackward(toProcess);
         }
+    }
+
+    private Set<Node> reapplyOrientation(Node x, Node y) {
+        Set<Node> visited = rebuildPatternRestricted(x, y);
+        Set<Node> toProcess = new HashSet<>();
+
+        for (Node node : visited) {
+            final Set<Node> neighbors = getNeighbors(node);
+            final Set<Node> storedNeighbors = this.neighbors.get(node);
+
+            if (!neighbors.equals(storedNeighbors)) {
+                toProcess.add(node);
+            }
+        }
+
+        toProcess.add(x);
+        toProcess.add(y);
+        return toProcess;
     }
 
     // Returns true if knowledge is not empty.
@@ -1487,14 +1475,19 @@ public final class Fgs implements GraphSearch, GraphScorer {
     private Set<Node> rebuildPatternRestricted(Node x, Node y) {
         Set<Node> visited = new HashSet<>();
 
-        visited.addAll(reorientNode(x));
-        visited.addAll(reorientNode(y));
+        Set<Node> toProcess = new HashSet<>();
+        toProcess.add(x);
+        toProcess.add(y);
+        toProcess.addAll(graph.getAdjacentNodes(x));
+        toProcess.addAll(graph.getAdjacentNodes(y));
 
-        for (Node node : graph.getAdjacentNodes(x)) {
-            visited.addAll(reorientNode(node));
+        for (Node node : toProcess) {
+            System.out.println("basic pattenr " + node);
+            SearchGraphUtils.basicPatternRestricted2(node, graph);
         }
 
-        for (Node node : graph.getAdjacentNodes(y)) {
+        for (Node node : toProcess) {
+            System.out.println("Reorienting " + node);
             visited.addAll(reorientNode(node));
         }
 
@@ -1507,26 +1500,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Runs Meek rules on just the changed adj.
     private Set<Node> reorientNode(Node a) {
-        System.out.println("Reorient node " + a);
-        List<Node> nodes = graph.getAdjacentNodes(a);
+        addRequiredEdges(graph);
+
+        List<Node> nodes = new ArrayList<>();
         nodes.add(a);
 
-        List<Edge> edges = graph.getEdges(a);
-        SearchGraphUtils.basicPatternRestricted2(graph, a);
-        addRequiredEdges(graph);
-        Set<Node> visited = meekOrientRestricted(nodes, getKnowledge());
-
-        List<Edge> newEdges = graph.getEdges(a);
-        newEdges.removeAll(edges); // The newly oriented edges.
-
-//        for (Edge edge : newEdges) {
-//            if (Edges.isUndirectedEdge(edge)) {
-//                Node _node = edge.getDistalNode(a);
-//                visited.addAll(reorientNode(_node));
-//            }
-//        }
-
-        return visited;
+        return meekOrientRestricted(nodes, getKnowledge());
     }
 
     // Runs Meek rules on just the changed adj.

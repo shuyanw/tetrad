@@ -119,22 +119,21 @@ public class GraphScore implements GesScore {
 //        if (dag.isDConnectedTo(x, y, scoreParents)) {
 //            diff += 1;
 //        }
-
-    //        List<Node> yUnionScoreParents = new ArrayList<>();
-    //        yUnionScoreParents.add(y);
-    //        yUnionScoreParents.addAll(scoreParents);
-    //
-    //        for (Node z : scoreParents) {
-    //            if (
-    //                    dag.isDConnectedTo(x, y, scoreParents) &&
-    //                            !dag.isDConnectedTo(x, z, scoreParents) &&
-    //                            dag.isDConnectedTo(z, y, scoreParents) &&
-    //                            dag.isDConnectedTo(x, z, yUnionScoreParents)
-    //                    )
-    //            {
-    //                diff += 1;
-    //            }
-    //        }
+//
+//        List<Node> yUnionScoreParents = new ArrayList<>();
+//        yUnionScoreParents.add(y);
+//        yUnionScoreParents.addAll(scoreParents);
+//
+//        for (Node z : scoreParents) {
+//            if (
+//                    dag.isDConnectedTo(x, y, scoreParents) &&
+//                            !dag.isDConnectedTo(x, z, scoreParents) &&
+//                            dag.isDConnectedTo(z, y, scoreParents) &&
+//                            dag.isDConnectedTo(x, z, yUnionScoreParents)
+//                    ) {
+//                diff += 1;
+//            }
+//        }
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
 

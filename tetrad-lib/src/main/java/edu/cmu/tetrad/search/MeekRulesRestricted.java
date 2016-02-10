@@ -254,9 +254,8 @@ public class MeekRulesRestricted implements ImpliedOrientation {
     /**
      * If b-->a-->c, b--c, then b-->c.
      */
-    private void meekR2(Node a, Graph graph, IKnowledge knowledge) {
-        List<Node> adjacentNodes = graph.getAdjacentNodes(a);
-//        visited.add(a);
+    private void meekR2(Node c, Graph graph, IKnowledge knowledge) {
+        List<Node> adjacentNodes = graph.getAdjacentNodes(c);
 
         if (adjacentNodes.size() < 2) {
             return;
@@ -266,8 +265,8 @@ public class MeekRulesRestricted implements ImpliedOrientation {
         int[] combination;
 
         while ((combination = cg.next()) != null) {
-            Node b = adjacentNodes.get(combination[0]);
-            Node c = adjacentNodes.get(combination[1]);
+            Node a = adjacentNodes.get(combination[0]);
+            Node b = adjacentNodes.get(combination[1]);
 
             if (graph.isDirectedFromTo(b, a) &&
                     graph.isDirectedFromTo(a, c) &&
@@ -286,12 +285,19 @@ public class MeekRulesRestricted implements ImpliedOrientation {
                     }
 
                     TetradLogger.getInstance().log("impliedOrientations", SearchLogUtils.edgeOrientedMsg("Meek R2", graph.getEdge(b, c)));
+                    continue;
                 }
-            } else if (graph.isDirectedFromTo(c, a) &&
-                    graph.isDirectedFromTo(a, b) &&
-                    graph.isUndirectedFromTo(c, b)) {
-                if (isArrowpointAllowed(c, b, knowledge)) {
-                    Edge after = direct(c, b, graph);
+            }
+
+            Node e = b;
+            b = a;
+            a = e;
+
+            if (graph.isDirectedFromTo(b, a) &&
+                    graph.isDirectedFromTo(a, c) &&
+                    graph.isUndirectedFromTo(b, c)) {
+                if (isArrowpointAllowed(b, c, knowledge)) {
+                    Edge after = direct(b, c, graph);
                     Node x = after.getNode1();
                     Node y = after.getNode2();
 
@@ -303,7 +309,8 @@ public class MeekRulesRestricted implements ImpliedOrientation {
                         rule4Queue.add(x);
                     }
 
-                    TetradLogger.getInstance().log("impliedOrientations", SearchLogUtils.edgeOrientedMsg("Meek R2", graph.getEdge(c, b)));
+                    TetradLogger.getInstance().log("impliedOrientations", SearchLogUtils.edgeOrientedMsg("Meek R2", graph.getEdge(b, c)));
+                    continue;
                 }
             }
         }

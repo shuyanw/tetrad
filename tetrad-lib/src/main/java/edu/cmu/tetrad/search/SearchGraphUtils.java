@@ -1201,7 +1201,7 @@ public final class SearchGraphUtils {
         }
     }
 
-    public static void basicPatternRestricted2(Graph graph, Node node) {
+    public static void basicPatternRestricted2(Node node, Graph graph) {
 //        List<Node> adj = graph.getAdjacentNodes(node);
 //
 //        if (adj.size() < 2) return;
