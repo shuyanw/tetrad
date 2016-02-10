@@ -1489,10 +1489,9 @@ public final class FgsOrienter implements GraphSearch, GraphScorer, Reorienter {
     // Runs Meek rules on just the changed nodes.
     private Set<Node> meekOrientRestricted(Graph graph, List<Node> nodes, IKnowledge knowledge) {
         MeekRulesRestricted rules = new MeekRulesRestricted();
-        rules.setOrientInPlace(false);
         rules.setKnowledge(knowledge);
         rules.orientImplied(graph, new HashSet<>(nodes));
-        return rules.getVisitedNodes();
+        return rules.getVisited();
     }
 
     // Sets the data set, possibly calculating a covariane matrix.

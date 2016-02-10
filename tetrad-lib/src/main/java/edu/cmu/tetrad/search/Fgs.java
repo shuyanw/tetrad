@@ -120,9 +120,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
     // Potential arrows sorted by bump high to low. The first one is a candidate for adding to the graph.
     private SortedSet<Arrow> sortedArrows = null;
 
-    // Arrows added to sortedArrows for each <i, j>.
-    private Map<OrderedPair<Node>, Set<Arrow>> lookupArrows = null;
-
     // A utility map to help with orientation.
     private Map<Node, Set<Node>> neighbors = null;
 
@@ -222,7 +219,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
      * @return the resulting Pattern.
      */
     public Graph search() {
-        lookupArrows = new ConcurrentHashMap<>();
         final List<Node> nodes = new ArrayList<>(variables);
 
         if (adjacencies != null) {
@@ -257,7 +253,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
         // Do backward search.
         bes();
-
 
         long endTime = System.currentTimeMillis();
         this.elapsedTime = endTime - start;
@@ -614,7 +609,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
         TetradLogger.getInstance().log("info", "** FORWARD EQUIVALENCE SEARCH");
 
         sortedArrows = new ConcurrentSkipListSet<>();
-        lookupArrows = new ConcurrentHashMap<>();
         neighbors = new ConcurrentHashMap<>();
 
         // This takes most of the time and calculates all of the effect edges if faithfulness is assumed.
@@ -704,8 +698,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
             delete(x, y, h, bump, arrow.getNaYX());
             score += bump;
 
-            clearArrow(x, y);
-
             Set<Node> visited = rebuildPatternRestricted(x, y);
             Set<Node> toProcess = new HashSet<>();
 
@@ -729,13 +721,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Returns true if knowledge is not empty.
     private boolean existsKnowledge() {
-        return !knowledge.isEmpty();
+        return false;
+//        return !knowledge.isEmpty();
     }
 
-    // Initiaizes the sorted arrows and lookup arrows lists for the backward search.
+    // Initiaizes the sorted arrows lists for the backward search.
     private void initializeArrowsBackward() {
-//        System.out.println("In InitializeArrowsBackwards");
-
         for (Edge edge : graph.getEdges()) {
             Node x = edge.getNode1();
             Node y = edge.getNode2();
@@ -881,7 +872,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
     private void addArrow(Node a, Node b, Set<Node> naYX, Set<Node> hOrT, double bump) {
         Arrow arrow = new Arrow(bump, a, b, hOrT, naYX);
         sortedArrows.add(arrow);
-        addLookupArrow(a, b, arrow);
     }
 
     // Reevaluates arrows after removing an edge from the graph.
@@ -911,9 +901,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
                         final Node w = adj.get(_w);
 
                         if (graph.isAdjacentTo(w, r)) {
-                            Edge edge = graph.getEdge(w, r);
-
-                            if (Edges.isDirectedEdge(edge) && edge.pointsTowards(r)) {
+                            if (graph.isParentOf(w, r)) {
                                 calculateArrowsBackward(w, r);
                             } else {
                                 calculateArrowsBackward(w, r);
@@ -953,18 +941,17 @@ public final class Fgs implements GraphSearch, GraphScorer {
             }
         }
 
-//        clearArrow(a, b);
+        Set<Node> naYX = getNaYX(a, b);
+        List<Node> _naYX = new ArrayList<>(naYX);
 
-        List<Node> _naYX = new ArrayList<>(getNaYX(a, b));
-
-        DepthChoiceGenerator gen = new DepthChoiceGenerator(_naYX.size(), 4);//_naYX.size());
+        DepthChoiceGenerator gen = new DepthChoiceGenerator(_naYX.size(), _naYX.size());
         int[] choice;
 
         while ((choice = gen.next()) != null) {
-            Set<Node> diff = GraphUtils.asSet(choice, _naYX);
+            Set<Node> h = GraphUtils.asSet(choice, _naYX);
 
-            Set<Node> h = new HashSet<>(_naYX);
-            h.removeAll(diff);
+            Set<Node> diff = new HashSet<>(_naYX);
+            diff.removeAll(h);
 
             if (existsKnowledge()) {
                 if (!validSetByKnowledge(b, h)) {
@@ -972,10 +959,10 @@ public final class Fgs implements GraphSearch, GraphScorer {
                 }
             }
 
-            double bump = deleteEval(a, b, diff, getNaYX(a, b), hashIndices);
+            double bump = deleteEval(a, b, diff, naYX, hashIndices);
 
             if (bump >= 0.0) {
-                addArrow(a, b, getNaYX(a, b), h, bump);
+                addArrow(a, b, naYX, h, bump);
             }
         }
     }
@@ -1503,6 +1490,14 @@ public final class Fgs implements GraphSearch, GraphScorer {
         visited.addAll(reorientNode(x));
         visited.addAll(reorientNode(y));
 
+        for (Node node : graph.getAdjacentNodes(x)) {
+            visited.addAll(reorientNode(node));
+        }
+
+        for (Node node : graph.getAdjacentNodes(y)) {
+            visited.addAll(reorientNode(node));
+        }
+
         if (TetradLogger.getInstance().isEventActive("rebuiltPatterns")) {
             TetradLogger.getInstance().log("rebuiltPatterns", "Rebuilt pattern = " + graph);
         }
@@ -1512,6 +1507,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Runs Meek rules on just the changed adj.
     private Set<Node> reorientNode(Node a) {
+        System.out.println("Reorient node " + a);
         List<Node> nodes = graph.getAdjacentNodes(a);
         nodes.add(a);
 
@@ -1523,12 +1519,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
         List<Edge> newEdges = graph.getEdges(a);
         newEdges.removeAll(edges); // The newly oriented edges.
 
-        for (Edge edge : newEdges) {
-            if (Edges.isUndirectedEdge(edge)) {
-                Node _node = edge.getDistalNode(a);
-                visited.addAll(reorientNode(_node));
-            }
-        }
+//        for (Edge edge : newEdges) {
+//            if (Edges.isUndirectedEdge(edge)) {
+//                Node _node = edge.getDistalNode(a);
+//                visited.addAll(reorientNode(_node));
+//            }
+//        }
 
         return visited;
     }
@@ -1536,10 +1532,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
     // Runs Meek rules on just the changed adj.
     private Set<Node> meekOrientRestricted(List<Node> nodes, IKnowledge knowledge) {
         MeekRulesRestricted rules = new MeekRulesRestricted();
-        rules.setOrientInPlace(false);
         rules.setKnowledge(knowledge);
         rules.orientImplied(graph, new HashSet<>(nodes));
-        return rules.getVisitedNodes();
+        return rules.getVisited();
     }
 
     // Maps adj to their indices for quick lookup.
@@ -1548,32 +1543,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
         for (Node node : nodes) {
             this.hashIndices.put(node, variables.indexOf(node));
         }
-    }
-
-    // Removes information associated with an edge x->y.
-    private synchronized void clearArrow(Node x, Node y) {
-        final OrderedPair<Node> pair = new OrderedPair<>(x, y);
-        final Set<Arrow> lookupArrows = this.lookupArrows.get(pair);
-
-        if (lookupArrows != null) {
-            sortedArrows.removeAll(lookupArrows);
-        }
-
-        this.lookupArrows.remove(pair);
-    }
-
-    // Adds the given arrow for the adjacency i->j. These all are for i->j but may have
-    // different T or H or NaYX sets, and so different bumps.
-    private void addLookupArrow(Node i, Node j, Arrow arrow) {
-        OrderedPair<Node> pair = new OrderedPair<>(i, j);
-        Set<Arrow> arrows = lookupArrows.get(pair);
-
-        if (arrows == null) {
-            arrows = new ConcurrentSkipListSet<>();
-            lookupArrows.put(pair, arrows);
-        }
-
-        arrows.add(arrow);
     }
 
     //===========================SCORING METHODS===================//
