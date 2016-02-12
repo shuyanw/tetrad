@@ -854,6 +854,8 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
         final Set<Node> naYX = getNaYX(a, b, graph);
         final List<Node> t = getTNeighbors(a, b, graph);
 
+//        if (!isClique(naYX, graph)) return;
+
         final int _depth = Math.min(t.size(), depth == -1 ? 1000 : depth);
 
         clearArrow(a, b);
@@ -861,15 +863,12 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
         final DepthChoiceGenerator gen = new DepthChoiceGenerator(t.size(), _depth);
         int[] choice;
 
-        // Try parallelizing this.
         while ((choice = gen.next()) != null) {
             Set<Node> T = GraphUtils.asSet(choice, t);
 
             Set<Node> union = new HashSet<>(T);
             union.addAll(naYX);
 
-            // Necessary condition for it to be a clique later (after possible edge removals) is that it be a clique
-            // now.
             if (!isClique(union, graph)) continue;
 
             if (existsKnowledge()) {
@@ -877,7 +876,6 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
                     continue;
                 }
             }
-
 
             double bump = insertEval(a, b, T, naYX, graph, hashIndices);
 
@@ -916,14 +914,6 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
                         if (w == x) continue;
                         if (w == y) continue;
 
-//                        if (!graph.isAdjacentTo(w, x)) {
-//                            calculateArrowsBackward(w, x, graph);
-//                        }
-//
-//                        if (!graph.isAdjacentTo(w, y)) {
-//                            calculateArrowsBackward(w, y, graph);
-//                        }
-
                         calculateArrowsBackward(w, x, graph);
                         calculateArrowsBackward(w, y, graph);
                     }
@@ -960,6 +950,8 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
             return;
         }
 
+        Edge e = graph.getEdge(a, b);
+
         if (existsKnowledge()) {
             if (!getKnowledge().noEdgeRequired(a.getName(), b.getName())) {
                 return;
@@ -991,7 +983,7 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
 
             double bump = deleteEval(a, b, H, naYX, graph, hashIndices);
 
-            if (bump > 0.0) {
+            if (bump >= 0.0) {
                 Arrow arrow = new Arrow(bump, a, b, H, naYX);
                 sortedArrows.add(arrow);
                 addLookupArrow(a, b, arrow);

@@ -71,7 +71,6 @@ public final class DataEditor extends JPanel implements KnowledgeEditable,
 
     public DataEditor(TabularComparison comparison) {
         this(new DataWrapper(comparison.getDataSet()));
-
     }
 
 

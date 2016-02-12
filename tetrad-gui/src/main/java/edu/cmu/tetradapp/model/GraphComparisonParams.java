@@ -137,6 +137,7 @@ public class GraphComparisonParams extends SessionAdapter
     }
 
     public DataSet getDataSet() {
+        dataSet.setNumberFormat(new DecimalFormat("0"));
         return dataSet;
     }
 

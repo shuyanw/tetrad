@@ -1804,15 +1804,15 @@ public final class GraphUtils {
         Set<Edge> edges = estimated.getEdges();
         int numCorrect = 0;
 
-        for (Edge edge1 : edges) {
-            Edge edge2 = correct.getEdge(edge1.getNode1(), edge1.getNode2());
-            if (edge2 == null) continue;
+        for (Edge estEdge : edges) {
+            Edge correctEdge = correct.getEdge(estEdge.getNode1(), estEdge.getNode2());
+            if (correctEdge == null) continue;
 
-            if (edge1.getEndpoint1() == Endpoint.ARROW && edge2.getProximalEndpoint(edge1.getNode1()) == Endpoint.ARROW) {
+            if (estEdge.getProximalEndpoint(estEdge.getNode1()) == Endpoint.ARROW && correctEdge.getProximalEndpoint(estEdge.getNode1()) == Endpoint.ARROW) {
                 numCorrect++;
             }
 
-            if (edge1.getEndpoint2() == Endpoint.ARROW && edge2.getProximalEndpoint(edge1.getNode2()) == Endpoint.ARROW) {
+            if (estEdge.getProximalEndpoint(estEdge.getNode2()) == Endpoint.ARROW && correctEdge.getProximalEndpoint(estEdge.getNode2()) == Endpoint.ARROW) {
                 numCorrect++;
             }
         }
