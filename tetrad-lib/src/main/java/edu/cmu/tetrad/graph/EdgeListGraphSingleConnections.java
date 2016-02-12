@@ -501,6 +501,11 @@ public class EdgeListGraphSingleConnections implements Graph {
 
         for (Edge edge : edges1) {
             if (edge.getDistalNode(node1) == node2) {
+//                List<Edge> edges2 = edgeLists.get(node2);
+//                if (!edges2.contains(edge)) {
+//                    throw new IllegalStateException();
+//                }
+
                 return edge;
             }
         }
@@ -1441,11 +1446,11 @@ public class EdgeListGraphSingleConnections implements Graph {
             if (node2 != node) {
                 List<Edge> edgeList2 = edgeLists.get(node2);
                 edgeList2.remove(edge);
-                edgesSet.remove(edge);
-                changed = true;
             }
 
             edgeList1.remove(edge);
+            edgesSet.remove(edge);
+            changed = true;
         }
 
 //        for (Iterator<Edge> i = edgeList1.iterator(); i.hasNext(); ) {

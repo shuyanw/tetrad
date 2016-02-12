@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.prefs.Preferences;
 
 
 /**
@@ -272,6 +274,8 @@ public final class TabularComparison implements SessionModel {
             System.out.println("Target graph = " + targetGraph);
             System.out.println("adj fn = " + adjFn + " adj fp = " + adjFp + " arrowptfn = " + arrowptFn +
                     " arrowptfp = "+ arrowptFp);
+
+            Preferences.userRoot().putBoolean("errorFound", true);
         }
 
         if (this.params != null) {

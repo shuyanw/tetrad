@@ -120,6 +120,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
     // Potential arrows sorted by bump high to low. The first one is a candidate for adding to the graph.
     private SortedSet<Arrow> sortedArrows = null;
 
+    // Arrows added to sortedArrows for each <i, j>.
+    private Map<OrderedPair<Node>, Set<Arrow>> lookupArrows = null;
+
     // A utility map to help with orientation.
     private Map<Node, Set<Node>> neighbors = null;
 
@@ -149,6 +152,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // The graph being constructed.
     private final Graph graph;
+
+    // Colliders implied by the Meek rules on the last orientation.
+    private Set<NodePair> impliedColliders = new HashSet<>();
 
     //===========================CONSTRUCTORS=============================//
 
@@ -219,6 +225,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
      * @return the resulting Pattern.
      */
     public Graph search() {
+        lookupArrows = new ConcurrentHashMap<>();
         final List<Node> nodes = new ArrayList<>(variables);
 
         if (adjacencies != null) {
@@ -609,6 +616,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         TetradLogger.getInstance().log("info", "** FORWARD EQUIVALENCE SEARCH");
 
         sortedArrows = new ConcurrentSkipListSet<>();
+        lookupArrows = new ConcurrentHashMap<>();
         neighbors = new ConcurrentHashMap<>();
 
         // This takes most of the time and calculates all of the effect edges if faithfulness is assumed.
@@ -683,6 +691,8 @@ public final class Fgs implements GraphSearch, GraphScorer {
             delete(x, y, h, bump, arrow.getNaYX());
             score += bump;
 
+            clearArrow(x, y);
+
             Set<Node> toProcess = reapplyOrientation(x, y);
             storeGraph();
             reevaluateBackward(toProcess);
@@ -704,6 +714,10 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
         toProcess.add(x);
         toProcess.add(y);
+
+        toProcess.addAll(graph.getAdjacentNodes(x));
+        toProcess.addAll(graph.getAdjacentNodes(y));
+
         return toProcess;
     }
 
@@ -736,8 +750,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Calcuates new arrows based on changes in the graph for the forward search.
     private void reevaluateForward(final Set<Node> nodes) {
-        List<Node> _nodes = new ArrayList<>(nodes);
-
         class AdjTask extends RecursiveTask<Boolean> {
             private final List<Node> nodes;
             private int from;
@@ -767,6 +779,8 @@ public final class Fgs implements GraphSearch, GraphScorer {
                             if (adjacencies != null && !(adjacencies.isAdjacentTo(w, x))) {
                                 continue;
                             }
+
+                            if (w == x) continue;
 
                             if (!graph.isAdjacentTo(w, x)) {
                                 calculateArrowsForward(w, x);
@@ -809,6 +823,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
 
         final Set<Node> naYX = getNaYX(a, b);
+
+        if (!isClique(naYX)) return;
+
         List<Node> TNeighbors = getTNeighbors(a, b);
 
         final int _depth = Math.min(TNeighbors.size(), depth == -1 ? 1000 : depth);
@@ -818,11 +835,14 @@ public final class Fgs implements GraphSearch, GraphScorer {
         for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(TNeighbors.size(), i);
             int[] choice;
-            boolean found = false;
+//            boolean found = false;
             List<Set<Node>> subsets = new ArrayList<>();
 
             while ((choice = gen.next()) != null) {
                 Set<Node> T = GraphUtils.asSet(choice, TNeighbors);
+
+                Set<Node> union = new HashSet<>(naYX);
+                union.addAll(T);
 
                 if (lastSubsets != null) {
                     boolean foundASubset = false;
@@ -837,6 +857,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
                     if (!foundASubset) continue;
                 }
 
+                if (!isClique(union)) continue;
+                subsets.add(T);
+
                 if (existsKnowledge()) {
                     if (!validSetByKnowledge(b, T)) {
                         continue;
@@ -847,12 +870,11 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
                 if (bump > 0.0) {
                     addArrow(a, b, naYX, T, bump);
-                    found = true;
-                    subsets.add(T);
+//                    found = true;
                 }
             }
 
-            if (!found) break;
+//            if (i > 0 && !found) break;
             lastSubsets = subsets;
         }
     }
@@ -860,6 +882,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     private void addArrow(Node a, Node b, Set<Node> naYX, Set<Node> hOrT, double bump) {
         Arrow arrow = new Arrow(bump, a, b, hOrT, naYX);
         sortedArrows.add(arrow);
+        addLookupArrow(a, b, arrow);
     }
 
     // Reevaluates arrows after removing an edge from the graph.
@@ -915,6 +938,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
 
         for (Node r : toProcess) {
+//            System.out.println("To process " + r);
             neighbors.put(r, getNeighbors(r));
             List<Node> adjacentNodes = graph.getAdjacentNodes(r);
             pool.invoke(new BackwardTask(r, adjacentNodes, minChunk, 0, adjacentNodes.size(), hashIndices));
@@ -929,30 +953,70 @@ public final class Fgs implements GraphSearch, GraphScorer {
             }
         }
 
+        clearArrow(a, b);
+
         Set<Node> naYX = getNaYX(a, b);
         List<Node> _naYX = new ArrayList<>(naYX);
 
-        DepthChoiceGenerator gen = new DepthChoiceGenerator(_naYX.size(), _naYX.size());
-        int[] choice;
+//        Set<Node> maxDiff = null;
+//        double maxBump = 0;
 
-        while ((choice = gen.next()) != null) {
-            Set<Node> h = GraphUtils.asSet(choice, _naYX);
+        final int _depth = Math.min(_naYX.size(), depth == -1 ? 1000 : depth);
 
-            Set<Node> diff = new HashSet<>(_naYX);
-            diff.removeAll(h);
+        List<Set<Node>> lastSubsets = null;
 
-            if (existsKnowledge()) {
-                if (!validSetByKnowledge(b, h)) {
-                    continue;
+        for (int i = 0; i <= _depth; i++) {
+            final ChoiceGenerator gen = new ChoiceGenerator(_naYX.size(), i);
+            int[] choice;
+            List<Set<Node>> subsets = new ArrayList<>();
+
+            while ((choice = gen.next()) != null) {
+                Set<Node> diff = GraphUtils.asSet(choice, _naYX);
+
+                Set<Node> h = new HashSet<>(_naYX);
+                h.removeAll(diff);
+
+                if (lastSubsets != null) {
+                    boolean foundASubset = false;
+
+                    for (Set<Node> set : lastSubsets) {
+                        if (diff.containsAll(set)) {
+                            foundASubset = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundASubset) continue;
                 }
+
+                if (!isClique(diff)) continue;
+                subsets.add(diff);
+
+                if (existsKnowledge()) {
+                    if (!validSetByKnowledge(b, h)) {
+                        continue;
+                    }
+                }
+
+                double bump = deleteEval(a, b, diff, naYX, hashIndices);
+
+                if (bump >= 0.0) {
+                    addArrow(a, b, naYX, h, bump);
+
+//                if (maxDiff == null || diff.size() > maxDiff.size()) {
+//                    maxDiff = diff;
+//                    maxBump = bump;
+//                }
+                }
+
             }
 
-            double bump = deleteEval(a, b, diff, naYX, hashIndices);
-
-            if (bump >= 0.0) {
-                addArrow(a, b, naYX, h, bump);
-            }
+            lastSubsets = subsets;
         }
+
+//        if (maxDiff != null) {
+//            addArrow(a, b, naYX, maxH, maxBump);
+//        }
     }
 
     public void setSamplePrior(double samplePrior) {
@@ -1109,7 +1173,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
                               Map<Node, Integer> hashIndices) {
         Set<Node> parents = new HashSet<>(graph.getParents(y));
 
-        Set<Node> set = new HashSet<>();//new HashSet<>(naYX);
+        Set<Node> set = new HashSet<>(naYX);
         set.addAll(t);
         set.addAll(parents);
 
@@ -1127,20 +1191,23 @@ public final class Fgs implements GraphSearch, GraphScorer {
         Set<Node> parents = new HashSet<>(graph.getParents(y));
         parents.remove(x);
 
-//        System.out.println("In deleteEval x = " + x + " y = " + y + " h = " + h + " naYX = " + naYX + " diff = " + diff);
-
         Set<Node> set = new HashSet<>(diff);
         set.addAll(parents);
 
         return -scoreGraphChange(y, set, x, hashIndices);
     }
 
+    Set<Triple> triplesAdded = new HashSet<>();
+
     // Do an actual insertion. (Definition 12 from Chickering, 2002).
-    private boolean insert(Node x, Node y, Set<Node> t, double bump) {
+    private boolean insert(Node x, Node y, Set<Node> T, double bump) {
         if (graph.isAdjacentTo(x, y)) {
             return false; // The initial graph may already have put this edge in the graph.
 //            throw new IllegalArgumentException(x + " and " + y + " are already adjacent in the graph.");
         }
+
+        Set<Node> union = new HashSet<>(getNaYX(x, y));
+        union.addAll(T);
 
         Edge trueEdge = null;
 
@@ -1156,6 +1223,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
         graph.addEdge(edge);
 
+        for (Node node : graph.getParents(y)) {
+            triplesAdded.add(new Triple(x, node, y));
+            impliedColliders.remove(new NodePair(x, node));
+            impliedColliders.remove(new NodePair(y, node));
+        }
+
+
         if (graph.getEdge(x, y) != edge) {
             throw new IllegalArgumentException();
         }
@@ -1163,7 +1237,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         if (verbose) {
             String label = trueGraph != null && trueEdge != null ? "*" : "";
             TetradLogger.getInstance().log("insertedEdges", graph.getNumEdges() + ". INSERT " + graph.getEdge(x, y) +
-                    " " + t + " " + bump + " " + label);
+                    " " + T + " " + bump + " " + label);
         }
 
         int numEdges = graph.getNumEdges();
@@ -1175,10 +1249,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
         if (verbose) {
             String label = trueGraph != null && trueEdge != null ? "*" : "";
             out.println(graph.getNumEdges() + ". INSERT " + graph.getEdge(x, y) +
-                    " " + t + " " + bump + " " + label + " degree = " + GraphUtils.getDegree(graph));
+                    " " + T + " " + bump + " " + label + " degree = " + GraphUtils.getDegree(graph));
         }
 
-        for (Node _t : t) {
+        Set<Node> t2 = new HashSet<>(T);
+        t2.addAll(getNaYX(x, y));
+
+        for (Node _t : t2) {
             Edge oldEdge = graph.getEdge(_t, y);
 
             if (oldEdge == null) throw new IllegalArgumentException("Not adjacent: " + _t + ", " + y);
@@ -1214,6 +1291,15 @@ public final class Fgs implements GraphSearch, GraphScorer {
         Set<Node> diff = new HashSet<>(naYX);
         diff.removeAll(H);
 
+//        Set<Node> diff2 = new HashSet<>(getNaYX2(x, y));
+//        diff2.removeAll(H);
+//
+//        diff = diff2;
+//
+//        Set<Node> diff3 = new HashSet<>(diff2);
+//        diff3.removeAll(diff);
+//        H.addAll(diff3);
+//
         graph.removeEdge(oldxy);
 
         if (verbose) {
@@ -1222,53 +1308,58 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
             String label = trueGraph != null && trueEdge != null ? "*" : "";
             String message = (graph.getNumEdges()) + ". DELETE " + oldxy +
-                    " H = " + H + " NaYX = " + getNaYX(x, y) + " diff = " + diff + " (" + bump + ") " + label;
+                    " H = " + H + " NaYX = " + naYX + " diff = " + diff + " (" + bump + ") " + label;
             TetradLogger.getInstance().log("deletedEdges", message);
             out.println(message);
         }
 
-        if (isClique(diff)) {
-            for (Node h : H) {
-                Edge oldyh = graph.getEdge(y, h);
+//        if (isClique(diff)) {
+        for (Node h : H) {
+            if (graph.isParentOf(h, y) || graph.isParentOf(h, x)) continue;
 
-                if (oldyh != null && Edges.isUndirectedEdge(oldyh)) {
-                    if (!graph.isAdjacentTo(y, h)) throw new IllegalArgumentException("Not adjacent: " + y + ", " + h);
+            Edge oldyh = graph.getEdge(y, h);
 
-                    graph.removeEdge(oldyh);
+//                if (!Edges.isUndirectedEdge(oldyh)) throw new IllegalArgumentException();
 
-                    Edge newEdge = Edges.directedEdge(y, h);
+            graph.removeEdge(oldyh);
 
-                    graph.addEdge(newEdge);
+            graph.addEdge(Edges.directedEdge(y, h));
 
-                    if (!graph.containsEdge(newEdge)) {
-                        throw new IllegalArgumentException();
-                    }
+            triplesAdded.add(new Triple(x, h, y));
+            impliedColliders.remove(new NodePair(x, h));
+            impliedColliders.remove(new NodePair(y, h));
 
-                    if (verbose) {
-                        TetradLogger.getInstance().log("directedEdges", "--- Directing " + oldyh + " to " +
-                                newEdge);
-                        out.println("--- Directing " + oldyh + " to " + newEdge);
-                    }
-                }
+            if (verbose) {
+                TetradLogger.getInstance().log("directedEdges", "--- Directing " + oldyh + " to " +
+                        graph.getEdge(y, h));
+                out.println("--- Directing " + oldyh + " to " + graph.getEdge(y, h));
+            }
 
-                Edge oldxh = graph.getEdge(x, h);
+            Edge oldxh = graph.getEdge(x, h);
 
-                if (oldxh != null && Edges.isUndirectedEdge(oldxh)) {
-                    if (!graph.isAdjacentTo(x, h)) throw new IllegalArgumentException("Not adjacent: " + x + ", " + h);
+            if (Edges.isUndirectedEdge(oldxh)) {
+                graph.removeEdge(oldxh);
 
-                    graph.removeEdge(x, h);
-                    graph.addDirectedEdge(x, h);
+                graph.addEdge(Edges.directedEdge(x, h));
 
-                    Edge edge = graph.getEdge(x, h);
+                triplesAdded.add(new Triple(x, h, y));
+                impliedColliders.remove(new NodePair(x, h));
+                impliedColliders.remove(new NodePair(y, h));
 
-                    if (verbose) {
-                        TetradLogger.getInstance().log("directedEdges", "--- Directing " + oldxh + " to " +
-                                edge);
-                        out.println("--- Directing " + oldxh + " to " + edge);
-                    }
+                if (verbose) {
+                    TetradLogger.getInstance().log("directedEdges", "--- Directing " + oldxh + " to " +
+                            graph.getEdge(x, h));
+                    out.println("--- Directing " + oldxh + " to " + graph.getEdge(x, h));
                 }
             }
+//            }
         }
+    }
+
+    private Set<Node> getCommonAdjacents(Node x, Node y) {
+        Set<Node> commonAdjacents = new HashSet<>(graph.getAdjacentNodes(x));
+        commonAdjacents.retainAll(graph.getAdjacentNodes(y));
+        return commonAdjacents;
     }
 
     // Test if the candidate insertion is a valid operation
@@ -1278,7 +1369,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         union.addAll(naYX);
         if (!isClique(union)) return false;
         if (existsUnblockedSemiDirectedPath(y, x, union, cycleBound)) {
-            System.out.println("Semidirected path from " + y + " to " + x);
+//            System.out.println("Semidirected path from " + y + " to " + x);
             return false;
         }
         return true;
@@ -1378,23 +1469,37 @@ public final class Fgs implements GraphSearch, GraphScorer {
     // Find all adj that are connected to Y by an undirected edge that are adjacent to X (that is, by undirected or
     // directed edge).
     private synchronized Set<Node> getNaYX(Node x, Node y) {
-//        if (true) return getNeighbors(x, y);
+        if (true) return getNaYX2(x, y);
+
+        List<Node> adj = graph.getAdjacentNodes(y);
+        Set<Node> nayx = new HashSet<>();
+
+        for (Node z : adj) {
+            Edge ez = graph.getEdge(z, y);
+            if (!Edges.isUndirectedEdge(ez)) continue;
+            if (!graph.isAdjacentTo(z, x)) continue;
+            nayx.add(z);
+        }
+
+        return nayx;
+    }
+
+    private synchronized Set<Node> getNaYX2(Node x, Node y) {
+//        if (true) return getNaYX(x, y);
 
         List<Edge> yEdges = graph.getEdges(y);
         Set<Node> nayx = new HashSet<>();
 
         for (Edge edge : yEdges) {
-            if (!Edges.isUndirectedEdge(edge)) {
-                continue;
+            if ((Edges.isUndirectedEdge(edge)) || !edge.pointsTowards(y)) {
+                Node z = edge.getDistalNode(y);
+
+                if (!graph.isAdjacentTo(z, x)) {
+                    continue;
+                }
+
+                nayx.add(z);
             }
-
-            Node z = edge.getDistalNode(y);
-
-            if (!graph.isAdjacentTo(z, x)) {
-                continue;
-            }
-
-            nayx.add(z);
         }
 
         return nayx;
@@ -1481,13 +1586,21 @@ public final class Fgs implements GraphSearch, GraphScorer {
         toProcess.addAll(graph.getAdjacentNodes(x));
         toProcess.addAll(graph.getAdjacentNodes(y));
 
-        for (Node node : toProcess) {
-            System.out.println("basic pattenr " + node);
-            SearchGraphUtils.basicPatternRestricted2(node, graph);
+        if (impliedColliders != null) {
+            for (NodePair triple : impliedColliders) {
+                boolean removed = graph.removeEdge(triple.getFirst(), triple.getSecond());
+                if (!removed) continue;
+                graph.addUndirectedEdge(triple.getFirst(), triple.getSecond());
+            }
         }
 
         for (Node node : toProcess) {
-            System.out.println("Reorienting " + node);
+            SearchGraphUtils.basicPatternRestricted2(node, graph);
+//            SearchGraphUtils.basicPatternRestricted3(node, graph, triplesAdded);
+//            SearchGraphUtils.basicPatternRestricted4(node, graph, triplesAdded);
+        }
+
+        for (Node node : toProcess) {
             visited.addAll(reorientNode(node));
         }
 
@@ -1513,6 +1626,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
         MeekRulesRestricted rules = new MeekRulesRestricted();
         rules.setKnowledge(knowledge);
         rules.orientImplied(graph, new HashSet<>(nodes));
+        this.impliedColliders.addAll(rules.getImpliedColliders());
         return rules.getVisited();
     }
 
@@ -1522,6 +1636,33 @@ public final class Fgs implements GraphSearch, GraphScorer {
         for (Node node : nodes) {
             this.hashIndices.put(node, variables.indexOf(node));
         }
+    }
+
+    // Removes information associated with an edge x->y.
+    private synchronized void clearArrow(Node x, Node y) {
+//        if (true) return;
+        final OrderedPair<Node> pair = new OrderedPair<>(x, y);
+        final Set<Arrow> lookupArrows = this.lookupArrows.get(pair);
+
+        if (lookupArrows != null) {
+            sortedArrows.removeAll(lookupArrows);
+        }
+
+        this.lookupArrows.remove(pair);
+    }
+
+    // Adds the given arrow for the adjacency i->j. These all are for i->j but may have
+    // different T or H or NaYX sets, and so different bumps.
+    private void addLookupArrow(Node i, Node j, Arrow arrow) {
+        OrderedPair<Node> pair = new OrderedPair<>(i, j);
+        Set<Arrow> arrows = lookupArrows.get(pair);
+
+        if (arrows == null) {
+            arrows = new ConcurrentSkipListSet<>();
+            lookupArrows.put(pair, arrows);
+        }
+
+        arrows.add(arrow);
     }
 
     //===========================SCORING METHODS===================//

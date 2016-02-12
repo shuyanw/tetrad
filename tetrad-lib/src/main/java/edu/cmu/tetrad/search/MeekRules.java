@@ -82,6 +82,11 @@ public class MeekRules implements ImpliedOrientation {
 
 
     public void orientImplied(Graph graph) {
+        if (true) {
+            MeekRulesRestricted rule = new MeekRulesRestricted();
+            rule.orientImplied(graph);
+        }
+
         TetradLogger.getInstance().log("impliedOrientations", "Starting Orientation Step D.");
         changedEdges = new HashMap<Edge, Edge>();
         orientUsingMeekRulesLocally(knowledge, graph);

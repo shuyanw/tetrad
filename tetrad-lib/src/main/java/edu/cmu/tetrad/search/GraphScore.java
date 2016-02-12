@@ -107,35 +107,101 @@ public class GraphScore implements GesScore {
         List<Node> allvars = new ArrayList<>(scoreParents);
         allvars.add(x);
 
+//
+//        double diff = score1(y, x, scoreParents);
+//        double diff = score2(y, x, scoreParents);
+        double diff = score3(y, x, scoreParents);
+//        double diff = score4  (y, x, scoreParents);
+
+//        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
+
+        return diff;
+    }
+
+    private double score1(Node y, Node x, List<Node> scoreParents) {
         double diff = 0;
 
-        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
-            diff = -1;
-        } else {
-            diff = 1;
+        if (dag.isDConnectedTo(x, y, scoreParents)) {
+            diff += 1;
+        }
+        return diff;
+    }
+
+    private double score2(Node y, Node x, List<Node> scoreParents) {
+        double diff = 0;
+
+        if (dag.isDConnectedTo(x, y, scoreParents)) {
+            diff += 1;
+        }
+
+        List<Node> yUnionScoreParents = new ArrayList<>();
+        yUnionScoreParents.add(y);
+        yUnionScoreParents.addAll(scoreParents);
+
+        for (Node z : scoreParents) {
+            if (
+                    dag.isDConnectedTo(x, y, scoreParents) &&
+                            dag.isDConnectedTo(z, y, scoreParents) &&
+//                            !dag.isDConnectedTo(x, z, scoreParents) &&
+                            dag.isDConnectedTo(z, y, scoreParents) &&
+                            dag.isDConnectedTo(x, z, yUnionScoreParents)
+                    ) {
+                diff += 1;
+                break;
+            }
         }
 
 
-//        if (dag.isDConnectedTo(x, y, scoreParents)) {
-//            diff += 1;
-//        }
-//
-//        List<Node> yUnionScoreParents = new ArrayList<>();
-//        yUnionScoreParents.add(y);
-//        yUnionScoreParents.addAll(scoreParents);
-//
-//        for (Node z : scoreParents) {
-//            if (
-//                    dag.isDConnectedTo(x, y, scoreParents) &&
-//                            !dag.isDConnectedTo(x, z, scoreParents) &&
-//                            dag.isDConnectedTo(z, y, scoreParents) &&
-//                            dag.isDConnectedTo(x, z, yUnionScoreParents)
-//                    ) {
-//                diff += 1;
-//            }
-//        }
+        return diff;
+    }
 
-//        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
+    private double score3(Node y, Node x, List<Node> scoreParents) {
+        double diff = 0;
+
+        if (dag.isDConnectedTo(x, y, scoreParents)) {
+            diff = 1;
+        }
+
+        List<Node> yUnionScoreParents = new ArrayList<>();
+        yUnionScoreParents.add(y);
+        yUnionScoreParents.addAll(scoreParents);
+
+        if (diff == 1) {
+            for (Node z : scoreParents) {
+//                if (!dag.isDConnectedTo(x, z, scoreParents)) {
+//                    continue;
+//                }
+
+                if (dag.isDConnectedTo(x, z, yUnionScoreParents)) {
+                    diff *= 2;
+                } else {
+                    diff *= .9;
+                }
+            }
+
+//            diff += numConnected;
+        }
+
+        return diff;
+    }
+
+    // Peter's score.
+    private double score4(Node y, Node x, List<Node> scoreParents) {
+        double diff = 0;
+
+        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
+            diff += 1;
+        }
+
+        for (Node t : scoreParents) {
+            List<Node> sepset = dag.getSepset(x, t);
+
+            if (sepset != null && !sepset.contains(y)) {
+                diff += 1;
+            } else {
+                diff -= 1;
+            }
+        }
 
         return diff;
     }

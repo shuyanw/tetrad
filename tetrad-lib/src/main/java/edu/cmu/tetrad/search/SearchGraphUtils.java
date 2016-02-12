@@ -1202,32 +1202,6 @@ public final class SearchGraphUtils {
     }
 
     public static void basicPatternRestricted2(Node node, Graph graph) {
-//        List<Node> adj = graph.getAdjacentNodes(node);
-//
-//        if (adj.size() < 2) return;
-//
-//        ChoiceGenerator gen = new ChoiceGenerator(adj.size(), 2);
-//        int[] choice;
-//
-//        while((choice = gen.next()) != null) {
-//            List<Node> pair = GraphUtils.asList(choice, adj);
-//            Node x = pair.get(0);
-//            Node y = pair.get(1);
-//
-//            if (!graph.isAdjacentTo(x, y)) {
-//                graph.removeEdge(x, node);
-//                graph.removeEdge(y, node);
-//                graph.addDirectedEdge(x, node);
-//                graph.addDirectedEdge(y, node);
-//            }
-//        }
-//
-//        for (Node _node : adj) {
-//            if (!graph.isAdjacentTo(_node, node)) {
-//                graph.addUndirectedEdge(_node, node);
-//            }
-//        }
-//
         Set<Edge> undirectedEdges = new HashSet<Edge>();
 
         NEXT_EDGE:
@@ -1258,6 +1232,70 @@ public final class SearchGraphUtils {
             graph.addUndirectedEdge(node1, node2);
         }
     }
+
+    public static void basicPatternRestricted3(Node node, Graph graph, Set<Triple> triples) {
+        Set<Edge> undirectedEdges = new HashSet<Edge>();
+
+        System.out.println("Triple = " + triples);
+
+        NEXT_EDGE:
+        for (Edge edge : graph.getEdges(node)) {
+            if (!edge.isDirected()) {
+                continue;
+            }
+
+            Node _x = Edges.getDirectedEdgeTail(edge);
+            Node _y = Edges.getDirectedEdgeHead(edge);
+
+            for (Node parent : graph.getParents(_y)) {
+                Triple triple = new Triple(parent, _y, _x);
+                if (parent != _x && triples.contains(triple)) {
+//                    if (!graph.isAdjacentTo(parent, _x)) {
+                    continue NEXT_EDGE;
+//                    }
+                }
+            }
+
+            undirectedEdges.add(edge);
+        }
+
+        for (Edge nextUndirected : undirectedEdges) {
+            Node node1 = nextUndirected.getNode1();
+            Node node2 = nextUndirected.getNode2();
+
+            graph.removeEdge(nextUndirected);
+            graph.addUndirectedEdge(node1, node2);
+        }
+    }
+
+    public static void basicPatternRestricted4(Node node, Graph graph, Set<Triple> triples) {
+        List<Node> adj = graph.getAdjacentNodes(node);
+
+        for (Node x : adj) {
+            graph.removeEdge(x, node);
+            graph.addUndirectedEdge(x, node);
+        }
+
+        if (adj.size() < 2) return;
+
+        ChoiceGenerator gen = new ChoiceGenerator(adj.size(), 2);
+        int[] choice;
+
+        while ((choice = gen.next()) != null) {
+            List<Node> _adj = GraphUtils.asList(choice, adj);
+            Node x = _adj.get(0);
+            Node y = _adj.get(1);
+            Triple triple = new Triple(x, node, y);
+
+            if (triples.contains(triple)) {
+                graph.removeEdge(x, node);
+                graph.removeEdge(y, node);
+                graph.addDirectedEdge(x, node);
+                graph.addDirectedEdge(y, node);
+            }
+        }
+    }
+
 
     /**
      * Transforms a DAG represented in graph <code>graph</code> into a maximally directed pattern (PDAG) by modifying
@@ -1529,12 +1567,12 @@ public final class SearchGraphUtils {
     }
 
     /**
-     * @param initialNodes  The nodes that reachability undirectedPaths start from.
-     * @param legalPairs    Specifies initial edges (given initial nodes) and legal edge pairs.
-     * @param c             a set of vertices (intuitively, the set of variables to be conditioned on.
-     * @param d             a set of vertices (intuitively to be used in tests of legality, for example, the set of
-     *                      ancestors of c).
-     * @param graph         the graph with respect to which reachability is
+     * @param initialNodes The nodes that reachability undirectedPaths start from.
+     * @param legalPairs   Specifies initial edges (given initial nodes) and legal edge pairs.
+     * @param c            a set of vertices (intuitively, the set of variables to be conditioned on.
+     * @param d            a set of vertices (intuitively to be used in tests of legality, for example, the set of
+     *                     ancestors of c).
+     * @param graph        the graph with respect to which reachability is
      * @return the set of nodes reachable from the given set of initial nodes in the given graph according to the
      * criteria in the given legal pairs object.
      * <p>

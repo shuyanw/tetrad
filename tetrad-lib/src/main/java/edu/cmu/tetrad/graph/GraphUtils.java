@@ -1772,6 +1772,29 @@ public final class GraphUtils {
             }
         }
 
+        for (Edge edge1 : graph2.getEdges()) {
+            Node node1 = edge1.getNode1();
+            Node node2 = edge1.getNode2();
+
+            Edge edge2 = graph1.getEdge(node1, node2);
+
+            if (edge1.getEndpoint1() == Endpoint.ARROW) {
+                if (edge2 == null) {
+                    count++;
+                } else if (edge2.getProximalEndpoint(edge1.getNode1()) != Endpoint.ARROW) {
+                    count++;
+                }
+            }
+
+            if (edge1.getEndpoint2() == Endpoint.ARROW) {
+                if (edge2 == null) {
+                    count++;
+                } else if (edge2.getProximalEndpoint(edge1.getNode2()) != Endpoint.ARROW) {
+                    count++;
+                }
+            }
+        }
+
         return count;
     }
 
