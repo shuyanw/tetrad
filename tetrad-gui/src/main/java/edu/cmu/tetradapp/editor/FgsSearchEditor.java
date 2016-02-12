@@ -84,6 +84,11 @@ public class FgsSearchEditor extends AbstractSearchEditor
 //        getWorkbench().setGraph(runner.getTopGraphs().get(runner.getTopGraphs().size() - 1).getGraph());
     }
 
+    public FgsSearchEditor(FgsRunner2 runner) {
+        super(runner, "Result Pattern");
+//        getWorkbench().setGraph(runner.getTopGraphs().get(runner.getTopGraphs().size() - 1).getGraph());
+    }
+
     public FgsSearchEditor(ImagesRunner runner) {
         super(runner, "Result Pattern");
     }
@@ -859,6 +864,15 @@ public class FgsSearchEditor extends AbstractSearchEditor
                     return new JPanel();
                 }
                 FgsRunner fgsRunner = ((FgsRunner) algorithmRunner);
+                FgsIndTestParams params = (FgsIndTestParams) indTestParams;
+                DataModel dataModel = fgsRunner.getDataModelList().get(0);
+                boolean discreteData = dataModel instanceof DataSet && ((DataSet) dataModel).isDiscrete();
+                return new FgsIndTestParamsEditor(params, discreteData);
+            } else if (algorithmRunner instanceof FgsRunner2) {
+                if (algorithmRunner.getDataModelList() == null) {
+                    return new JPanel();
+                }
+                FgsRunner2 fgsRunner = ((FgsRunner2) algorithmRunner);
                 FgsIndTestParams params = (FgsIndTestParams) indTestParams;
                 DataModel dataModel = fgsRunner.getDataModelList().get(0);
                 boolean discreteData = dataModel instanceof DataSet && ((DataSet) dataModel).isDiscrete();

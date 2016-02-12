@@ -27,6 +27,7 @@ import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.graph.NodeType;
 
 import java.util.*;
+import java.util.stream.Collector;
 
 /**
  * Implements the continuous BIC score for FGS.
@@ -109,8 +110,8 @@ public class GraphScore implements GesScore {
 
 //
 //        double diff = score1(y, x, scoreParents);
-//        double diff = score2(y, x, scoreParents);
-        double diff = score3(y, x, scoreParents);
+        double diff = score2(y, x, scoreParents);
+//        double diff = score3(y, x, scoreParents);
 //        double diff = score4  (y, x, scoreParents);
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
@@ -154,6 +155,35 @@ public class GraphScore implements GesScore {
 
         return diff;
     }
+
+    private double scoreb(Node y, Node x, List<Node> scoreParents) {
+        double diff = 0;
+
+        if (dag.isDConnectedTo(x, y, Collections.EMPTY_LIST)) {
+            diff += 1;
+        }
+
+        List<Node> yUnionScoreParents = new ArrayList<>();
+        yUnionScoreParents.add(y);
+        yUnionScoreParents.addAll(scoreParents);
+
+        for (Node z : scoreParents) {
+            if (
+                    dag.isDConnectedTo(x, y, Collections.EMPTY_LIST) &&
+                            dag.isDConnectedTo(z, y, Collections.EMPTY_LIST) &&
+//                            !dag.isDConnectedTo(x, z, scoreParents) &&
+                            dag.isDConnectedTo(z, y, Collections.EMPTY_LIST) &&
+                            dag.isDConnectedTo(x, z, Collections.singletonList(y))
+                    ) {
+                diff += 1;
+                break;
+            }
+        }
+
+
+        return diff;
+    }
+
 
     private double score3(Node y, Node x, List<Node> scoreParents) {
         double diff = 0;

@@ -1650,6 +1650,23 @@
                 </editor-class>
                 <params-class>edu.cmu.tetradapp.model.FgsParams</params-class>
             </model>
+            <model name="FGS2" acronym="FGS2" help="fgs"
+                   category="Pattern Searches">
+                <logger>
+                    <event id="info" description="Information" default="on"/>
+                    <event id="insertedEdges" description="Inserted Edges" default="on"/>
+                    <event id="deletedEdges" description="Deleted Edges" default="on"/>
+                    <event id="directedEdges" description="Directed Edges" default="on"/>
+                    <event id="edgeEvaluations" description="Edge Evaluations"/>
+                    <event id="impliedOrientations" description="Implied Orientations"/>
+                    <event id="rebuiltPatterns" description="Rebuilt Patterns"/>
+                    <event id="graph" description="Graph" default="on"/>
+                </logger>
+                <model-class>edu.cmu.tetradapp.model.FgsRunner2</model-class>
+                <editor-class>edu.cmu.tetradapp.editor.FgsSearchEditor
+                </editor-class>
+                <params-class>edu.cmu.tetradapp.model.FgsParams</params-class>
+            </model>
             <model name="iMAGES" acronym="iMAGES" help="ges"
                    category="Pattern Searches">
                 <logger>

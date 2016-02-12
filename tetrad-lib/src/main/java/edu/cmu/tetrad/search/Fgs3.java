@@ -48,7 +48,7 @@ import java.util.concurrent.*;
  * @author Ricardo Silva, Summer 2003
  * @author Joseph Ramsey, Revisions 5/2015
  */
-public final class Fgs implements GraphSearch, GraphScorer {
+public final class Fgs3 implements GraphSearch, GraphScorer {
 
     /**
      * Sample size, either from the data set or from the covariances.
@@ -111,10 +111,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
      */
     private TetradLogger logger = TetradLogger.getInstance();
 
-    /**
-     * The top n graphs found by the algorithm, where n is numPatternsToStore.
-     */
-    private SortedSet<ScoredGraph> topGraphs = new TreeSet<>();
+    private LinkedList<ScoredGraph> topGraphs = new LinkedList<>();
 
     /**
      * The number of top patterns to store.
@@ -169,7 +166,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     /**
      * The data set must either be all continuous or all discrete.
      */
-    public Fgs(DataSet dataSet) {
+    public Fgs3(DataSet dataSet) {
         out.println("GES constructor");
 
         if (dataSet.isDiscrete()) {
@@ -184,7 +181,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     /**
      * Continuous case--where a covariance matrix is already available.
      */
-    public Fgs(ICovarianceMatrix covMatrix) {
+    public Fgs3(ICovarianceMatrix covMatrix) {
         out.println("GES constructor");
 
         setGesScore(new SemBicScore(covMatrix));
@@ -192,7 +189,8 @@ public final class Fgs implements GraphSearch, GraphScorer {
         out.println("GES constructor done");
     }
 
-    public Fgs(GesScore gesScore) {
+
+    public Fgs3(GesScore gesScore) {
         if (gesScore == null) throw new NullPointerException();
         setGesScore(gesScore);
     }
@@ -295,11 +293,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
     public double getPenaltyDiscount() {
         if (gesScore instanceof SemBicScore) {
             return ((SemBicScore) gesScore).getPenaltyDiscount();
-        } else {
-            return 2.0;
         }
 
-//        throw new UnsupportedOperationException("Penalty discount supported only for SemBicScore.");
+        return Double.NaN;
     }
 
     /**
@@ -313,8 +309,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
         if (gesScore instanceof SemBicScore) {
             ((SemBicScore) gesScore).setPenaltyDiscount(penaltyDiscount);
-        } else {
-            throw new UnsupportedOperationException("Penalty discount supported only for SemBicScore.");
         }
     }
 
@@ -330,13 +324,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
      */
     public double getScore(Graph dag) {
         return scoreDag(dag);
-    }
-
-    /**
-     * Returns the list of top scoring graphs.
-     */
-    public SortedSet<ScoredGraph> getTopGraphs() {
-        return topGraphs;
     }
 
     /**
@@ -561,11 +548,11 @@ public final class Fgs implements GraphSearch, GraphScorer {
                                 continue;
                             }
 
-                            double bump;
+//                            double bump;
 
-                            double s1 = gesScore.localScore(hashIndices.get(y), hashIndices.get(x));
-                            double s2 = gesScore.localScore(hashIndices.get(y));
-                            bump = s1 - s2;
+                            int child = hashIndices.get(y);
+                            int parent = hashIndices.get(x);
+                            double bump = gesScore.localScoreDiff(child, new int[]{}, parent);
 
                             if (gesScore.isEffectEdge(bump)) {
                                 final Edge edge = Edges.undirectedEdge(x, y);
@@ -630,6 +617,14 @@ public final class Fgs implements GraphSearch, GraphScorer {
             Node y = arrow.getB();
 
             if (graph.isAdjacentTo(x, y)) {
+                continue;
+            }
+
+            if (!arrow.getNaYX().equals(getNaYX(x, y, graph))) {
+                continue;
+            }
+
+            if (!getTNeighbors(x, y, graph).containsAll(arrow.getHOrT())) {
                 continue;
             }
 
@@ -704,6 +699,10 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
             if (!graph.isAdjacentTo(x, y)) continue;
 
+            if (!arrow.getNaYX().equals(getNaYX(x, y, graph))) {
+                continue;
+            }
+
             if (!validDelete(y, arrow.getHOrT(), arrow.getNaYX(), graph)) {
                 continue;
             }
@@ -711,7 +710,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
             Set<Node> h = arrow.getHOrT();
             double bump = arrow.getBump();
 
-            delete(x, y, h, graph, bump);
+            delete(x, y, h, graph, bump, arrow.getNaYX());
             score += bump;
 
             Set<Node> visited = rebuildPatternRestricted(graph, x, y);
@@ -860,14 +859,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
         clearArrow(a, b);
 
         final DepthChoiceGenerator gen = new DepthChoiceGenerator(t.size(), _depth);
-
         int[] choice;
 
         // Try parallelizing this.
         while ((choice = gen.next()) != null) {
-            Set<Node> s = GraphUtils.asSet(choice, t);
+            Set<Node> T = GraphUtils.asSet(choice, t);
 
-            Set<Node> union = new HashSet<>(s);
+            Set<Node> union = new HashSet<>(T);
             union.addAll(naYX);
 
             // Necessary condition for it to be a clique later (after possible edge removals) is that it be a clique
@@ -875,16 +873,16 @@ public final class Fgs implements GraphSearch, GraphScorer {
             if (!isClique(union, graph)) continue;
 
             if (existsKnowledge()) {
-                if (!validSetByKnowledge(b, s)) {
+                if (!validSetByKnowledge(b, T)) {
                     continue;
                 }
             }
 
 
-            double bump = insertEval(a, b, s, naYX, graph, hashIndices);
+            double bump = insertEval(a, b, T, naYX, graph, hashIndices);
 
             if (bump > 0.0) {
-                Arrow arrow = new Arrow(bump, a, b, s, naYX);
+                Arrow arrow = new Arrow(bump, a, b, T, naYX);
                 sortedArrows.add(arrow);
                 addLookupArrow(a, b, arrow);
             }
@@ -978,23 +976,23 @@ public final class Fgs implements GraphSearch, GraphScorer {
         int[] choice;
 
         while ((choice = gen.next()) != null) {
-            Set<Node> h = GraphUtils.asSet(choice, _naYX);
+            Set<Node> H = GraphUtils.asSet(choice, _naYX);
 
             Set<Node> diff = new HashSet<>(naYX);
-            diff.removeAll(h);
+            diff.removeAll(H);
 
             if (!isClique(diff, graph)) continue;
 
             if (existsKnowledge()) {
-                if (!validSetByKnowledge(b, h)) {
+                if (!validSetByKnowledge(b, H)) {
                     continue;
                 }
             }
 
-            double bump = deleteEval(a, b, h, naYX, graph, hashIndices);
+            double bump = deleteEval(a, b, H, naYX, graph, hashIndices);
 
             if (bump > 0.0) {
-                Arrow arrow = new Arrow(bump, a, b, h, naYX);
+                Arrow arrow = new Arrow(bump, a, b, H, naYX);
                 sortedArrows.add(arrow);
                 addLookupArrow(a, b, arrow);
             }
@@ -1011,6 +1009,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
         if (gesScore instanceof LocalDiscreteScore) {
             ((LocalDiscreteScore) gesScore).setStructurePrior(structurePrior);
         }
+    }
+
+    /**
+     * The top n graphs found by the algorithm, where n is numPatternsToStore.
+     */
+    public LinkedList<ScoredGraph> getTopGraphs() {
+        return topGraphs;
     }
 
     // Basic data structure for an arrow a->b considered for additiom or removal from the graph, together with
@@ -1133,30 +1138,29 @@ public final class Fgs implements GraphSearch, GraphScorer {
     // Evaluate the Insert(X, Y, T) operator (Definition 12 from Chickering, 2002).
     private double insertEval(Node x, Node y, Set<Node> t, Set<Node> naYX, Graph graph,
                               Map<Node, Integer> hashIndices) {
-        Set<Node> set1 = new HashSet<>(naYX);
-        set1.addAll(t);
-        set1.addAll(graph.getParents(y));
-        set1.remove(x);
+        Set<Node> parents = new HashSet<>(graph.getParents(y));
 
-        Set<Node> set2 = new HashSet<>(set1);
-        set1.add(x);
+        Set<Node> set = new HashSet<>(naYX);
+        set.addAll(t);
+        set.addAll(parents);
+        set.remove(x);
 
-        return scoreGraphChange(y, set1, set2, hashIndices);
+        return scoreGraphChange(y, set, x, hashIndices);
     }
 
     // Evaluate the Delete(X, Y, T) operator (Definition 12 from Chickering, 2002).
-    private double deleteEval(Node x, Node y, Set<Node> h, Set<Node> naYX, Graph graph,
+    private double deleteEval(Node x, Node y, Set<Node> diff, Set<Node> naYX, Graph graph,
                               Map<Node, Integer> hashIndices) {
-        Set<Node> set1 = new HashSet<>(naYX);
-        set1.removeAll(h);
-        set1.addAll(graph.getParents(y));
-        set1.remove(x);
+        Set<Node> parents = new HashSet<>(graph.getParents(y));
+//        parents.remove(x);
 
-        Set<Node> set2 = new HashSet<>(set1);
-        set2.add(x);
+        Set<Node> set = new HashSet<>(diff);
+        set.addAll(parents);
+        set.remove(x);
 
-        return scoreGraphChange(y, set1, set2, hashIndices);
+        return -scoreGraphChange(y, set, x, hashIndices);
     }
+
 
     // Do an actual insertion. (Definition 12 from Chickering, 2002).
     private boolean insert(Node x, Node y, Set<Node> t, Graph graph, double bump) {
@@ -1212,7 +1216,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     }
 
     // Do an actual deletion (Definition 13 from Chickering, 2002).
-    private void delete(Node x, Node y, Set<Node> subset, Graph graph, double bump) {
+    private void delete(Node x, Node y, Set<Node> H, Graph graph, double bump, Set<Node> naYX) {
 
         Edge trueEdge = null;
 
@@ -1231,15 +1235,21 @@ public final class Fgs implements GraphSearch, GraphScorer {
             if (numEdges % 1000 == 0) out.println("Num edges (backwards) = " + numEdges);
         }
 
-        if (log) {
+        Set<Node> diff = new HashSet<>(naYX);
+        diff.removeAll(H);
+
+        if (verbose) {
+            int numEdges = graph.getNumEdges();
+            if (numEdges % 1000 == 0) out.println("Num edges (backwards) = " + numEdges);
+
             String label = trueGraph != null && trueEdge != null ? "*" : "";
-            TetradLogger.getInstance().log("deletedEdges", (graph.getNumEdges() - 1) + ". DELETE " + oldxy +
-                    " " + subset + " (" + bump + ") " + label);
-            out.println((graph.getNumEdges()) + ". DELETE " + oldxy +
-                    " " + subset + " (" + bump + ") " + label);
+            String message = (graph.getNumEdges()) + ". DELETE " + oldxy +
+                    " H = " + H + " NaYX = " + naYX + " diff = " + diff + " (" + bump + ") " + label;
+            TetradLogger.getInstance().log("deletedEdges", message);
+            out.println(message);
         }
 
-        for (Node h : subset) {
+        for (Node h : H) {
             Edge oldyh = graph.getEdge(y, h);
 //
             if (oldyh != null && Edges.isUndirectedEdge(oldyh)) {
@@ -1584,32 +1594,20 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return score;
     }
 
-    // Scores the difference between y with 'parents1' as parents an y with 'parents2' as parents.
-    private double scoreGraphChange(Node y, Set<Node> parents1,
-                                    Set<Node> parents2, Map<Node, Integer> hashIndices) {
+    private double scoreGraphChange(Node y, Set<Node> parents,
+                                    Node x, Map<Node, Integer> hashIndices) {
         int yIndex = hashIndices.get(y);
 
-        double score1, score2;
+        if (parents.contains(x)) throw new IllegalArgumentException();
 
-        int[] parentIndices1 = new int[parents1.size()];
+        int[] parentIndices = new int[parents.size()];
 
-        int count = -1;
-        for (Node parent : parents1) {
-            parentIndices1[++count] = hashIndices.get(parent);
+        int count = 0;
+        for (Node parent : parents) {
+            parentIndices[count++] = hashIndices.get(parent);
         }
 
-        score1 = gesScore.localScore(yIndex, parentIndices1);
-
-        int[] parentIndices2 = new int[parents2.size()];
-
-        int count2 = -1;
-        for (Node parent : parents2) {
-            parentIndices2[++count2] = hashIndices.get(parent);
-        }
-
-        score2 = gesScore.localScore(yIndex, parentIndices2);
-
-        return score1 - score2;
+        return gesScore.localScoreDiff(yIndex, parentIndices, hashIndices.get(x));
     }
 
     private int sampleSize() {
@@ -1626,16 +1624,13 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     // Stores the graph, if its score knocks out one of the top ones.
     private void storeGraph(Graph graph) {
-        if (numPatternsToStore < 1) return;
-
-        if (topGraphs.isEmpty() || score > topGraphs.first().getScore()) {
+        if (getNumPatternsToStore() > 0) {
             Graph graphCopy = new EdgeListGraphSingleConnections(graph);
+            topGraphs.addLast(new ScoredGraph(graphCopy, score));
+        }
 
-            topGraphs.add(new ScoredGraph(graphCopy, score));
-
-            if (topGraphs.size() > getNumPatternsToStore()) {
-                topGraphs.remove(topGraphs.first());
-            }
+        if (topGraphs.size() == getNumPatternsToStore() + 1) {
+            topGraphs.removeFirst();
         }
     }
 }

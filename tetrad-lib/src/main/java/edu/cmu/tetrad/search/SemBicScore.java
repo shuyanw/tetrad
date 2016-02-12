@@ -234,7 +234,9 @@ public class SemBicScore implements GesScore {
 
     // Calculates the BIC score.
     private double score(double residualVariance, int n, int p, double c) {
-        return -n * Math.log(residualVariance) - c * (p + 1) * Math.log(n);
+        int k = ((p + 1) * (p + 2)) / 2;
+//        int k = p + 1;
+        return -n * Math.log(residualVariance) - c * k * Math.log(n);
     }
 
     private TetradMatrix getSelection1(ICovarianceMatrix cov, int[] rows) {

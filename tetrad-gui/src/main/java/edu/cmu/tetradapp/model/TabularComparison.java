@@ -275,7 +275,7 @@ public final class TabularComparison implements SessionModel {
             System.out.println("adj fn = " + adjFn + " adj fp = " + adjFp + " arrowptfn = " + arrowptFn +
                     " arrowptfp = "+ arrowptFp);
 
-            Preferences.userRoot().putBoolean("errorFound", true);
+//            Preferences.userRoot().putBoolean("errorFound", true);
         }
 
         if (this.params != null) {

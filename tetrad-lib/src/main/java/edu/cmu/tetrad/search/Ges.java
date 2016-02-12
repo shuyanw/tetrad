@@ -130,7 +130,7 @@ public final class Ges implements GraphSearch, GraphScorer {
     /**
      * The score for discrete searches.
      */
-    private LocalDiscreteScore discreteScore;
+    private GesScore score;
 
     /**
      * The logger for this class. The config needs to be set.
@@ -140,7 +140,7 @@ public final class Ges implements GraphSearch, GraphScorer {
     /**
      * The top n graphs found by the algorithm, where n is <code>numPatternsToStore</code>.
      */
-    private SortedSet<ScoredGraph> topGraphs = new TreeSet<ScoredGraph>();
+    private LinkedList<ScoredGraph> topGraphs = new LinkedList<>();
 
     /**
      * The number of top patterns to store.
@@ -162,15 +162,22 @@ public final class Ges implements GraphSearch, GraphScorer {
     //===========================CONSTRUCTORS=============================//
 
     public Ges(DataSet dataSet) {
+        setStructurePrior(0.001);
+        setSamplePrior(10.);
+        setPenaltyDiscount(1.0);
         setDataSet(dataSet);
+
         if (dataSet.isDiscrete()) {
             BDeuScore score = new BDeuScore(dataSet);
             score.setSamplePrior(10);
             score.setStructurePrior(0.001);
-            this.discreteScore = score;
+            this.score = score;
+        } else if (dataSet.isContinuous()) {
+            SemBicScore score = new SemBicScore(new CovarianceMatrixOnTheFly(dataSet));
+            score.setPenaltyDiscount(getPenaltyDiscount());
+            setPenaltyDiscount(score.getPenaltyDiscount());
+            this.score = score;
         }
-        setStructurePrior(0.001);
-        setSamplePrior(10.);
     }
 
     public Ges(ICovarianceMatrix covMatrix) {
@@ -310,14 +317,14 @@ public final class Ges implements GraphSearch, GraphScorer {
     }
 
     public void setStructurePrior(double structurePrior) {
-        if (getDiscreteScore() != null) {
-            getDiscreteScore().setStructurePrior(structurePrior);
+        if (getScore() != null && getScore() instanceof BDeuScore) {
+            ((BDeuScore)getScore()).setStructurePrior(structurePrior);
         }
     }
 
     public void setSamplePrior(double samplePrior) {
-        if (getDiscreteScore() != null) {
-            getDiscreteScore().setSamplePrior(samplePrior);
+        if (getScore() != null && getScore() instanceof BDeuScore) {
+            ((BDeuScore)getScore()).setSamplePrior(samplePrior);
         }
     }
 
@@ -334,9 +341,8 @@ public final class Ges implements GraphSearch, GraphScorer {
     }
 
     public void setPenaltyDiscount(double penaltyDiscount) {
-        if (penaltyDiscount < 0) {
-            throw new IllegalArgumentException("Penalty discount must be >= 0: "
-                    + penaltyDiscount);
+        if (getScore() != null && getScore() instanceof SemBicScore) {
+            ((SemBicScore) getScore()).setPenaltyDiscount(penaltyDiscount);
         }
 
         this.penaltyDiscount = penaltyDiscount;
@@ -350,7 +356,7 @@ public final class Ges implements GraphSearch, GraphScorer {
         return scoreDag(dag);
     }
 
-    public SortedSet<ScoredGraph> getTopGraphs() {
+    public LinkedList<ScoredGraph> getTopGraphs() {
         return topGraphs;
     }
 
@@ -366,15 +372,15 @@ public final class Ges implements GraphSearch, GraphScorer {
         this.numPatternsToStore = numPatternsToStore;
     }
 
-    public LocalDiscreteScore getDiscreteScore() {
-        return discreteScore;
+    public GesScore getScore() {
+        return score;
     }
 
-    public void setDiscreteScore(LocalDiscreteScore discreteScore) {
-//        if (discreteScore.getDataSet() != dataSet) {
+    public void setScore(LocalDiscreteScore score) {
+//        if (score.getDataSet() != dataSet) {
 //            throw new IllegalArgumentException("Must use the same data set.");
 //        }
-        this.discreteScore = discreteScore;
+        this.score = score;
     }
 
 
@@ -1244,11 +1250,13 @@ public final class Ges implements GraphSearch, GraphScorer {
                 }
             }
 
-            if (this.isDiscrete()) {
-                score += localDiscreteScore(nextIndex, parentIndices);
-            } else {
-                score += localSemScore(nextIndex, parentIndices);
-            }
+            score += this.score.localScore(nextIndex, parentIndices);
+
+//            if (this.isDiscrete()) {
+//                score += localDiscreteScore(nextIndex, parentIndices);
+//            } else {
+//                score += localSemScore(nextIndex, parentIndices);
+//            }
         }
         return score;
     }
@@ -1266,11 +1274,13 @@ public final class Ges implements GraphSearch, GraphScorer {
             parentIndices1[++count] = (hashIndices.get(parent));
         }
 
-        if (isDiscrete()) {
-            score1 = localDiscreteScore(yIndex, parentIndices1);
-        } else {
-            score1 = localSemScore(yIndex, parentIndices1);
-        }
+        score1 = this.score.localScore(yIndex, parentIndices1);
+//
+//        if (isDiscrete()) {
+//            score1 = localDiscreteScore(yIndex, parentIndices1);
+//        } else {
+//            score1 = localSemScore(yIndex, parentIndices1);
+//        }
 
         int parentIndices2[] = new int[parents2.size()];
 
@@ -1279,11 +1289,13 @@ public final class Ges implements GraphSearch, GraphScorer {
             parentIndices2[++count2] = (hashIndices.get(parent));
         }
 
-        if (isDiscrete()) {
-            score2 = localDiscreteScore(yIndex, parentIndices2);
-        } else {
-            score2 = localSemScore(yIndex, parentIndices2);
-        }
+        score2 = this.score.localScore(yIndex, parentIndices2);
+
+//        if (isDiscrete()) {
+//            score2 = localDiscreteScore(yIndex, parentIndices2);
+//        } else {
+//            score2 = localSemScore(yIndex, parentIndices2);
+//        }
 
         return score1 - score2;
     }
@@ -1292,67 +1304,67 @@ public final class Ges implements GraphSearch, GraphScorer {
      * Compute the local BDeu score of (i, parents(i)). See (Chickering, 2002).
      */
     private double localDiscreteScore(int i, int parents[]) {
-        return getDiscreteScore().localScore(i, parents);
+        return getScore().localScore(i, parents);
     }
 
     /**
      * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model.
      */
-    private double localSemScore(int i, int[] parents) {
-        TetradMatrix cov = getCovMatrix();
-        double varianceY = cov.get(i, i);
-        double residualVariance = varianceY;
-        int n = sampleSize();
-        int p = parents.length;
-        int k = ((p + 1) * (p + 2)) / 2;
+//    private double localSemScore(int i, int[] parents) {
+//        TetradMatrix cov = getCovMatrix();
+//        double varianceY = cov.get(i, i);
+//        double residualVariance = varianceY;
+//        int n = sampleSize();
+//        int p = parents.length;
+//        int k = ((p + 1) * (p + 2)) / 2;
+//
+//        try {
+//            TetradMatrix covxx = cov.getSelection(parents, parents);
+//            TetradMatrix covxxInv = covxx.inverse();
+//            TetradVector covxy = cov.getSelection(parents, new int[]{i}).getColumn(0);
+//            TetradVector b = covxxInv.times(covxy);
+//            residualVariance -= covxy.dotProduct(b);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throwMinimalLinearDependentSet(parents, cov);
+//        }
+//
+//        if (residualVariance <= 0 && verbose) {
+//            System.out.println("Nonpositive residual varianceY: resVar / varianceY = " + (residualVariance / varianceY));
+//            return Double.NaN;
+//        }
+//
+//        double c = getPenaltyDiscount();
+//
+////        return -n * log(residualVariance) - 2 * k; //AIC
+//        return -n * log(residualVariance) - c * k * log(n);
+////        return -n * log(residualVariance) - c * k * (log(n) - log(2 * PI));
+//    }
 
-        try {
-            TetradMatrix covxx = cov.getSelection(parents, parents);
-            TetradMatrix covxxInv = covxx.inverse();
-            TetradVector covxy = cov.getSelection(parents, new int[]{i}).getColumn(0);
-            TetradVector b = covxxInv.times(covxy);
-            residualVariance -= covxy.dotProduct(b);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throwMinimalLinearDependentSet(parents, cov);
-        }
-
-        if (residualVariance <= 0 && verbose) {
-            System.out.println("Nonpositive residual varianceY: resVar / varianceY = " + (residualVariance / varianceY));
-            return Double.NaN;
-        }
-
-        double c = getPenaltyDiscount();
-
-//        return -n * log(residualVariance) - 2 * k; //AIC
-        return -n * log(residualVariance) - c * k * log(n);
-//        return -n * log(residualVariance) - c * k * (log(n) - log(2 * PI));
-    }
-
-    private void throwMinimalLinearDependentSet(int[] parents, TetradMatrix cov) {
-        List<Node> _parents = new ArrayList<Node>();
-        for (int p : parents) _parents.add(variables.get(p));
-
-        DepthChoiceGenerator gen = new DepthChoiceGenerator(_parents.size(), _parents.size());
-        int[] choice;
-
-        while ((choice = gen.next()) != null) {
-            int[] sel = new int[choice.length];
-            List<Node> _sel = new ArrayList<Node>();
-            for (int m = 0; m < choice.length; m++) {
-                sel[m] = parents[m];
-                _sel.add(variables.get(sel[m]));
-            }
-
-            TetradMatrix m = cov.getSelection(sel, sel);
-
-            try {
-                m.inverse();
-            } catch (Exception e2) {
-                throw new RuntimeException("Linear dependence among variables: " + _sel);
-            }
-        }
-    }
+//    private void throwMinimalLinearDependentSet(int[] parents, TetradMatrix cov) {
+//        List<Node> _parents = new ArrayList<Node>();
+//        for (int p : parents) _parents.add(variables.get(p));
+//
+//        DepthChoiceGenerator gen = new DepthChoiceGenerator(_parents.size(), _parents.size());
+//        int[] choice;
+//
+//        while ((choice = gen.next()) != null) {
+//            int[] sel = new int[choice.length];
+//            List<Node> _sel = new ArrayList<Node>();
+//            for (int m = 0; m < choice.length; m++) {
+//                sel[m] = parents[m];
+//                _sel.add(variables.get(sel[m]));
+//            }
+//
+//            TetradMatrix m = cov.getSelection(sel, sel);
+//
+//            try {
+//                m.inverse();
+//            } catch (Exception e2) {
+//                throw new RuntimeException("Linear dependence among variables: " + _sel);
+//            }
+//        }
+//    }
 
     private int sampleSize() {
         return this.sampleSize;
@@ -1388,16 +1400,13 @@ public final class Ges implements GraphSearch, GraphScorer {
     }
 
     private void storeGraph(Graph graph, double score) {
-        if (numPatternsToStore == 0) return;
+        if (getNumPatternsToStore() > 0) {
+            Graph graphCopy = new EdgeListGraphSingleConnections(graph);
+            topGraphs.addLast(new ScoredGraph(graphCopy, score));
+        }
 
-        if (topGraphs.isEmpty() || score > topGraphs.first().getScore()) {
-            Graph graphCopy = new EdgeListGraph(graph);
-
-            topGraphs.add(new ScoredGraph(graphCopy, score));
-
-            if (topGraphs.size() > getNumPatternsToStore()) {
-                topGraphs.remove(topGraphs.first());
-            }
+        if (topGraphs.size() == getNumPatternsToStore() + 1) {
+            topGraphs.removeFirst();
         }
     }
 }
