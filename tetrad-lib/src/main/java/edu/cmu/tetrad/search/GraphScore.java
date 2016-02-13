@@ -64,31 +64,9 @@ public class GraphScore implements GesScore {
      * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model
      */
     public double localScore(int i, int[] parents) {
-        Node child = variables.get(i);
-        Set<Node> scoreParents = getVariableSet(parents);
-        Set<Node> graphParents = new HashSet<>(dag.getParents(child));
-        graphParents.retainAll(scoreParents);
-
-        Set<Node> missing = new HashSet<>(scoreParents);
-        missing.removeAll(graphParents);
-
-        Set<Node> extra = new HashSet<>(dag.getParents(child));
-        extra.removeAll(scoreParents);
-
-        int error = -(missing.size() + extra.size());
-
-
-        return error;
+        throw new UnsupportedOperationException();
     }
 
-
-    private Set<Node> getVariableSet(int[] indices) {
-        Set<Node> variables = new HashSet<>();
-        for (int i : indices) {
-            variables.add(this.variables.get(i));
-        }
-        return variables;
-    }
 
     private List<Node> getVariableList(int[] indices) {
         List<Node> variables = new ArrayList<>();
@@ -112,8 +90,8 @@ public class GraphScore implements GesScore {
 //
 //        double diff = score1(y, x, scoreParents);
 //        double diff = score2(y, x, scoreParents);
-        double diff = score3(x, y, scoreParents);
-//        double diff = score4  (y, x, scoreParents);
+//        double diff = score3(x, y, scoreParents);
+        double diff = score4  (y, x, scoreParents);
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
 
@@ -157,36 +135,11 @@ public class GraphScore implements GesScore {
         return diff;
     }
 
-    private double scoreb(Node y, Node x, List<Node> scoreParents) {
-        double diff = 0;
-
-        if (dag.isDConnectedTo(x, y, Collections.EMPTY_LIST)) {
-            diff += 1;
-        }
-
-        List<Node> yUnionScoreParents = new ArrayList<>();
-        yUnionScoreParents.add(y);
-        yUnionScoreParents.addAll(scoreParents);
-
-        for (Node z : scoreParents) {
-            if (
-                    dag.isDConnectedTo(x, y, Collections.EMPTY_LIST) &&
-                            dag.isDConnectedTo(z, y, Collections.EMPTY_LIST) &&
-//                            !dag.isDConnectedTo(x, z, scoreParents) &&
-                            dag.isDConnectedTo(z, y, Collections.EMPTY_LIST) &&
-                            dag.isDConnectedTo(x, z, Collections.singletonList(y))
-                    ) {
-                diff += 1;
-                break;
-            }
-        }
-
-
-        return diff;
-    }
-
-
     private double score3(Node x, Node y, List<Node> scoreParents) {
+
+        List<Node> _scoreParents = new ArrayList<>(scoreParents);
+        scoreParents = _scoreParents;
+
         List<Node> yUnionScoreParents = new ArrayList<>();
         yUnionScoreParents.add(y);
         yUnionScoreParents.addAll(scoreParents);
@@ -194,12 +147,22 @@ public class GraphScore implements GesScore {
         int numIndependencies = 0;
 
         for (Node z : scoreParents) {
-            List<Node> _scoreParents = new ArrayList<>(scoreParents);
-            _scoreParents.remove(z);
+            List<Node> sepset = dag.getSepset(x, z);
+
+            System.out.println("sepset for " + x + " and " + z + " is " + sepset + " contains " + y + " = " + (sepset != null ? sepset.contains(y) : ""));
+
 
             if (dag.isDConnectedTo(z, y, new ArrayList<>(scoreParents))) {
                 numDependencies++;
             } else {
+                numIndependencies++;
+            }
+
+            if (dag.isDSeparatedFrom(x, z, scoreParents)) {
+                numIndependencies++;
+            }
+
+            if (dag.isDSeparatedFrom(x, z, Collections.EMPTY_LIST)) {
                 numIndependencies++;
             }
 
@@ -216,10 +179,8 @@ public class GraphScore implements GesScore {
             numDependencies++;
         } else {
             numIndependencies++;
-        }
 
-        if (isClique(scoreParents, dag)) {
-            numIndependencies += 1;
+
         }
 
         if (xyConnected) {
@@ -229,88 +190,26 @@ public class GraphScore implements GesScore {
         }
     }
 
-    private boolean isClique(List<Node> nodes, Graph graph) {
-        for (int i = 0; i < nodes.size() - 1; i++) {
-            for (int j = i + 1; j < nodes.size(); j++) {
-                if (!graph.isAdjacentTo(nodes.get(i), nodes.get(j))) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
     private double score4(Node x, Node y, List<Node> scoreParents) {
-        double score = 0;
-
-        List<Node> yUnionScoreParents = new ArrayList<>();
-        yUnionScoreParents.add(y);
-        yUnionScoreParents.addAll(scoreParents);
-
-        if (dag.isDConnectedTo(x, y, yUnionScoreParents)) {
-            score = 1;
-        } else {
-            score = -1;
-        }
-
-        double up = 2;
-        double down = .5;
+        int count = 0;
 
         for (Node z : scoreParents) {
-//            if (dag.isDConnectedTo(x, z, yUnionScoreParents)) {
-//                score *= 2;
-//            } else {
-//                score /= 3;
-//            }
+            List<Node> sepset = dag.getSepset(x, z);
 
-//            if (dag.isDConnectedTo(z, y, scoreParents)) {
-//                score *= up;
-//            } else {
-//                score *= down;
-//            }
-
-            if (dag.isDConnectedTo(x, z, yUnionScoreParents)) {
-                score *= up;
-            } else {
-                score *= down;
-            }
-        }
-
-        System.out.println("Score for " + y + " given " + x + " and " + scoreParents + " is " + score);
-
-        return score;
-    }
-
-    // Peter's score.
-    private double score5(Node y, Node x, List<Node> scoreParents) {
-        double diff = 0;
-
-        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
-            diff += 1;
-        }
-
-        for (Node t : scoreParents) {
-            List<Node> sepset = dag.getSepset(x, t);
+            System.out.println("sepset for " + x + " and " + z + " is " + sepset + " contains " + y + " = " + (sepset != null ? sepset.contains(y) : ""));
 
             if (sepset != null && !sepset.contains(y)) {
-                diff += 1;
-            } else {
-                diff -= 1;
+                count++;
             }
         }
 
-        return diff;
+        if (dag.isDConnectedTo(x, y, scoreParents)) {
+            return 1 + count;
+        } else {
+            return -1 - count;
+        }
     }
 
-
-    private List<Node> getParentsInDag(Node y, List<Node> allvars) {
-        return allvars;
-//        Set<Node> parents = new HashSet<>();
-//        parents.addAll(dag.getParents(y));
-//        parents.retainAll(allvars);
-//        return new ArrayList<>(parents);
-    }
 
     int[] append(int[] parents, int extra) {
         int[] all = new int[parents.length + 1];

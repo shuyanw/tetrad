@@ -736,12 +736,12 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 }
             }
 
-//            if (Edges.isDirectedEdge(edge)) {
+            if (Edges.isDirectedEdge(edge)) {
                 calculateArrowsBackward(x, y);
-//            } else {zx
-//                calculateArrowsBackward(x, y);
-//                calculateArrowsBackward(y, x);
-//            }
+            } else {
+                calculateArrowsBackward(x, y);
+                calculateArrowsBackward(y, x);
+            }
         }
     }
 
@@ -924,12 +924,12 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                         final Node w = adj.get(_w);
 
                         if (graph.isAdjacentTo(w, r)) {
-//                            if (graph.isParentOf(w, r)) {
+                            if (graph.isParentOf(w, r)) {
                                 calculateArrowsBackward(w, r);
-//                            } else {
-//                                calculateArrowsBackward(w, r);
-//                                calculateArrowsBackward(r, w);
-//                            }
+                            } else {
+                                calculateArrowsBackward(w, r);
+                                calculateArrowsBackward(r, w);
+                            }
                         }
                     }
 
@@ -968,15 +968,15 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         Set<Node> naYX = getNaYX(a, b);
         Set<Node> naXY = getNaYX(b, a);
 
-        if (!graph.isParentOf(b, a) && naXY.containsAll(naYX) && !naYX.equals(naXY)) {
-//            Node e = a;
-//            a = b;
-//            b = e;q
-//            naYX = naXY;
-            clearArrow(a, b);
-            calculateArrowsBackward(b, a);
-            return;
-        }
+//        if (!graph.isParentOf(b, a) && naXY.containsAll(naYX) && !naYX.equals(naXY)) {
+////            Node e = a;
+////            a = b;
+////            b = e;q
+////            naYX = naXY;
+//            clearArrow(a, b);
+//            calculateArrowsBackward(b, a);
+//            return;
+//        }
 
 //        System.out.println("NaYX for " + a + "-->" + b + " is " + naXY);
 
@@ -1030,6 +1030,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             lastSubsets = subsets;
         }
+
     }
 
     public void setSamplePrior(double samplePrior) {
