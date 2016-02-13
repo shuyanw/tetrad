@@ -206,7 +206,7 @@ public class GraphScore implements GesScore {
         if (dag.isDConnectedTo(x, y, scoreParents)) {
             return 1 + count;
         } else {
-            return -1 - count;
+            return -count;
         }
     }
 
