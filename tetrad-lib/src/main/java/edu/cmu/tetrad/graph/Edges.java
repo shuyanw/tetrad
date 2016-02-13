@@ -146,7 +146,7 @@ public final class Edges {
         // changed == to equals.
         if (node.equals(edge.getNode1())) {
             return edge.getNode2();
-        } else if (node.equals(edge.getNode2())) {
+        } else if (node == edge.getNode2()) {
             return edge.getNode1();
         }
 

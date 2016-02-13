@@ -23,7 +23,7 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.util.DepthChoiceGenerator;
+import edu.cmu.tetrad.util.ChoiceGenerator;
 import edu.cmu.tetrad.util.ForkJoinPoolInstance;
 import edu.cmu.tetrad.util.TetradLogger;
 
@@ -35,14 +35,14 @@ import java.util.concurrent.*;
 /**
  * GesSearch is an implementation of the GES algorithm, as specified in Chickering (2002) "Optimal structure
  * identification with greedy search" Journal of Machine Learning Research. It works for both BayesNets and SEMs.
- * <p/>
+ * <p>
  * Some code optimization could be done for the scoring part of the graph for discrete models (method scoreGraphChange).
  * Some of Andrew Moore's approaches for caching sufficient statistics, for instance.
- * <p/>
+ * <p>
  * To speed things up, it has been assumed that variables X and Y with zero correlation do not correspond to edges in
  * the graph. This is a restricted form of the faithfulness assumption, something GES does not assume. This
  * faithfulness assumption needs to be explicitly turned on using setFaithfulnessAssumed(true).
- * <p/>
+ * <p>
  * A number of other optimizations were added 5/2015. See code for details.
  *
  * @author Ricardo Silva, Summer 2003
@@ -477,8 +477,7 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
     public void setIgnoreLinearDependent(boolean ignoreLinearDependent) {
         if (gesScore instanceof SemBicScore) {
             ((SemBicScore) gesScore).setIgnoreLinearDependent(ignoreLinearDependent);
-        }
-        else {
+        } else {
             throw new UnsupportedOperationException("Operation supported only for SemBicScore.");
         }
     }
@@ -841,9 +840,10 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
     }
 
     // Calculates the new arrows for an a->b edge.
-    private void calculateArrowsForward(final Node a, final Node b, final Graph graph) {
+    private void calculateArrowsForward(final Node a, final Node b, Graph graph) {
         if (isFaithfulnessAssumed() && !effectEdgesGraph.isAdjacentTo(a, b)) return;
         if (adjacencies != null && !adjacencies.isAdjacentTo(a, b)) return;
+//        this.neighbors.put(b, getNeighbors(b, graph));
 
         if (existsKnowledge()) {
             if (getKnowledge().isForbidden(a.getName(), b.getName())) {
@@ -851,41 +851,92 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
             }
         }
 
-        final Set<Node> naYX = getNaYX(a, b, graph);
-        final List<Node> t = getTNeighbors(a, b, graph);
-
-//        if (!isClique(naYX, graph)) return;
-
-        final int _depth = Math.min(t.size(), depth == -1 ? 1000 : depth);
-
         clearArrow(a, b);
 
-        final DepthChoiceGenerator gen = new DepthChoiceGenerator(t.size(), _depth);
-        int[] choice;
+        final Set<Node> naYX = getNaYX(a, b, graph);
 
-        while ((choice = gen.next()) != null) {
-            Set<Node> T = GraphUtils.asSet(choice, t);
+        if (!isClique(naYX, graph)) return;
 
-            Set<Node> union = new HashSet<>(T);
-            union.addAll(naYX);
+        List<Node> TNeighbors = getTNeighbors(a, b, graph);
 
-            if (!isClique(union, graph)) continue;
+        final int _depth = Math.min(TNeighbors.size(), depth == -1 ? 1000 : depth);
 
-            if (existsKnowledge()) {
-                if (!validSetByKnowledge(b, T)) {
-                    continue;
+        for (int i = 0; i <= _depth; i++) {
+            final ChoiceGenerator gen = new ChoiceGenerator(TNeighbors.size(), i);
+            int[] choice;
+            List<Set<Node>> subsets = new ArrayList<>();
+
+            while ((choice = gen.next()) != null) {
+                Set<Node> T = GraphUtils.asSet(choice, TNeighbors);
+
+                Set<Node> union = new HashSet<>(naYX);
+                union.addAll(T);
+
+                if (!isClique(union, graph)) continue;
+                subsets.add(T);
+
+                if (existsKnowledge()) {
+                    if (!validSetByKnowledge(b, T)) {
+                        continue;
+                    }
                 }
-            }
 
-            double bump = insertEval(a, b, T, naYX, graph, hashIndices);
+                double bump = insertEval(a, b, T, naYX, graph, hashIndices);
 
-            if (bump > 0.0) {
-                Arrow arrow = new Arrow(bump, a, b, T, naYX);
-                sortedArrows.add(arrow);
-                addLookupArrow(a, b, arrow);
+                if (bump > 0.0) {
+                    Arrow arrow = new Arrow(bump, a, b, T, naYX);
+                    sortedArrows.add(arrow);
+                    addLookupArrow(a, b, arrow);
+                }
             }
         }
     }
+
+//    private void calculateArrowsForward2(final Node a, final Node b, final Graph graph) {
+//        if (isFaithfulnessAssumed() && !effectEdgesGraph.isAdjacentTo(a, b)) return;
+//        if (adjacencies != null && !adjacencies.isAdjacentTo(a, b)) return;
+//
+//        if (existsKnowledge()) {
+//            if (getKnowledge().isForbidden(a.getName(), b.getName())) {
+//                return;
+//            }
+//        }
+//
+//        final Set<Node> naYX = getNaYX(a, b, graph);
+//        final List<Node> TNeighbors = getTNeighbors(a, b, graph);
+//
+////        if (!isClique(naYX, graph)) return;
+//
+//        final int _depth = Math.min(TNeighbors.size(), depth == -1 ? 1000 : depth);
+//
+//        clearArrow(a, b);
+//
+//        final DepthChoiceGenerator gen = new DepthChoiceGenerator(TNeighbors.size(), _depth);
+//        int[] choice;
+//
+//        while ((choice = gen.next()) != null) {
+//            Set<Node> T = GraphUtils.asSet(choice, TNeighbors);
+//
+//            Set<Node> union = new HashSet<>(T);
+//            union.addAll(naYX);
+//
+//            if (!isClique(union, graph)) continue;
+//
+//            if (existsKnowledge()) {
+//                if (!validSetByKnowledge(b, T)) {
+//                    continue;
+//                }
+//            }
+//
+//            double bump = insertEval(a, b, T, naYX, graph, hashIndices);
+//
+//            if (bump > 0.0) {
+//                Arrow arrow = new Arrow(bump, a, b, T, naYX);
+//                sortedArrows.add(arrow);
+//                addLookupArrow(a, b, arrow);
+//            }
+//        }
+//    }
 
     // Reevaluates arrows after removing an edge from the graph.
     private void reevaluateBackward(final Graph graph, final Node x, final Node y) {
@@ -942,54 +993,97 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
 
     // Calculates the arrows for the removal in the backward direction.
     private void calculateArrowsBackward(Node a, Node b, Graph graph) {
-        if (a == b) {
-            return;
-        }
-
-        if (!graph.isAdjacentTo(a, b)) {
-            return;
-        }
-
-        Edge e = graph.getEdge(a, b);
-
         if (existsKnowledge()) {
             if (!getKnowledge().noEdgeRequired(a.getName(), b.getName())) {
                 return;
             }
         }
 
-        Set<Node> naYX = getNaYX(a, b, graph);
-
         clearArrow(a, b);
 
+        Set<Node> naYX = getNaYX(a, b, graph);
         List<Node> _naYX = new ArrayList<>(naYX);
 
-        DepthChoiceGenerator gen = new DepthChoiceGenerator(_naYX.size(), _naYX.size());
-        int[] choice;
+        final int _depth = Math.min(_naYX.size(), depth == -1 ? 1000 : depth);
 
-        while ((choice = gen.next()) != null) {
-            Set<Node> H = GraphUtils.asSet(choice, _naYX);
+        for (int i = 0; i <= _depth; i++) {
+            final ChoiceGenerator gen = new ChoiceGenerator(_naYX.size(), i);
+            int[] choice;
 
-            Set<Node> diff = new HashSet<>(naYX);
-            diff.removeAll(H);
+            while ((choice = gen.next()) != null) {
+                Set<Node> diff = GraphUtils.asSet(choice, _naYX);
 
-            if (!isClique(diff, graph)) continue;
+                if (!isClique(diff, graph)) continue;
 
-            if (existsKnowledge()) {
-                if (!validSetByKnowledge(b, H)) {
-                    continue;
+                Set<Node> h = new HashSet<>(_naYX);
+                h.removeAll(diff);
+
+                if (existsKnowledge()) {
+                    if (!validSetByKnowledge(b, h)) {
+                        continue;
+                    }
                 }
-            }
 
-            double bump = deleteEval(a, b, H, naYX, graph, hashIndices);
+                double bump = deleteEval(a, b, diff, naYX, graph, hashIndices);
 
-            if (bump >= 0.0) {
-                Arrow arrow = new Arrow(bump, a, b, H, naYX);
-                sortedArrows.add(arrow);
-                addLookupArrow(a, b, arrow);
+                if (bump >= 0.0) {
+                    Arrow arrow = new Arrow(bump, a, b, h, naYX);
+                    sortedArrows.add(arrow);
+                    addLookupArrow(a, b, arrow);
+                }
             }
         }
     }
+
+//    private void calculateArrowsBackward(Node a, Node b, Graph graph) {
+//        if (a == b) {
+//            return;
+//        }
+//
+//        if (!graph.isAdjacentTo(a, b)) {
+//            return;
+//        }
+//
+//        Edge e = graph.getEdge(a, b);
+//
+//        if (existsKnowledge()) {
+//            if (!getKnowledge().noEdgeRequired(a.getName(), b.getName())) {
+//                return;
+//            }
+//        }
+//
+//        Set<Node> naYX = getNaYX(a, b, graph);
+//
+//        clearArrow(a, b);
+//
+//        List<Node> _naYX = new ArrayList<>(naYX);
+//
+//        DepthChoiceGenerator gen = new DepthChoiceGenerator(_naYX.size(), _naYX.size());
+//        int[] choice;
+//
+//        while ((choice = gen.next()) != null) {
+//            Set<Node> H = GraphUtils.asSet(choice, _naYX);
+//
+//            Set<Node> diff = new HashSet<>(naYX);
+//            diff.removeAll(H);
+//
+//            if (!isClique(diff, graph)) continue;
+//
+//            if (existsKnowledge()) {
+//                if (!validSetByKnowledge(b, H)) {
+//                    continue;
+//                }
+//            }
+//
+//            double bump = deleteEval(a, b, H, naYX, graph, hashIndices);
+//
+//            if (bump >= 0.0) {
+//                Arrow arrow = new Arrow(bump, a, b, H, naYX);
+//                sortedArrows.add(arrow);
+//                addLookupArrow(a, b, arrow);
+//            }
+//        }
+//    }
 
     public void setSamplePrior(double samplePrior) {
         if (gesScore instanceof LocalDiscreteScore) {
@@ -1221,6 +1315,8 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
         Edge oldxy = graph.getEdge(x, y);
 
         graph.removeEdge(x, y);
+//        rebuildPatternRestricted(graph, x, y);
+
 
         if (verbose) {
             int numEdges = graph.getNumEdges();
@@ -1419,6 +1515,16 @@ public final class Fgs3 implements GraphSearch, GraphScorer {
                 if (!graph.isAdjacentTo(_nodes.get(i), _nodes.get(j))) {
                     return false;
                 }
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean isClique(Set<Node> clique, Node newNode, Graph graph) {
+        for (Node z : clique) {
+            if (!graph.isAdjacentTo(z, newNode)) {
+                return false;
             }
         }
 

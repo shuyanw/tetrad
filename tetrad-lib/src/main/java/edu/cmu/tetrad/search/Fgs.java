@@ -313,8 +313,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
         if (gesScore instanceof SemBicScore) {
             ((SemBicScore) gesScore).setPenaltyDiscount(penaltyDiscount);
-        } else {
-            throw new UnsupportedOperationException("Penalty discount supported only for SemBicScore.");
         }
     }
 

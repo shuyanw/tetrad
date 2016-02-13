@@ -66,7 +66,7 @@ public class MeekRules implements ImpliedOrientation {
     private boolean orientInPlace = false;
     private PrintStream out;
 
-    boolean bettera = true;
+    boolean bettera = false;
     boolean betterb;
     private List<Node> nodes = new ArrayList<>();
     private Set<Node> visited = new HashSet<>();

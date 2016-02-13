@@ -27,7 +27,6 @@ import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.graph.NodeType;
 
 import java.util.*;
-import java.util.stream.Collector;
 
 /**
  * Implements the continuous BIC score for FGS.
@@ -57,6 +56,8 @@ public class GraphScore implements GesScore {
                 this.variables.add(node);
             }
         }
+
+        Collections.sort(variables);
     }
 
     /**
@@ -110,8 +111,8 @@ public class GraphScore implements GesScore {
 
 //
 //        double diff = score1(y, x, scoreParents);
-        double diff = score2(y, x, scoreParents);
-//        double diff = score3(y, x, scoreParents);
+//        double diff = score2(y, x, scoreParents);
+        double diff = score3(x, y, scoreParents);
 //        double diff = score4  (y, x, scoreParents);
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
@@ -185,38 +186,88 @@ public class GraphScore implements GesScore {
     }
 
 
-    private double score3(Node y, Node x, List<Node> scoreParents) {
-        double diff = 0;
+    private double score3(Node x, Node y, List<Node> scoreParents) {
+        List<Node> yUnionScoreParents = new ArrayList<>();
+        yUnionScoreParents.add(y);
+        yUnionScoreParents.addAll(scoreParents);
+        int numDependencies = 0;
+        int numIndependencies = 0;
 
-        if (dag.isDConnectedTo(x, y, scoreParents)) {
-            diff = 1;
+        for (Node z : scoreParents) {
+            List<Node> _scoreParents = new ArrayList<>(scoreParents);
+            _scoreParents.remove(z);
+
+            if (dag.isDConnectedTo(z, y, new ArrayList<>(scoreParents))) {
+                numDependencies++;
+            } else {
+                numIndependencies++;
+            }
+
+            if (dag.isDConnectedTo(x, z, yUnionScoreParents)) {
+                numDependencies++;
+            } else {
+                numIndependencies++;
+            }
         }
+
+        boolean xyConnected = dag.isDConnectedTo(x, y, scoreParents);
+
+        if (xyConnected) {
+            numDependencies++;
+        } else {
+            numIndependencies++;
+        }
+
+        if (xyConnected) {
+            return numDependencies;
+        } else {
+            return -numDependencies;
+        }
+    }
+
+    private double score4(Node x, Node y, List<Node> scoreParents) {
+        double score = 0;
 
         List<Node> yUnionScoreParents = new ArrayList<>();
         yUnionScoreParents.add(y);
         yUnionScoreParents.addAll(scoreParents);
 
-        if (diff == 1) {
-            for (Node z : scoreParents) {
-//                if (!dag.isDConnectedTo(x, z, scoreParents)) {
-//                    continue;
-//                }
-
-                if (dag.isDConnectedTo(x, z, yUnionScoreParents)) {
-                    diff *= 2;
-                } else {
-                    diff *= .9;
-                }
-            }
-
-//            diff += numConnected;
+        if (dag.isDConnectedTo(x, y, yUnionScoreParents)) {
+            score = 1;
+        } else {
+            score = -1;
         }
 
-        return diff;
+        double up = 2;
+        double down = .5;
+
+        for (Node z : scoreParents) {
+//            if (dag.isDConnectedTo(x, z, yUnionScoreParents)) {
+//                score *= 2;
+//            } else {
+//                score /= 3;
+//            }
+
+//            if (dag.isDConnectedTo(z, y, scoreParents)) {
+//                score *= up;
+//            } else {
+//                score *= down;
+//            }
+
+            if (dag.isDConnectedTo(x, z, yUnionScoreParents)) {
+                score *= up;
+            } else {
+                score *= down;
+            }
+        }
+
+        System.out.println("Score for " + y + " given " + x + " and " + scoreParents + " is " + score);
+
+        return score;
     }
 
     // Peter's score.
-    private double score4(Node y, Node x, List<Node> scoreParents) {
+    private double score5(Node y, Node x, List<Node> scoreParents) {
         double diff = 0;
 
         if (dag.isDSeparatedFrom(x, y, scoreParents)) {
@@ -235,6 +286,7 @@ public class GraphScore implements GesScore {
 
         return diff;
     }
+
 
     private List<Node> getParentsInDag(Node y, List<Node> allvars) {
         return allvars;

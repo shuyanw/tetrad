@@ -117,13 +117,13 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
         FgsParams fgsParams = (FgsParams) getParams();
         FgsIndTestParams indTestParams = (FgsIndTestParams) fgsParams.getIndTestParams();
         double penalty = fgsParams.getComplexityPenalty();
-        Fgs3 ges;
+        Fgs2 ges;
         boolean faithfulnessAssumed = fgsParams.isFaithfulnessAssumed();
 
         if (source instanceof ICovarianceMatrix) {
             SemBicScore gesScore = new SemBicScore((ICovarianceMatrix) source);
             gesScore.setPenaltyDiscount(penalty);
-            ges = new Fgs3(gesScore);
+            ges = new Fgs2(gesScore);
             ges.setKnowledge(getParams().getKnowledge());
             ges.setPenaltyDiscount(penalty);
             ges.setDepth(2);
@@ -138,7 +138,7 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
 
                 SemBicScore gesScore = new SemBicScore(new CovarianceMatrixOnTheFly((DataSet) source));
                 gesScore.setPenaltyDiscount(penalty);
-                ges = new Fgs3(gesScore);
+                ges = new Fgs2(gesScore);
                 ges.setKnowledge(getParams().getKnowledge());
                 ges.setPenaltyDiscount(penalty);
 //                ges.setDepth(2);
@@ -153,7 +153,7 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
                 score.setSamplePrior(samplePrior);
                 score.setStructurePrior(structurePrior);
 //                BDeuScore score = new BDeuScore(dataSet);
-                ges = new Fgs3(score);
+                ges = new Fgs2(score);
                 ges.setVerbose(true);
                 ges.setKnowledge(getParams().getKnowledge());
 //                ges.setDepth(2);
@@ -165,7 +165,7 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
             }
         } else if (source instanceof Graph) {
             GraphScore gesScore = new GraphScore((Graph) source);
-            ges = new Fgs3(gesScore);
+            ges = new Fgs2(gesScore);
             ges.setKnowledge(getParams().getKnowledge());
             ges.setPenaltyDiscount(penalty);
 //                ges.setDepth(2);
@@ -229,7 +229,7 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
         return index;
     }
 
-    private Map<Graph, Double> scoreGraphs(Fgs3 ges, Graph graph) {
+    private Map<Graph, Double> scoreGraphs(Fgs2 ges, Graph graph) {
         Map<Graph, Double> dagsToScores = new HashMap<Graph, Double>();
 
         if (false) {
