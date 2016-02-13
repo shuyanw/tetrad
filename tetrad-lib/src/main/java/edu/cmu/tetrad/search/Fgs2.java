@@ -152,9 +152,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     // The graph being constructed.
     private Graph graph;
 
-//     Colliders implied by the Meek rules on the last orientation.
-//    private Set<NodePair> impliedColliders = new HashSet<>();
-
     //===========================CONSTRUCTORS=============================//
 
     /**
