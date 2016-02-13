@@ -24,22 +24,19 @@ package edu.cmu.tetradapp;
 import edu.cmu.tetrad.graph.NodeEqualityMode;
 import edu.cmu.tetrad.util.JOptionUtils;
 import edu.cmu.tetrad.util.TetradLogger;
+import edu.cmu.tetrad.util.Version;
 import edu.cmu.tetradapp.app.TetradDesktop;
 import edu.cmu.tetradapp.util.DesktopController;
 import edu.cmu.tetradapp.util.ImageUtils;
 import edu.cmu.tetradapp.util.SplashScreen;
-import edu.cmu.tetrad.util.Version;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Locale;
-import java.util.prefs.Preferences;
 
 /**
  * <p>Launches Tetrad as an application.  The intended class path in either case

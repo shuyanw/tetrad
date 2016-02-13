@@ -21,9 +21,10 @@
 
 package edu.cmu.tetradapp.editor;
 
-import edu.cmu.tetrad.data.*;
+import edu.cmu.tetrad.data.ContinuousVariable;
+import edu.cmu.tetrad.data.DataGraphUtils;
+import edu.cmu.tetrad.data.IKnowledge;
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.search.IndTestDSep;
 import edu.cmu.tetrad.search.IndependenceTest;
 import edu.cmu.tetrad.session.DelegatesEditing;

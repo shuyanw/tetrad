@@ -23,11 +23,8 @@ package edu.cmu.tetradapp.editor;
 
 import edu.cmu.tetrad.data.BigDataSetUtility;
 import edu.cmu.tetrad.data.DataModel;
-import edu.cmu.tetrad.data.DataReader;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.util.TetradLogger;
-import edu.cmu.tetradapp.util.IntTextField;
-import edu.cmu.tetradapp.util.StringTextField;
 import edu.cmu.tetradapp.util.TextAreaOutputStream;
 
 import javax.swing.*;

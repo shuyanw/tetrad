@@ -19,12 +19,8 @@
 package edu.cmu.tetrad.cli.graph;
 
 import edu.cmu.tetrad.data.ContinuousVariable;
-import edu.cmu.tetrad.graph.Edge;
-import edu.cmu.tetrad.graph.EdgeListGraph;
-import edu.cmu.tetrad.graph.Endpoint;
-import edu.cmu.tetrad.graph.Graph;
-import edu.cmu.tetrad.graph.GraphUtils;
-import edu.cmu.tetrad.graph.Node;
+import edu.cmu.tetrad.graph.*;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

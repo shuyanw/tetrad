@@ -22,13 +22,10 @@
 package edu.cmu.tetrad.data;
 
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.util.PointXy;
 import edu.cmu.tetrad.util.RandomUtil;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.prefs.Preferences;
 
 /**
  * Sundry graph utils that need to be located in the data package to

@@ -21,7 +21,6 @@
 
 package edu.cmu.tetradapp.editor;
 
-import edu.cmu.tetrad.data.MeanInterpolator;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.util.JOptionUtils;
 

@@ -33,13 +33,9 @@ import nu.xom.Element;
 import nu.xom.Elements;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.*;
-import java.util.List;
 import java.util.prefs.Preferences;
 
 /**

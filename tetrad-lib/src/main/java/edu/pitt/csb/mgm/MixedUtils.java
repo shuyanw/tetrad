@@ -23,8 +23,6 @@ package edu.pitt.csb.mgm;
 
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.linalg.Algebra;
-import edu.cmu.tetrad.calculator.expression.Expression;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.*;
 import edu.cmu.tetrad.sem.GeneralizedSemIm;
@@ -33,8 +31,6 @@ import edu.cmu.tetrad.sem.TemplateExpander;
 import edu.cmu.tetrad.util.PermutationGenerator;
 import edu.cmu.tetrad.util.RandomUtil;
 import edu.cmu.tetrad.util.StatUtils;
-import edu.cmu.tetrad.util.dist.Discrete;
-
 
 import java.io.File;
 import java.io.IOException;

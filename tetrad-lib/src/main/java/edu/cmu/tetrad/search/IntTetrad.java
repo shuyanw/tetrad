@@ -24,9 +24,7 @@ package edu.cmu.tetrad.search;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Represents a tetrad of variables.

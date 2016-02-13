@@ -21,23 +21,15 @@
 
 package edu.cmu.tetrad.test;
 
-import edu.cmu.tetrad.data.*;
-import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.search.*;
-import edu.cmu.tetrad.sem.SemIm;
-import edu.cmu.tetrad.sem.SemPm;
-import edu.cmu.tetrad.util.TetradLogger;
-import org.junit.Ignore;
+import edu.cmu.tetrad.data.ContinuousVariable;
+import edu.cmu.tetrad.graph.EdgeListGraph;
+import edu.cmu.tetrad.graph.Graph;
+import edu.cmu.tetrad.graph.Node;
+import edu.cmu.tetrad.graph.NodeType;
+import edu.cmu.tetrad.search.Ccd;
+import edu.cmu.tetrad.search.IndTestDSep;
+import edu.cmu.tetrad.search.PagUtils;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import static org.junit.Assert.fail;
 

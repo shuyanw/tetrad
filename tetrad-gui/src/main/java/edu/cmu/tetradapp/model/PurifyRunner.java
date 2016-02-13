@@ -27,7 +27,6 @@ import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.graph.NodeType;
 import edu.cmu.tetrad.search.*;
-import edu.cmu.tetrad.search.TestType;
 import edu.cmu.tetrad.util.TetradSerializableUtils;
 
 import java.util.ArrayList;

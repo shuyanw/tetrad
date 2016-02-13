@@ -25,7 +25,6 @@ import edu.cmu.tetrad.calculator.expression.Expression;
 import edu.cmu.tetrad.calculator.expression.VariableExpression;
 import edu.cmu.tetrad.data.KnowledgeBoxInput;
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.search.IndTestDSep;
 import edu.cmu.tetrad.search.IndependenceTest;
 import edu.cmu.tetrad.sem.GeneralizedSemIm;
@@ -33,7 +32,7 @@ import edu.cmu.tetrad.sem.GeneralizedSemPm;
 import edu.cmu.tetrad.session.SessionModel;
 import edu.cmu.tetrad.util.TetradLogger;
 import edu.cmu.tetrad.util.TetradSerializableUtils;
-import edu.cmu.tetradapp.util.*;
+import edu.cmu.tetradapp.util.IonInput;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

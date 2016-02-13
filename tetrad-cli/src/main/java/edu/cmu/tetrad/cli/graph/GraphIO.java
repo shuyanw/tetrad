@@ -19,6 +19,7 @@
 package edu.cmu.tetrad.cli.graph;
 
 import edu.cmu.tetrad.graph.Graph;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;

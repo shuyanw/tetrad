@@ -26,7 +26,6 @@ import edu.cmu.tetrad.data.DataModel;
 import edu.cmu.tetrad.data.DataModelList;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.LogDataUtils;
-import edu.cmu.tetrad.sem.GeneralizedSemIm;
 import edu.cmu.tetrad.sem.Simulator;
 import edu.cmu.tetrad.session.SessionModel;
 import edu.cmu.tetrad.util.Params;

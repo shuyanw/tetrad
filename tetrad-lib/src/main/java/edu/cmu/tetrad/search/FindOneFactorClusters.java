@@ -23,7 +23,10 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.sem.*;
+import edu.cmu.tetrad.sem.SemEstimator;
+import edu.cmu.tetrad.sem.SemIm;
+import edu.cmu.tetrad.sem.SemOptimizerEm;
+import edu.cmu.tetrad.sem.SemPm;
 import edu.cmu.tetrad.util.*;
 
 import java.util.*;

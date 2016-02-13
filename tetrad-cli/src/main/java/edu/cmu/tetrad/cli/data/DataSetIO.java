@@ -20,6 +20,7 @@ package edu.cmu.tetrad.cli.data;
 
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.DataWriter;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

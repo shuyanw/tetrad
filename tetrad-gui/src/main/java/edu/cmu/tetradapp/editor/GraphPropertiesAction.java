@@ -31,8 +31,6 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Puts up a panel showing some graph properties, e.g., number of nodes and

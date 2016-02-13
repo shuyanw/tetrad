@@ -24,7 +24,6 @@ package edu.cmu.tetradapp.editor;
 import edu.cmu.tetrad.data.Clusters;
 import edu.cmu.tetrad.data.IKnowledge;
 import edu.cmu.tetrad.graph.Graph;
-import edu.cmu.tetradapp.model.MimBuildIndTestParams;
 import edu.cmu.tetradapp.model.MimIndTestParams;
 import edu.cmu.tetradapp.util.DoubleTextField;
 

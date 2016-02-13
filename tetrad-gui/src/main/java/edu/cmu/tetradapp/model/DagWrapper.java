@@ -23,7 +23,6 @@ package edu.cmu.tetradapp.model;
 
 import edu.cmu.tetrad.data.KnowledgeBoxInput;
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.search.IndTestDSep;
 import edu.cmu.tetrad.search.IndependenceTest;
 import edu.cmu.tetrad.session.SessionModel;

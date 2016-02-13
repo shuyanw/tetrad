@@ -23,7 +23,6 @@ package edu.cmu.tetradapp.model;
 
 import edu.cmu.tetrad.data.KnowledgeBoxInput;
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.session.SessionModel;
 import edu.cmu.tetrad.util.TetradLogger;
 import edu.cmu.tetrad.util.TetradSerializableUtils;

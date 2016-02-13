@@ -25,8 +25,6 @@ import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.session.ParamsResettable;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.List;
 
 /**

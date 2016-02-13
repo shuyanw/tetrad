@@ -28,7 +28,6 @@ import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.GraphNode;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.util.ProbUtils;
-import edu.cmu.tetrad.util.RandomUtil;
 
 import java.util.HashMap;
 import java.util.List;

@@ -26,10 +26,8 @@ import edu.cmu.tetrad.graph.GraphNode;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.graph.NodeType;
 import edu.cmu.tetrad.graph.SemGraph;
-import edu.cmu.tetrad.sem.SemIm;
 import edu.cmu.tetrad.sem.SemPm;
 import edu.cmu.tetrad.util.MatrixUtils;
-import edu.cmu.tetrad.util.ProbUtils;
 import edu.cmu.tetrad.util.TetradMatrix;
 
 import java.util.*;

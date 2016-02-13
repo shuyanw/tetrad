@@ -30,7 +30,6 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 /**

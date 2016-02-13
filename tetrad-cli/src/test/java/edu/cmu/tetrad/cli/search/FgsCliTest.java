@@ -18,6 +18,8 @@
  */
 package edu.cmu.tetrad.cli.search;
 
+import org.junit.Test;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -25,7 +27,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
-import org.junit.Test;
 
 /**
  *

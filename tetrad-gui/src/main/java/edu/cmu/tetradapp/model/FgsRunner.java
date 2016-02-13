@@ -22,7 +22,6 @@
 package edu.cmu.tetradapp.model;
 
 import edu.cmu.tetrad.data.CovarianceMatrixOnTheFly;
-import edu.cmu.tetrad.data.DataModelList;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.ICovarianceMatrix;
 import edu.cmu.tetrad.graph.Graph;

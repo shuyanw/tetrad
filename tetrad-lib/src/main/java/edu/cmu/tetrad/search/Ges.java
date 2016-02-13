@@ -23,14 +23,15 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.util.*;
+import edu.cmu.tetrad.util.DepthChoiceGenerator;
+import edu.cmu.tetrad.util.NumberFormatUtil;
+import edu.cmu.tetrad.util.TetradLogger;
+import edu.cmu.tetrad.util.TetradMatrix;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.NumberFormat;
 import java.util.*;
-
-import static java.lang.Math.log;
 
 /**
  * GesSearch is an implentation of the GES algorithm, as specified in Chickering (2002) "Optimal structure

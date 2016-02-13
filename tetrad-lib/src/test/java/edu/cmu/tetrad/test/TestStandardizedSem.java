@@ -21,7 +21,10 @@
 
 package edu.cmu.tetrad.test;
 
-import edu.cmu.tetrad.data.*;
+import edu.cmu.tetrad.data.ColtDataSet;
+import edu.cmu.tetrad.data.ContinuousVariable;
+import edu.cmu.tetrad.data.DataSet;
+import edu.cmu.tetrad.data.DataUtils;
 import edu.cmu.tetrad.graph.*;
 import edu.cmu.tetrad.sem.SemEstimator;
 import edu.cmu.tetrad.sem.SemIm;
@@ -35,9 +38,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 /**

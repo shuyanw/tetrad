@@ -22,10 +22,6 @@
 package edu.cmu.tetrad.util;
 
 
-import static edu.cmu.tetrad.util.ProbUtils.lngamma;
-import static java.lang.Math.exp;
-import static java.lang.Math.round;
-
 /**
  * Generates (nonrecursively) all of the combinations of a choose b, where a, b
  * are nonnegative integers and a >= b.  The values of a and b are given in the

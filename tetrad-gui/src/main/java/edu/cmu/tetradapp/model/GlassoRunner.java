@@ -30,7 +30,6 @@ import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.graph.Triple;
 import edu.cmu.tetrad.search.*;
 import edu.cmu.tetrad.util.TetradMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
 
 import java.util.ArrayList;
 import java.util.List;

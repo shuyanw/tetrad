@@ -20,6 +20,7 @@ package edu.cmu.tetrad.cli.data;
 
 import edu.cmu.tetrad.data.DataReader;
 import edu.cmu.tetrad.data.IKnowledge;
+
 import java.io.IOException;
 import java.nio.file.Path;
 

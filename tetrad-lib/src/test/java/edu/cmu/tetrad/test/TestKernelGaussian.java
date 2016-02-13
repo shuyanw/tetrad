@@ -26,8 +26,6 @@ import edu.cmu.tetrad.data.ContinuousVariable;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.search.kernel.KernelGaussian;
-import edu.cmu.tetrad.util.TetradLogger;
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.util.Arrays;

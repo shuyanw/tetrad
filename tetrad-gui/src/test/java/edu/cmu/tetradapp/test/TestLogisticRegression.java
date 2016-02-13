@@ -29,7 +29,6 @@ import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.sem.SemIm;
 import edu.cmu.tetrad.sem.SemPm;
-import edu.cmu.tetrad.util.TetradLogger;
 import org.junit.Test;
 
 import java.util.ArrayList;

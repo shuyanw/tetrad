@@ -27,7 +27,10 @@ import edu.cmu.tetrad.sem.SemEstimator;
 import edu.cmu.tetrad.sem.SemIm;
 import edu.cmu.tetrad.sem.SemPm;
 import edu.cmu.tetrad.sem.StandardizedSemIm;
-import edu.cmu.tetrad.util.*;
+import edu.cmu.tetrad.util.DepthChoiceGenerator;
+import edu.cmu.tetrad.util.ForkJoinPoolInstance;
+import edu.cmu.tetrad.util.TetradLogger;
+import edu.cmu.tetrad.util.TetradMatrix;
 
 import java.beans.PropertyChangeListener;
 import java.io.PrintStream;

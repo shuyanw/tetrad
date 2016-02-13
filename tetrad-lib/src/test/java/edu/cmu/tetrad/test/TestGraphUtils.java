@@ -24,7 +24,6 @@ package edu.cmu.tetrad.test;
 import edu.cmu.tetrad.data.ContinuousVariable;
 import edu.cmu.tetrad.graph.*;
 import edu.cmu.tetrad.util.RandomUtil;
-import junit.framework.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -32,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 

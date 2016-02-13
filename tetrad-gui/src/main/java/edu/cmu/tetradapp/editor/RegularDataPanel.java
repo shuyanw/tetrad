@@ -22,14 +22,12 @@
 package edu.cmu.tetradapp.editor;
 
 import edu.cmu.tetrad.data.DataModel;
-import edu.cmu.tetrad.data.DataModelList;
 import edu.cmu.tetrad.data.DataReader;
 import edu.cmu.tetrad.data.DelimiterType;
 import edu.cmu.tetrad.util.TetradLogger;
 import edu.cmu.tetradapp.util.IntTextField;
 import edu.cmu.tetradapp.util.StringTextField;
 import edu.cmu.tetradapp.util.TextAreaOutputStream;
-import edu.cmu.tetradapp.util.WatchedProcess;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -37,7 +35,8 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.io.File;
+import java.io.PrintStream;
 import java.util.prefs.Preferences;
 
 /**

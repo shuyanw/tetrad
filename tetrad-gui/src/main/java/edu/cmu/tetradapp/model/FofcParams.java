@@ -28,8 +28,6 @@ import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.search.TestType;
 import edu.cmu.tetrad.util.TetradSerializableUtils;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.List;
 
 /**

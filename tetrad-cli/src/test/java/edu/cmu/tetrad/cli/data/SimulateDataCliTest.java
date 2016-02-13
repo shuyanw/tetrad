@@ -18,10 +18,11 @@
  */
 package edu.cmu.tetrad.cli.data;
 
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
 
 /**
  *

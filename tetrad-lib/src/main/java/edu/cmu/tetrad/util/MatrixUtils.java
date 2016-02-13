@@ -21,7 +21,6 @@
 
 package edu.cmu.tetrad.util;
 
-import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.CholeskyDecomposition;

@@ -24,7 +24,6 @@ package edu.cmu.tetrad.test;
 import edu.cmu.tetrad.data.ContinuousVariable;
 import edu.cmu.tetrad.graph.*;
 import edu.cmu.tetrad.util.RandomUtil;
-import junit.framework.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;

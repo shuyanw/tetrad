@@ -21,7 +21,10 @@
 
 package edu.cmu.tetradapp.model;
 
-import edu.cmu.tetrad.data.*;
+import edu.cmu.tetrad.data.BoxDataSet;
+import edu.cmu.tetrad.data.ContinuousVariable;
+import edu.cmu.tetrad.data.DataSet;
+import edu.cmu.tetrad.data.VerticalIntDataBox;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.session.ExecutionRestarter;
 import edu.cmu.tetrad.session.SessionAdapter;

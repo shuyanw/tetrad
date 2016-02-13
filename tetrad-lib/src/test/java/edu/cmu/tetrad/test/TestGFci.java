@@ -30,13 +30,9 @@ import edu.cmu.tetrad.search.GFci;
 import edu.cmu.tetrad.search.IndTestFisherZ;
 import edu.cmu.tetrad.search.SearchGraphUtils;
 import edu.cmu.tetrad.sem.LargeSemSimulator;
-import edu.cmu.tetrad.sem.SemIm;
-import edu.cmu.tetrad.sem.SemImInitializationParams;
-import edu.cmu.tetrad.sem.SemPm;
 import edu.cmu.tetrad.util.RandomUtil;
 import org.junit.Test;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
