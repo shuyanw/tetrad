@@ -218,11 +218,27 @@ public class GraphScore implements GesScore {
             numIndependencies++;
         }
 
+        if (isClique(scoreParents, dag)) {
+            numIndependencies += 1;
+        }
+
         if (xyConnected) {
             return numDependencies;
         } else {
-            return -numDependencies;
+            return -numIndependencies;
         }
+    }
+
+    private boolean isClique(List<Node> nodes, Graph graph) {
+        for (int i = 0; i < nodes.size() - 1; i++) {
+            for (int j = i + 1; j < nodes.size(); j++) {
+                if (!graph.isAdjacentTo(nodes.get(i), nodes.get(j))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private double score4(Node x, Node y, List<Node> scoreParents) {

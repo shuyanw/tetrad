@@ -1021,12 +1021,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                     }
                 }
 
-                double bump = deleteEval(a, b, diff, naYX, hashIndices);
+                double bump = deleteEval(a, b, diff, naYX, hashIndices) ;
 
                 if (bump >= 0.0) {
                     addArrow(a, b, naYX, h, bump);
                 }
-
             }
 
             lastSubsets = subsets;
