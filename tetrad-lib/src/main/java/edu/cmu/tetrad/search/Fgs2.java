@@ -569,8 +569,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                             }
 
                             if (bump > 0.0) {
-                                addArrow(x, y, emptySet, emptySet, bump);
-                                addArrow(y, x, emptySet, emptySet, bump);
+                                addArrow(x, y, emptySet, emptySet, bump, null);
+                                addArrow(y, x, emptySet, emptySet, bump, null);
                             }
                         }
                     }
@@ -868,7 +868,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 double bump = insertEval(a, b, T, naYX, hashIndices);
 
                 if (bump > 0.0) {
-                    addArrow(a, b, naYX, T, bump);
+                    addArrow(a, b, naYX, T, bump, null);
                 }
             }
 
@@ -876,8 +876,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         }
     }
 
-    private void addArrow(Node a, Node b, Set<Node> naYX, Set<Node> hOrT, double bump) {
-        Arrow arrow = new Arrow(bump, a, b, hOrT, naYX);
+    private void addArrow(Node a, Node b, Set<Node> naYX, Set<Node> hOrT, double bump, Set<Node> diff) {
+        Arrow arrow = new Arrow(bump, a, b, hOrT, naYX, diff);
         sortedArrows.add(arrow);
         addLookupArrow(a, b, arrow);
     }
@@ -997,7 +997,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 double bump = deleteEval(a, b, diff, naYX, hashIndices);
 
                 if (bump >= 0.0) {
-                    addArrow(a, b, naYX, h, bump);
+                    addArrow(a, b, naYX, h, bump, diff);
                 }
             }
 
@@ -1029,13 +1029,15 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         private Node b;
         private Set<Node> hOrT;
         private Set<Node> naYX;
+        private Set<Node> diff = new HashSet<>();
 
-        public Arrow(double bump, Node a, Node b, Set<Node> hOrT, Set<Node> naYX) {
+        public Arrow(double bump, Node a, Node b, Set<Node> hOrT, Set<Node> naYX, Set<Node> diff) {
             this.bump = bump;
             this.a = a;
             this.b = b;
             this.hOrT = hOrT;
             this.naYX = naYX;
+            this.diff = diff;
         }
 
         public double getBump() {
@@ -1065,15 +1067,33 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         // same hash code but not be equal. If we're paranoid, in this case we calculate a determinate comparison
         // not equal to zero by keeping a list. This last part is commened out by default.
         public int compareTo(Arrow arrow) {
-            final int compare = Double.compare(arrow.getBump(), getBump());
+//            if (diff != null && arrow.diff != null) {
+//                final int compare0 = Integer.compare(arrow.diff.size(), diff.size());
+//
+//                if (compare0 == 0) {
+//                    final int compare = Double.compare(arrow.getBump(), getBump());
+//
+//                    if (compare == 0)   {
+//                        int hashcode1 = hashCode();
+//                        int hashcode2 = arrow.hashCode();
+//                        return Integer.compare(hashcode1, hashcode2);
+//                    }
+//
+//                    return compare;
+//                }
+//
+//                return compare0;
+//            } else {
+                final int compare = Double.compare(arrow.getBump(), getBump());
 
-            if (compare == 0) {
-                int hashcode1 = hashCode();
-                int hashcode2 = arrow.hashCode();
-                return Integer.compare(hashcode1, hashcode2);
-            }
+                if (compare == 0) {
+                    int hashcode1 = hashCode();
+                    int hashcode2 = arrow.hashCode();
+                    return Integer.compare(hashcode1, hashcode2);
+                }
 
-            return compare;
+                return compare;
+//            }
         }
 
         public boolean equals(Object o) {

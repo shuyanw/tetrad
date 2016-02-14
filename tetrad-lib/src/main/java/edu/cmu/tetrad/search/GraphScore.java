@@ -26,9 +26,7 @@ import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.graph.NodeType;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Implements the continuous BIC score for FGS.
@@ -196,20 +194,27 @@ public class GraphScore implements GesScore {
     private double score4(Node x, Node y, List<Node> scoreParents) {
         int count = 0;
 
+        Set<Node> all = new HashSet<>();
+
         for (Node z : scoreParents) {
             List<Node> sepset = dag.getSepset(x, z);
 
             System.out.println("sepset for " + x + " and " + z + " is " + sepset + " contains " + y + " = " + (sepset != null ? sepset.contains(y) : ""));
 
             if (sepset != null && !sepset.contains(y)) {
-                count++;
+                all.add(z);
             }
         }
 
+//        all.retainAll(scoreParents);
+//        all.remove(y);
+
+        double v = (all.size() - 0.01 * scoreParents.size());
+
         if (dag.isDConnectedTo(x, y, scoreParents)) {
-            return 1 + count;
+            return 1 + v;
         } else {
-            return -count;
+            return -1 - v;
         }
     }
 
