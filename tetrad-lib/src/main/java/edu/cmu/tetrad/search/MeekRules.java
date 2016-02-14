@@ -364,14 +364,14 @@ public class MeekRules implements ImpliedOrientation {
     /**
      * Meek's rule R3. If a--b, a--c, a--d, c-->b, d-->b, then orient a-->b.
      */
-    private void meekR3b(Node c, Graph graph, IKnowledge knowledge) {
-        List<Node> adjacentNodes = graph.getAdjacentNodes(c);
+    private void meekR3b(Node a, Graph graph, IKnowledge knowledge) {
+        List<Node> adjacentNodes = graph.getAdjacentNodes(a);
 
         if (adjacentNodes.size() < 3) {
             return;
         }
 
-        for (Node a : adjacentNodes) {
+        for (Node c : adjacentNodes) {
             List<Node> otherAdjacents = new LinkedList<>(adjacentNodes);
             otherAdjacents.remove(c);
 
@@ -379,20 +379,26 @@ public class MeekRules implements ImpliedOrientation {
             int[] choice;
 
             while ((choice = cg.next()) != null) {
-                List<Node> nodes = GraphUtils.asList(choice, adjacentNodes);
+                List<Node> nodes = GraphUtils.asList(choice, otherAdjacents);
                 Node b = nodes.get(0);
                 Node d = nodes.get(1);
 
-                if (!(graph.isAdjacentTo(a, b) && graph.isAdjacentTo(a, d) && graph.isAdjacentTo(b, c) && graph.isAdjacentTo(d, c) && graph.isAdjacentTo(a, c))
-                        && graph.isDirectedFromTo(b, c) && graph.isDirectedFromTo(d, c) &&
-                        graph.isUndirectedFromTo(a, c)) {
-                    if (isArrowpointAllowed(a, c, knowledge)) {
-                        if (!isUnshieldedNoncollider(d, a, b, graph)) {
+                boolean b1 = graph.isAdjacentTo(a, b);
+                boolean b2 = graph.isAdjacentTo(a, c);
+                boolean b3 = graph.isAdjacentTo(a, d);
+                boolean b4 = graph.isAdjacentTo(d, c);
+                boolean b5 = graph.isAdjacentTo(d, b);
+                boolean b6 = graph.isDirectedFromTo(b, a);
+                boolean b7 = graph.isDirectedFromTo(c, a);
+                boolean b8 = graph.isUndirectedFromTo(d, a);
+
+                if (b1 && b2 && b3 && b4 && b5 && b6 && b7 && b8) {
+                    if (isArrowpointAllowed(d, a, knowledge)) {
+                        if (!isUnshieldedNoncollider(c, d, b, graph)) {
                             continue;
                         }
 
-                        direct(a, c, graph);
-                        Edge after = direct(a, c, graph);
+                        Edge after = direct(d, a, graph);
                         Node y = after.getNode2();
 
                         rule1Queue.add(y);
