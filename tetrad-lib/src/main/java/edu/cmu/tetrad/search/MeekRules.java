@@ -371,9 +371,10 @@ public class MeekRules implements ImpliedOrientation {
             return;
         }
 
-        for (Node c : adjacentNodes) {
+        for (Node d : adjacentNodes) {
             List<Node> otherAdjacents = new LinkedList<>(adjacentNodes);
-            otherAdjacents.remove(c);
+            otherAdjacents.remove(d);
+
 
             ChoiceGenerator cg = new ChoiceGenerator(otherAdjacents.size(), 2);
             int[] choice;
@@ -381,7 +382,7 @@ public class MeekRules implements ImpliedOrientation {
             while ((choice = cg.next()) != null) {
                 List<Node> nodes = GraphUtils.asList(choice, otherAdjacents);
                 Node b = nodes.get(0);
-                Node d = nodes.get(1);
+                Node c = nodes.get(1);
 
                 boolean b1 = graph.isAdjacentTo(a, b);
                 boolean b2 = graph.isAdjacentTo(a, c);
