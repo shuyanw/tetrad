@@ -3979,6 +3979,80 @@ public final class GraphUtils {
         return edges;
     }
 
+    // Returns true if a path consisting of undirected and directed edges toward 'to' exists of
+    // length at most 'bound'. Cycle checker in other words.
+    public static List<Node> existsUnblockedSemiDirectedPath(Node from, Node to, Set<Node> cond, int bound, Graph graph) {
+        Queue<Node> Q = new LinkedList<>();
+        Set<Node> V = new HashSet<>();
+        Q.offer(from);
+        V.add(from);
+        Node e = null;
+        int distance = 0;
+        Map<Node, Node> back = new HashMap<>();
+
+        while (!Q.isEmpty()) {
+            Node t = Q.remove();
+            if (t == to) {
+                LinkedList<Node> _back = new LinkedList<>();
+                _back.add(to);
+                return _back;
+            }
+
+            if (e == t) {
+                e = null;
+                distance++;
+                if (distance > (bound == -1 ? 1000 : bound)) return null;
+            }
+
+            for (Node u : graph.getAdjacentNodes(t)) {
+                Edge edge = graph.getEdge(t, u);
+                Node c = traverseSemiDirected(t, edge);
+                if (c == null) continue;
+                if (cond.contains(c)) continue;
+
+                if (c == to) {
+                    back.put(c, t);
+                    LinkedList<Node> _back = new LinkedList<>();
+                    _back.addLast(to);
+                    Node f = to;
+
+                    for (int i = 0; i < 10; i++) {
+                        f = back.get(f);
+                        if (f == null) break;
+                        _back.addFirst(f);
+                    }
+
+                    return _back;
+                }
+
+                if (!V.contains(c)) {
+                    back.put(c, t);
+                    V.add(c);
+                    Q.offer(c);
+
+                    if (e == null) {
+                        e = u;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // Used to find semidirected paths for cycle checking.
+    private static Node traverseSemiDirected(Node node, Edge edge) {
+        if (node == edge.getNode1()) {
+            if (edge.getEndpoint1() == Endpoint.TAIL) {
+                return edge.getNode2();
+            }
+        } else if (node == edge.getNode2()) {
+            if (edge.getEndpoint2() == Endpoint.TAIL) {
+                return edge.getNode1();
+            }
+        }
+        return null;
+    }
 
 }
 

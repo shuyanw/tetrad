@@ -23,12 +23,11 @@ package edu.cmu.tetrad.test;
 
 import edu.cmu.tetrad.data.ContinuousVariable;
 import edu.cmu.tetrad.graph.*;
+import edu.cmu.tetrad.search.SearchGraphUtils;
 import edu.cmu.tetrad.util.RandomUtil;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -250,6 +249,33 @@ public final class TestGraphUtils {
 
         assertTrue(graph.isDConnectedTo(a, c, Collections.singletonList(b)));
         assertTrue(graph.isDConnectedTo(c, a, Collections.singletonList(b)));
+    }
+
+    @Test
+    public void testUnblockSemiDirectedPath() {
+        Graph graph = GraphUtils.randomGraphRandomForwardEdges(10, 0, 20, 5, 5, 5, true);
+        List<Node> nodes = graph.getNodes();
+        Graph pattern = SearchGraphUtils.patternForDag(graph);
+        System.out.println(graph);
+        System.out.println(pattern);
+
+        for (int k = 0; k < 100; k++) {
+            int index1 = RandomUtil.getInstance().nextInt(nodes.size() - 1) + 1;
+            Node a = nodes.get(index1 - 1);
+            int index2 = RandomUtil.getInstance().nextInt(nodes.size() - index1) + 1;
+            Node b = nodes.get(index2 + index1 - 1);
+            Set<Node> cond = new HashSet<>();
+            for (int i = 0; i < RandomUtil.getInstance().nextInt(5); i++) {
+                Node c = nodes.get(RandomUtil.getInstance().nextInt(nodes.size()));
+                if (c != a && c != b && !cond.contains(c)) cond.add(c);
+                else i--;
+            }
+            int bound = -1;
+            List<Node> _back = GraphUtils.existsUnblockedSemiDirectedPath(b, a, cond, bound, pattern);
+            if (_back != null) {
+                System.out.println(b + " ~~> " + a + " " + GraphUtils.pathString(_back, pattern));
+            }
+        }
     }
 
 }

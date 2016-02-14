@@ -192,6 +192,7 @@ public class GraphScore implements GesScore {
         }
     }
 
+    // Peter's score.
     private double score4(Node x, Node y, List<Node> scoreParents) {
         int count = 0;
 

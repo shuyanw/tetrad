@@ -828,6 +828,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
         final int _depth = Math.min(TNeighbors.size(), depth == -1 ? 1000 : depth);
 
+        List<Set<Node>> lastSubsets = null;
+
         for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(TNeighbors.size(), i);
             int[] choice;
@@ -842,6 +844,21 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 if (!isClique(union)) continue;
                 subsets.add(T);
 
+                if (!isClique(union)) continue;
+
+                if (lastSubsets != null) {
+                    boolean foundASubset = false;
+
+                    for (Set<Node> set : lastSubsets) {
+                        if (union.containsAll(set)) {
+                            foundASubset = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundASubset) continue;
+                }
+
                 if (existsKnowledge()) {
                     if (!validSetByKnowledge(b, T)) {
                         continue;
@@ -854,6 +871,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                     addArrow(a, b, naYX, T, bump);
                 }
             }
+
+            lastSubsets = subsets;
         }
     }
 
@@ -951,6 +970,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
                 Set<Node> h = new HashSet<>(_naYX);
                 h.removeAll(diff);
+
+                if (!isClique(diff)) continue;
 
                 if (lastSubsets != null) {
                     boolean foundASubset = false;
@@ -1279,9 +1300,13 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         Set<Node> union = new HashSet<>(s);
         union.addAll(naYX);
         if (!isClique(union)) return false;
+//        if (existsUnblockedSemiDirectedPath(y, x, union, cycleBound)) {
+//            return false;
+//        }
         if (existsUnblockedSemiDirectedPath(y, x, union, cycleBound)) {
             return false;
         }
+
         return true;
 
     }
@@ -1410,38 +1435,41 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     // Returns true if a path consisting of undirected and directed edges toward 'to' exists of
     // length at most 'bound'. Cycle checker in other words.
     private boolean existsUnblockedSemiDirectedPath(Node from, Node to, Set<Node> cond, int bound) {
-        synchronized (graph) {
-            Queue<Node> Q = new LinkedList<>();
-            Set<Node> V = new HashSet<>();
-            Q.offer(from);
-            V.add(from);
-            Node e = null;
-            int distance = 0;
+        Queue<Node> Q = new LinkedList<>();
+        Set<Node> V = new HashSet<>();
+        Q.offer(from);
+        V.add(from);
+        Node e = null;
+        int distance = 0;
 
-            while (!Q.isEmpty()) {
-                Node t = Q.remove();
-                if (t == to) return true;
+        while (!Q.isEmpty()) {
+            Node t = Q.remove();
+            if (t == to) {
+                return true;
+            }
 
-                if (e == t) {
-                    e = null;
-                    distance++;
-                    if (distance > (bound == -1 ? 1000 : bound)) return true;
+            if (e == t) {
+                e = null;
+                distance++;
+                if (distance > (bound == -1 ? 1000 : bound)) return false;
+            }
+
+            for (Node u : graph.getAdjacentNodes(t)) {
+                Edge edge = graph.getEdge(t, u);
+                Node c = traverseSemiDirected(t, edge);
+                if (c == null) continue;
+                if (cond.contains(c)) continue;
+
+                if (c == to) {
+                    return true;
                 }
 
-                for (Node u : graph.getAdjacentNodes(t)) {
-                    Edge edge = graph.getEdge(t, u);
-                    Node c = traverseSemiDirected(t, edge);
-                    if (c == null) continue;
-                    if (cond.contains(c)) continue;
-                    if (c == to) return true;
+                if (!V.contains(c)) {
+                    V.add(c);
+                    Q.offer(c);
 
-                    if (!V.contains(c)) {
-                        V.add(c);
-                        Q.offer(c);
-
-                        if (e == null) {
-                            e = u;
-                        }
+                    if (e == null) {
+                        e = u;
                     }
                 }
             }
