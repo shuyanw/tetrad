@@ -136,13 +136,13 @@ public class Edge implements TetradSerializable, Comparable {
         return this.endpoint2;
     }
 
-    public final void setEndpoint1(Endpoint e) {
-        this.endpoint1 = e;
-    }
-
-    public final void setEndpoint2(Endpoint e) {
-        this.endpoint2 = e;
-    }
+//    public final void setEndpoint1(Endpoint e) {
+//        this.endpoint1 = e;
+//    }
+//
+//    public final void setEndpoint2(Endpoint e) {
+//        this.endpoint2 = e;
+//    }
 
 
     /**

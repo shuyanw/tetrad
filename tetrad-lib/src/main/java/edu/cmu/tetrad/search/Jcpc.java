@@ -521,8 +521,10 @@ public class Jcpc implements GraphSearch {
 
     private void undirectedGraph(Graph graph) {
         for (Edge edge : graph.getEdges()) {
-            edge.setEndpoint1(Endpoint.TAIL);
-            edge.setEndpoint2(Endpoint.TAIL);
+            graph.removeEdge(edge);
+            graph.addUndirectedEdge(edge.getNode1(), edge.getNode2());
+//            edge.setEndpoint1(Endpoint.TAIL);
+//            edge.setEndpoint2(Endpoint.TAIL);
         }
     }
 

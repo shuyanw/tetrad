@@ -22,9 +22,7 @@
 package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.DataSet;
-import edu.cmu.tetrad.graph.Graph;
-import edu.cmu.tetrad.graph.Node;
-import edu.cmu.tetrad.graph.NodeType;
+import edu.cmu.tetrad.graph.*;
 
 import java.util.*;
 
@@ -57,7 +55,7 @@ public class GraphScore implements GesScore {
             }
         }
 
-        Collections.sort(variables);
+//        Collections.shuffle(this.variables);
     }
 
     /**
@@ -76,6 +74,15 @@ public class GraphScore implements GesScore {
         return variables;
     }
 
+    private Set<Node> getVariableSet(int[] indices) {
+        Set<Node> variables = new HashSet<>();
+        for (int i : indices) {
+            variables.add(this.variables.get(i));
+        }
+
+        return variables;
+    }
+
 
     @Override
     public synchronized double localScoreDiff(int i, int[] parents, int extra) {
@@ -84,14 +91,12 @@ public class GraphScore implements GesScore {
         Node y = variables.get(i);
         Node x = variables.get(extra);
         List<Node> scoreParents = getVariableList(parents);
-        List<Node> allvars = new ArrayList<>(scoreParents);
-        allvars.add(x);
-
 //
 //        double diff = score1(y, x, scoreParents);
 //        double diff = score2(y, x, scoreParents);
 //        double diff = score3(x, y, scoreParents);
-        double diff = score4  (y, x, scoreParents);
+//        double diff = score4(y, x, scoreParents);
+        double diff = score5(x, y, scoreParents);
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
 
@@ -190,34 +195,50 @@ public class GraphScore implements GesScore {
         }
     }
 
-    // Peter's score.
     private double score4(Node x, Node y, List<Node> scoreParents) {
         int count = 0;
-
-        Set<Node> all = new HashSet<>();
 
         for (Node z : scoreParents) {
             List<Node> sepset = dag.getSepset(x, z);
 
-            System.out.println("sepset for " + x + " and " + z + " is " + sepset + " contains " + y + " = " + (sepset != null ? sepset.contains(y) : ""));
-
             if (sepset != null && !sepset.contains(y)) {
-                all.add(z);
+                count++;
             }
         }
 
-//        all.retainAll(scoreParents);
-//        all.remove(y);
-
-        double v = (all.size() - 0.01 * scoreParents.size());
-
         if (dag.isDConnectedTo(x, y, scoreParents)) {
-            return 1 + v;
+            return 1 + count;
         } else {
-            return -1 - v;
+            return -count;
         }
     }
+    private double score5(Node x, Node y, List<Node> scoreParents) {
+        List<Node> vars = new ArrayList<>(scoreParents);
+        vars.add(x);
 
+//        int count = 0;
+//
+//        for (Node z : scoreParents) {
+//            List<Node> sepset = dag.getSepset(x, z);
+//
+//            if (sepset != null && !sepset.contains(y)) {
+//                count++;
+//            }
+//        }
+
+        double score;
+
+        if (dag.isDSeparatedFrom(x, y, vars)) {
+            score = -1 - scoreParents.size();
+        } else {
+            score = 1 + scoreParents.size();
+
+        }
+
+        System.out.println("x = " + x + " y = " + y + " scoreParents = " + scoreParents + " score = " + score);
+
+        return score;
+    }
 
     int[] append(int[] parents, int extra) {
         int[] all = new int[parents.length + 1];

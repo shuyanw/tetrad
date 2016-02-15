@@ -149,7 +149,7 @@ public class GesDisplay extends JPanel implements GraphEditable {
     private void resetDisplay() {
         final int numPatterns = topGraphs.size();
 
-        final SpinnerNumberModel model = new SpinnerNumberModel(numPatterns, 1, numPatterns, 1);
+        final SpinnerNumberModel model = new SpinnerNumberModel(numPatterns, 0, numPatterns, 1);
         model.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 getIndexable().setIndex((Integer) model.getValue() - 1);

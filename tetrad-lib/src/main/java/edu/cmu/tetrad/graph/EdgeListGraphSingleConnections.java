@@ -576,28 +576,28 @@ public class EdgeListGraphSingleConnections implements Graph {
     /**
      * Determines whether one node is an ancestor of another.
      */
-//    public boolean isAncestorOf(Node node1, Node node2) {
-//        return (node1 == node2) || GraphUtils.existsDirectedPathFromTo(node1, node2, this);
-//    }
+    public boolean isAncestorOf(Node node1, Node node2) {
+        return (node1 == node2) || GraphUtils.existsDirectedPathFromTo(node1, node2, this);
+    }
 
     private Map<Node, Set<Node>> ancestors = null;
 
     /**
      * Determines whether one node is an ancestor of another.
      */
-    public boolean isAncestorOf(Node node1, Node node2) {
-        if (ancestors != null) {
-            return ancestors.get(node2).contains(node1);
-        } else {
-            ancestors = new HashMap<>();
-
-            for (Node node : nodes) {
-                ancestors.put(node, new HashSet<>(getAncestors(Collections.singletonList(node))));
-            }
-
-            return ancestors.get(node2).contains(node1);
-        }
-    }
+//    public boolean isAncestorOf(Node node1, Node node2) {
+//        if (ancestors != null) {
+//            return ancestors.get(node2).contains(node1);
+//        } else {
+//            ancestors = new HashMap<>();
+//
+//            for (Node node : nodes) {
+//                ancestors.put(node, new HashSet<>(getAncestors(Collections.singletonList(node))));
+//            }
+//
+//            return ancestors.get(node2).contains(node1);
+//        }
+//    }
 
     public boolean possibleAncestor(Node node1, Node node2) {
         return existsSemiDirectedPathFromTo(node1,
@@ -1751,11 +1751,8 @@ public class EdgeListGraphSingleConnections implements Graph {
         ancestors.add(node);
         List<Node> parents = getParents(node);
 
-        if (!parents.isEmpty()) {
-            for (Object parent1 : parents) {
-                Node parent = (Node) parent1;
-                doParentClosureVisit(parent, ancestors);
-            }
+        for (Node parent : parents) {
+            collectDescendantsVisit(parent, ancestors);
         }
     }
 
@@ -1763,11 +1760,8 @@ public class EdgeListGraphSingleConnections implements Graph {
         descendants.add(node);
         List<Node> children = getChildren(node);
 
-        if (!children.isEmpty()) {
-            for (Object aChildren : children) {
-                Node child = (Node) aChildren;
-                doChildClosureVisit(child, descendants);
-            }
+        for (Node child : children) {
+            collectDescendantsVisit(child, descendants);
         }
     }
 

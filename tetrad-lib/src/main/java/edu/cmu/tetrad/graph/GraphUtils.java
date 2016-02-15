@@ -3316,6 +3316,7 @@ public final class GraphUtils {
             }
 
             public boolean equals(Object o) {
+                if (!(o instanceof EdgeNode)) throw new IllegalArgumentException();
                 EdgeNode _o = (EdgeNode) o;
                 return _o.edge == edge && _o.node == node;
             }
@@ -3328,9 +3329,9 @@ public final class GraphUtils {
 
         for (Edge edge : graph.getEdges(x)) {
             if (edge.getDistalNode(x) == y) return true;
-            EdgeNode edgePoint = new EdgeNode(edge, x);
-            Q.offer(edgePoint);
-            V.add(edgePoint);
+            EdgeNode edgeNode = new EdgeNode(edge, x);
+            Q.offer(edgeNode);
+            V.add(edgeNode);
         }
 
         while (!Q.isEmpty()) {
@@ -3398,6 +3399,101 @@ public final class GraphUtils {
 
         return false;
     }
+
+    // Depth first.
+    public static boolean isDConnectedTo2(Node x, Node y, List<Node> z, Graph graph) {
+        LinkedList<Node> path = new LinkedList<Node>();
+
+        path.add(x);
+
+        for (Node c : graph.getAdjacentNodes(x)) {
+            if (isDConnectedToVisit2(x, c, y, path, z, graph)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean isDConnectedTo2(Node x, Node y, List<Node> z, Graph graph, LinkedList<Node> path) {
+        path.add(x);
+
+        for (Node c : graph.getAdjacentNodes(x)) {
+            if (isDConnectedToVisit2(x, c, y, path, z, graph)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isDConnectedToVisit2(Node a, Node b, Node y, LinkedList<Node> path, List<Node> z, Graph graph) {
+        if (b == y) {
+            path.addLast(b);
+            return true;
+        }
+
+        if (path.contains(b)) {
+            return false;
+        }
+
+        path.addLast(b);
+
+        for (Node c : graph.getAdjacentNodes(b)) {
+            if (a == c) continue;
+
+            if (reachable(a, b, c, z, graph)) {
+                if (isDConnectedToVisit2(b, c, y, path, z, graph)) {
+//                    path.removeLast();
+                    return true;
+                }
+            }
+        }
+
+        path.removeLast();
+        return false;
+    }
+
+    public static boolean isDConnectedTo3(Node x, Node y, List<Node> z, Graph graph) {
+        return reachableDConnectedNodes(x, z, graph).contains(y);
+    }
+
+    private static Set<Node> reachableDConnectedNodes(Node x, List<Node> z, Graph graph) {
+        Set<Node> R = new HashSet<Node>();
+        R.add(x);
+
+        Queue<OrderedPair<Node>> Q = new ArrayDeque<OrderedPair<Node>>();
+        Set<OrderedPair<Node>> V = new HashSet<OrderedPair<Node>>();
+
+        for (Node node : graph.getAdjacentNodes(x)) {
+            OrderedPair<Node> edge = new OrderedPair<Node>(x, node);
+            Q.offer(edge);
+            V.add(edge);
+            R.add(node);
+        }
+
+        while (!Q.isEmpty()) {
+            OrderedPair<Node> t = Q.poll();
+
+            Node a = t.getFirst();
+            Node b = t.getSecond();
+
+            for (Node c : graph.getAdjacentNodes(b)) {
+                if (c == a) continue;
+                if (!reachable(a, b, c, z, graph, null)) continue;
+                R.add(c);
+
+                OrderedPair<Node> u = new OrderedPair<Node>(b, c);
+                if (V.contains(u)) continue;
+
+                V.add(u);
+                Q.offer(u);
+            }
+        }
+
+        return R;
+    }
+
 
 
     // Finds a sepset for x and y, if there is one; otherwise, returns null.
@@ -3564,16 +3660,13 @@ public final class GraphUtils {
     }
 
     private static boolean isAncestor(Node b, List<Node> z, Graph graph) {
-        boolean ancestor = false;
-
         for (Node n : z) {
             if (graph.isAncestorOf(b, n)) {
-                ancestor = true;
-                break;
+                return true;
             }
         }
 
-        return ancestor;
+        return false;
     }
 
     private static List<Node> getPassNodes(Node a, Node b, List<Node> z, Graph graph, Set<Triple> colliders) {
@@ -3827,42 +3920,6 @@ public final class GraphUtils {
         }
 
         return max;
-    }
-
-    /**
-     * Number directed edges in both graph1 and graph2 divided by the number of directed edges in graph1.
-     */
-    public static double orientationPrecision(Graph graph1, Graph graph2) {
-        Graph _graph2 = replaceNodes(graph1, graph2.getNodes());
-
-        if (!new HashSet<Node>(graph2.getNodes()).equals(new HashSet<Node>(graph1.getNodes()))) {
-            throw new IllegalArgumentException("Variables in the two graphs must be the same.");
-        }
-
-        int intersection = 0;
-        int numGraph2 = 0;
-
-        for (Edge edge : graph2.getEdges()) {
-            edge = new Edge(edge);
-            if (Edges.isPartiallyOrientedEdge(edge)) edge.setEndpoint1(Endpoint.TAIL);
-
-            if (!edge.isDirected()) continue;
-
-//            Edge oppositeEdge = new Edge(edge.getNode1(), edge.getNode2(), edge.getEndpoint2(), edge.getEndpoint1());
-//
-//            Ignore cycles.
-//            if (graph1.containsEdge(oppositeEdge)) {
-//                continue;
-//            }
-
-            numGraph2++;
-
-            if (_graph2.containsEdge(edge)) {
-                intersection++;
-            }
-        }
-
-        return intersection / (double) numGraph2;
     }
 
     public static double adjacencyPrecision(Graph graph1, Graph graph2) {

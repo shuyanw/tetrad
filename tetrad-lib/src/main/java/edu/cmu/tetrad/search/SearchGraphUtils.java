@@ -1155,16 +1155,16 @@ public final class SearchGraphUtils {
         }
 
         for (Edge nextUndirected : undirectedEdges) {
-            if (orientInPlace) {
-                nextUndirected.setEndpoint1(Endpoint.TAIL);
-                nextUndirected.setEndpoint2(Endpoint.TAIL);
-            } else {
-                Node node1 = nextUndirected.getNode1();
-                Node node2 = nextUndirected.getNode2();
+//            if (orientInPlace) {
+//                nextUndirected.setEndpoint1(Endpoint.TAIL);
+//                nextUndirected.setEndpoint2(Endpoint.TAIL);
+//            } else {
+            Node node1 = nextUndirected.getNode1();
+            Node node2 = nextUndirected.getNode2();
 
-                graph.removeEdge(nextUndirected);
-                graph.addUndirectedEdge(node1, node2);
-            }
+            graph.removeEdge(nextUndirected);
+            graph.addUndirectedEdge(node1, node2);
+//            }
         }
     }
 

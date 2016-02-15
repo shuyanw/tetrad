@@ -49,10 +49,10 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
         PropertyChangeListener, Indexable, IGesRunner, DoNotAddOldModel {
     static final long serialVersionUID = 23L;
     private transient List<PropertyChangeListener> listeners;
-    private Map<Graph, Double> dagsToScores;
+//    private Map<Graph, Double> dagsToScores;
     private List<ScoredGraph> topGraphs = new ArrayList<ScoredGraph>();
     private int index;
-    private List<Map<Graph, Double>> allDagsToScores;
+//    private List<Map<Graph, Double>> allDagsToScores;
     private Graph initialGraph;
     private Graph trueGraph;// deprecated.
 
@@ -201,12 +201,12 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
             this.topGraphs.add(new ScoredGraph(getResultGraph(), Double.NaN));
         }
 
-        this.allDagsToScores = new ArrayList<>();
+//        this.allDagsToScores = new ArrayList<>();
 
-        for (ScoredGraph scoredGraph : topGraphs) {
-            Map<Graph, Double> dagsToScores = scoreGraphs(ges, scoredGraph.getGraph());
-            this.allDagsToScores.add(dagsToScores);
-        }
+//        for (ScoredGraph scoredGraph : topGraphs) {
+//            Map<Graph, Double> dagsToScores = scoreGraphs(ges, scoredGraph.getGraph());
+//            this.allDagsToScores.add(dagsToScores);
+//        }
 
         setIndex(topGraphs.size() - 1);
     }
@@ -220,7 +220,7 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
             }
         }
 
-        this.dagsToScores = this.allDagsToScores.get(index);
+//        this.dagsToScores = this.allDagsToScores.get(index);
         this.index = index;
         firePropertyChange(new PropertyChangeEvent(this, "modelChanged", null, null));
     }
@@ -229,20 +229,20 @@ public class FgsRunner2 extends AbstractAlgorithmRunner implements GraphSource,
         return index;
     }
 
-    private Map<Graph, Double> scoreGraphs(Fgs2 ges, Graph graph) {
-        Map<Graph, Double> dagsToScores = new HashMap<Graph, Double>();
-
-        if (false) {
-            final List<Graph> dags = SearchGraphUtils.generatePatternDags(graph, true);
-
-            for (Graph _graph : dags) {
-                double score = ges.scoreDag(_graph);
-                dagsToScores.put(_graph, score);
-            }
-        }
-
-        return dagsToScores;
-    }
+//    private Map<Graph, Double> scoreGraphs(Fgs2 ges, Graph graph) {
+//        Map<Graph, Double> dagsToScores = new HashMap<Graph, Double>();
+//
+//        if (true) {
+//            final List<Graph> dags = SearchGraphUtils.generatePatternDags(graph, true);
+//
+//            for (Graph _graph : dags) {
+//                double score = ges.scoreDag(_graph);
+//                dagsToScores.put(_graph, score);
+//            }
+//        }
+//
+//        return dagsToScores;
+//    }
 
     public Graph getGraph() {
         return getResultGraph();
