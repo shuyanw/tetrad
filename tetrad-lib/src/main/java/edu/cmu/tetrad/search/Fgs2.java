@@ -152,6 +152,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     // The graph being constructed.
     private Graph graph;
 
+    int arrowIndex = 0;
+
     //===========================CONSTRUCTORS=============================//
 
     /**
@@ -652,11 +654,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             Set<Node> toProcess = reapplyOrientation(x, y);
 
-            try {
-                Graph dagFromPattern = SearchGraphUtils.dagFromPattern2(new EdgeListGraphSingleConnections(graph));
-            } catch (Exception e) {
-                System.out.println("Found a cycle when picking a DAG in the pattern (FES).");
-            }
+//            try {
+//                Graph dagFromPattern = SearchGraphUtils.dagFromPattern2(new EdgeListGraphSingleConnections(graph));
+//            } catch (Exception e) {
+//                System.out.println("Found a cycle when picking a DAG in the pattern (FES).");
+//            }
 
             storeGraph();
             reevaluateForward(toProcess);
@@ -718,12 +720,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             Set<Node> toProcess = reapplyOrientation(x, y);
 
-            try {
-                Graph dagFromPattern = SearchGraphUtils.dagFromPattern2(new EdgeListGraphSingleConnections(graph));
-            } catch (Exception e) {
-                System.out.println("Found a cycle when picking a DAG in the pattern (BES).");
-            }
-
+//            try {
+//                Graph dagFromPattern = SearchGraphUtils.dagFromPattern2(new EdgeListGraphSingleConnections(graph));
+//            } catch (Exception e) {
+//                System.out.println("Found a cycle when picking a DAG in the pattern (BES).");
+//            }
 
 
             storeGraph();
@@ -732,27 +733,31 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     }
 
     private Set<Node> reapplyOrientation(Node x, Node y) {
-        Set<Node> visited = rebuildPatternRestricted(x, y);
+
+//        Set<Node> visited = rebuildPatternRestricted(x, y);
         Set<Node> toProcess = new HashSet<>();
 
-        for (Node node : visited) {
-            final Set<Node> neighbors = getNeighbors(node);
-            final Set<Node> storedNeighbors = this.neighbors.get(node);
-
-            if (!neighbors.equals(storedNeighbors)) {
-                toProcess.add(node);
-            }
-        }
+//        for (Node node : visited) {
+//            final Set<Node> neighbors = getNeighbors(node);
+//            final Set<Node> storedNeighbors = this.neighbors.get(node);
+//
+//            if (!neighbors.equals(storedNeighbors)) {
+//                toProcess.add(node);
+//            }
+//        }
 
         toProcess.add(x);
         toProcess.add(y);
 
-        toProcess.addAll(graph.getAdjacentNodes(x));
-        toProcess.addAll(graph.getAdjacentNodes(y));
+//        toProcess.addAll(graph.getAdjacentNodes(x));
+//        toProcess.addAll(graph.getAdjacentNodes(y));
+//
+//        toProcess.addAll(visited);
 
-        toProcess.addAll(visited);
+        return meekOrientRestricted(new ArrayList<Node>(toProcess), getKnowledge());
 
-        return toProcess;
+
+//        return toProcess;
     }
 
     // Returns true if knowledge is not empty.
@@ -919,7 +924,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     }
 
     private void addArrow(Node a, Node b, Set<Node> naYX, Set<Node> hOrT, double bump, Set<Node> diff) {
-        Arrow arrow = new Arrow(bump, a, b, hOrT, naYX);
+        Arrow arrow = new Arrow(bump, a, b, hOrT, naYX, arrowIndex++);
         sortedArrows.add(arrow);
         addLookupArrow(a, b, arrow);
     }
@@ -1071,13 +1076,16 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         private Node b;
         private Set<Node> hOrT;
         private Set<Node> naYX;
+        private int index = 0;
 
-        public Arrow(double bump, Node a, Node b, Set<Node> hOrT, Set<Node> naYX) {
+
+        public Arrow(double bump, Node a, Node b, Set<Node> hOrT, Set<Node> naYX, int index) {
             this.bump = bump;
             this.a = a;
             this.b = b;
             this.hOrT = hOrT;
             this.naYX = naYX;
+            this.index = index;
         }
 
         public double getBump() {
@@ -1107,35 +1115,38 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         // same hash code but not be equal. If we're paranoid, in this case we calculate a determinate comparison
         // not equal to zero by keeping a list. This last part is commened out by default.
         public int compareTo(Arrow arrow) {
+            if (arrow == null) throw new NullPointerException();
+
             final int compare = Double.compare(arrow.getBump(), getBump());
 
             if (compare == 0) {
-                int hashcode1 = hashCode();
-                int hashcode2 = arrow.hashCode();
-                return Integer.compare(hashcode1, hashcode2);
+                return Integer.compare(getIndex(), arrow.getIndex());
             }
 
             return compare;
         }
 
-        public boolean equals(Object o) {
-            if (!(o instanceof Arrow)) {
-                return false;
-            }
+//        public boolean equals(Object o) {
+//            if (!(o instanceof Arrow)) {
+//                return false;
+//            }
+//
+//            Arrow a = (Arrow) o;
+//
+//            return a.a.equals(this.a) && a.b.equals(this.b) && a.hOrT.equals(this.hOrT) && a.naYX.equals(this.naYX);
+//        }
 
-            Arrow a = (Arrow) o;
-
-            return a.a.equals(this.a) && a.b.equals(this.b) && a.hOrT.equals(this.hOrT) && a.naYX.equals(this.naYX);
-        }
-
-        public int hashCode() {
-            return 11 * a.hashCode() + 13 * b.hashCode() + 17 * hOrT.hashCode() + 19 * naYX.hashCode();
-        }
+//        public int hashCode() {
+//            return 11 * a.hashCode() + 13 * b.hashCode() + 17 * hOrT.hashCode() + 19 * naYX.hashCode();
+//        }
 
         public String toString() {
             return "Arrow<" + a + "->" + b + " bump = " + bump + " t/h = " + hOrT + " naYX = " + naYX + ">";
         }
 
+        public int getIndex() {
+            return index;
+        }
     }
 
     // Get all adj that are connected to Y by an undirected edge and not adjacent to X.
@@ -1538,13 +1549,13 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     }
 
     // Runs Meek rules on just the changed adj.
-    private Set<Node> reorientNode(List<Node> bides) {
+    private Set<Node> reorientNode(List<Node> nodes) {
         addRequiredEdges(graph);
 
 //        List<Node> nodes = new ArrayList<>();
 //        nodes.add(a);
 
-        return meekOrientRestricted(bides, getKnowledge());
+        return meekOrientRestricted(nodes, getKnowledge());
     }
 
     // Runs Meek rules on just the changed adj.

@@ -105,6 +105,15 @@ public class MeekRules implements ImpliedOrientation {
 
     private void orientUsingMeekRulesLocally(IKnowledge knowledge, Graph graph) {
 
+        Set<Node> t = new HashSet<>();
+
+        for (Node node : nodes) {
+            SearchGraphUtils.basicPatternRestricted2(node, graph);
+        }
+
+        t.addAll(nodes);
+
+
         // Previously oriented, probably by knowledge.
         for (Node node : this.nodes) {
             meekR1(node, graph, knowledge);
@@ -118,6 +127,10 @@ public class MeekRules implements ImpliedOrientation {
 
         while (!queue.isEmpty()) {
             Node node = queue.remove();
+            if (!t.contains(node)) {
+                SearchGraphUtils.basicPatternRestricted2(node, graph);
+                t.add(node);
+            }
             meekR1(node, graph, knowledge);
             meekR2(node, graph, knowledge);
             meekR3(node, graph, knowledge);
