@@ -91,12 +91,13 @@ public class GraphScore implements GesScore {
         Node y = variables.get(i);
         Node x = variables.get(extra);
         List<Node> scoreParents = getVariableList(parents);
+//        scoreParents.add(x);
 //
 //        double diff = score1(y, x, scoreParents);
 //        double diff = score2(y, x, scoreParents);
 //        double diff = score3(x, y, scoreParents);
-//        double diff = score4(y, x, scoreParents);
-        double diff = score5(x, y, scoreParents);
+        double diff = score4(y, x, scoreParents);
+//        double diff = score5(x, y, scoreParents);
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
 
@@ -198,6 +199,7 @@ public class GraphScore implements GesScore {
     private double score4(Node x, Node y, List<Node> scoreParents) {
         int count = 0;
 
+
         for (Node z : scoreParents) {
             List<Node> sepset = dag.getSepset(x, z);
 
@@ -206,10 +208,12 @@ public class GraphScore implements GesScore {
             }
         }
 
-        if (dag.isDConnectedTo(x, y, scoreParents)) {
-            return 1 + count;
+        scoreParents.add(x);
+
+        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
+            return -1 - count;
         } else {
-            return -count;
+            return 1 + count;
         }
     }
     private double score5(Node x, Node y, List<Node> scoreParents) {
@@ -235,7 +239,7 @@ public class GraphScore implements GesScore {
 
         }
 
-        System.out.println("x = " + x + " y = " + y + " scoreParents = " + scoreParents + " score = " + score);
+//        System.out.println("x = " + x + " y = " + y + " scoreParents = " + scoreParents + " score = " + score);
 
         return score;
     }

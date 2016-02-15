@@ -1448,49 +1448,42 @@ public final class SearchGraphUtils {
     public static Graph dagFromPattern(Graph pattern) {
         DagInPatternIterator dags = new DagInPatternIterator(pattern);
         return dags.next();
+    }
 
-//        MeekRules rules = new MeekRules();
-//        rules.orientImplied(graph);
-//
-//        WHILE:
-//        while (true) {
-//            List<Edge> edges = graph.getEdges();
-//
-//            for (Edge edge : edges) {
-//                if (Edges.isUndirectedEdge(edge)) {
-//                    Node node1 = edge.getNode1();
-//                    Node node2 = edge.getNode2();
-//
-//                    if (!(pattern.isAncestorOf(node2, node1)) && !pattern.getParents(node2).isEmpty()) {
-//                        edge.setEndpoint2(Endpoint.ARROW);
-//                    }
-//                    else if (!pattern.getParents(node1).isEmpty()) {
-//                        edge.setEndpoint1(Endpoint.ARROW);
-//                    }
-//                    else {
-//                        throw new IllegalArgumentException("Can't orient " + edge);
-//                    }
-//
-//                    rules.orientImplied(graph);
-//                    continue WHILE;
-//                }
-//            }
-//
-//            break;
-//        }
-//
-////        if (pattern.getNumEdges() > 10) {
-////            System.out.println(pattern);
-////        }
-//
-//
-//        return pattern;
-//
-////
-////
-////        Graph graph = new EdgeListGraph(pattern);
-////        pdagToDag(graph);
-////        return graph;
+    public static Graph dagFromPattern2(Graph graph) {
+        MeekRules rules = new MeekRules();
+        rules.orientImplied(graph);
+
+        WHILE:
+        while (true) {
+            Set<Edge> edges = graph.getEdges();
+
+            for (Edge edge : edges) {
+                if (Edges.isUndirectedEdge(edge)) {
+                    Node node1 = edge.getNode1();
+                    Node node2 = edge.getNode2();
+
+                    if (!(graph.isAncestorOf(node1, node2))) {
+                        graph.removeEdge(edge);
+                        graph.addDirectedEdge(node2, node1);
+                    }
+                    else if (!(graph.isAncestorOf(node2, node1))) {
+                        graph.removeEdge(edge);
+                        graph.addDirectedEdge(node1, node2);
+                    }
+                    else {
+                        throw new IllegalArgumentException("Can't orient " + edge);
+                    }
+
+                    rules.orientImplied(graph);
+                    continue WHILE;
+                }
+            }
+
+            break;
+        }
+
+        return graph;
     }
 
     public static void arrangeByKnowledgeTiers(Graph graph,

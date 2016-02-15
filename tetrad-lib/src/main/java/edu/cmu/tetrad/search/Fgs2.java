@@ -138,7 +138,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     private Graph effectEdgesGraph;
 
     // The minimum number of operations to do before parallelizing.
-    private final int minChunk = 1000;
+    private final int minChunk = 10;
 
     // Where printed output is sent.
     private PrintStream out = System.out;
@@ -651,6 +651,13 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             score += bump;
 
             Set<Node> toProcess = reapplyOrientation(x, y);
+
+            try {
+                Graph dagFromPattern = SearchGraphUtils.dagFromPattern2(new EdgeListGraphSingleConnections(graph));
+            } catch (Exception e) {
+                System.out.println("Found a cycle when picking a DAG in the pattern (FES).");
+            }
+
             storeGraph();
             reevaluateForward(toProcess);
         }
@@ -675,7 +682,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             Node x = arrow.getA();
             Node y = arrow.getB();
 
-            if (!arrow.getNaYX().equals(getNaYX2(x, y))) {
+            if (!arrow.getNaYX().equals(getNaYX(x, y))) {
                 continue;
             }
 
@@ -686,6 +693,21 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             if (!isClique(diff)) continue;
 
+            Edge j = graph.getEdge(x, y);
+            graph.removeEdge(x, y);
+
+//            if (existsUnblockedSemiDirectedPath(x, y, diff, cycleBound)) {
+//                System.out.println("Unblocked semidirected path " + x + "~~>" + y + " | " + diff);
+//                continue;
+//            }
+
+//            if (existsUnblockedSemiDirectedPath(y, x, diff, cycleBound)) {
+//                System.out.println("Unblocked semidirected path " + y + "~~>" + x + " | " + diff);
+//                continue;
+//            }
+
+            graph.addEdge(j);
+
             Set<Node> h = arrow.getHOrT();
             double bump = arrow.getBump();
 
@@ -695,6 +717,15 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             clearArrow(x, y);
 
             Set<Node> toProcess = reapplyOrientation(x, y);
+
+            try {
+                Graph dagFromPattern = SearchGraphUtils.dagFromPattern2(new EdgeListGraphSingleConnections(graph));
+            } catch (Exception e) {
+                System.out.println("Found a cycle when picking a DAG in the pattern (BES).");
+            }
+
+
+
             storeGraph();
             reevaluateBackward(toProcess);
         }
@@ -718,6 +749,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
         toProcess.addAll(graph.getAdjacentNodes(x));
         toProcess.addAll(graph.getAdjacentNodes(y));
+
+        toProcess.addAll(visited);
 
         return toProcess;
     }
@@ -959,7 +992,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             }
         }
 
-        Set<Node> naYX = getNaYX2(a, b);
+        Set<Node> naYX = getNaYX(a, b);
 
         clearArrow(a, b);
 
@@ -1161,7 +1194,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     private double deleteEval(Node x, Node y, Set<Node> diff, Set<Node> naYX,
                               Map<Node, Integer> hashIndices) {
 
-        if (!naYX.equals(getNaYX2(x, y))) {
+        if (!naYX.equals(getNaYX(x, y))) {
             throw new IllegalArgumentException();
         }
 
@@ -1388,40 +1421,16 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
     // Find all adj that are connected to Y by an undirected edge that are adjacent to X (that is, by undirected or
     // directed edge).
-    private synchronized Set<Node> getNaYX(Node x, Node y) {
+    private Set<Node> getNaYX(Node x, Node y) {
         List<Node> adj = graph.getAdjacentNodes(y);
         Set<Node> nayx = new HashSet<>();
 
         for (Node z : adj) {
             if (z == x) continue;
-            Edge ez = graph.getEdge(z, y);
-            if (!Edges.isUndirectedEdge(ez)) continue;
+            Edge yz = graph.getEdge(y, z);
+            if (!Edges.isUndirectedEdge(yz)) continue;
             if (!graph.isAdjacentTo(z, x)) continue;
             nayx.add(z);
-        }
-
-        return nayx;
-    }
-
-    private synchronized Set<Node> getNaYX2(Node x, Node y) {
-        if (true) return getNaYX(x, y);
-
-        List<Node> adj = graph.getAdjacentNodes(y);
-        Set<Node> nayx = new HashSet<>();
-
-        for (Node z : adj) {
-            if (z == x) continue;
-            Edge ez = graph.getEdge(z, y);
-            if (!Edges.isUndirectedEdge(ez)) continue;
-            if (!graph.isAdjacentTo(z, x)) continue;
-            nayx.add(z);
-        }
-
-        for (Node c : graph.getChildren(y)) {
-            Edge f = graph.getEdge(c, x);
-            if (f != null && Edges.isUndirectedEdge(f)) {
-                nayx.add(c);
-            }
         }
 
         return nayx;
@@ -1517,9 +1526,9 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
         storeGraph();
 
-        for (Node node : toProcess) {
-            visited.addAll(reorientNode(node));
-        }
+//        for (Node node : toProcess) {
+        visited.addAll(reorientNode(new ArrayList<Node>(toProcess)));
+//        }
 
         if (TetradLogger.getInstance().isEventActive("rebuiltPatterns")) {
             TetradLogger.getInstance().log("rebuiltPatterns", "Rebuilt pattern = " + graph);
@@ -1529,13 +1538,13 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     }
 
     // Runs Meek rules on just the changed adj.
-    private Set<Node> reorientNode(Node a) {
+    private Set<Node> reorientNode(List<Node> bides) {
         addRequiredEdges(graph);
 
-        List<Node> nodes = new ArrayList<>();
-        nodes.add(a);
+//        List<Node> nodes = new ArrayList<>();
+//        nodes.add(a);
 
-        return meekOrientRestricted(nodes, getKnowledge());
+        return meekOrientRestricted(bides, getKnowledge());
     }
 
     // Runs Meek rules on just the changed adj.
@@ -1605,8 +1614,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             for (int i = 0; i < parentIndices.length - 1; i++) {
                 int[] _parents = Arrays.copyOf(parentIndices, i);
-                int xIndex = parentIndices[i+1];
-                score += gesScore.localScoreDiff(yIndex,_parents, xIndex);
+                int xIndex = parentIndices[i + 1];
+                score += gesScore.localScoreDiff(yIndex, _parents, xIndex);
             }
         }
 

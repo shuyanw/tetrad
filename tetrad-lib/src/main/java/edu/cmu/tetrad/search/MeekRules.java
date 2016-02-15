@@ -197,7 +197,7 @@ public class MeekRules implements ImpliedOrientation {
             r2Helper(a, b, c, graph, knowledge);
             r2Helper(b, a, c, graph, knowledge);
             r2Helper(a, c, b, graph, knowledge);
-            r2Helper(b, c, a, graph, knowledge);
+            r2Helper(c, a, b, graph, knowledge);
         }
     }
 

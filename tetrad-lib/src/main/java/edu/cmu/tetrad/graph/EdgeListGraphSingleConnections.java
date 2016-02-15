@@ -968,7 +968,7 @@ public class EdgeListGraphSingleConnections implements Graph {
      * up twice in the list of adjacencies for X, for optimality; simply create a list an and array from these to
      * eliminate the duplication.
      */
-    public List<Node> getAdjacentNodes(Node node) {
+    public synchronized List<Node> getAdjacentNodes(Node node) {
         List<Edge> edges = edgeLists.get(node);
         List<Node> adj = new ArrayList<>(edges.size());
 
@@ -977,17 +977,6 @@ public class EdgeListGraphSingleConnections implements Graph {
         }
 
         return adj;
-
-//        List<Node> adj = new ArrayList<Node>();
-//
-//        for (Edge edge : edgesSet) {
-//            Node _node = edge.getDistalNode(node);
-//            if (_node != null) {
-//                adj.add(_node);
-//            }
-//        }
-//
-//        return adj;
     }
 
     /**

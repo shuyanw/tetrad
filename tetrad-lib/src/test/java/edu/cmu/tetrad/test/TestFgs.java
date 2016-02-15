@@ -32,8 +32,7 @@ import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.GraphConverter;
 import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.graph.Node;
-import edu.cmu.tetrad.search.Fgs;
-import edu.cmu.tetrad.search.SearchGraphUtils;
+import edu.cmu.tetrad.search.*;
 import edu.cmu.tetrad.sem.LargeSemSimulator;
 import edu.cmu.tetrad.sem.SemIm;
 import edu.cmu.tetrad.sem.SemPm;
@@ -257,6 +256,23 @@ public class TestFgs {
         }
 
 //        System.out.println(count);
+    }
+
+    @Test
+    public void test6() {
+        for (int i = 0; i < 10; i++) {
+            Graph dag = GraphUtils.randomGraph(6, 0, 6, 10, 10, 10, false);
+            GraphScore score = new GraphScore(dag);
+            Fgs2 fgs = new Fgs2(score);
+
+            Graph patternFgs = fgs.search();
+
+            Pc pc = new Pc(new IndTestDSep(dag));
+            Graph patternPc = pc.search();
+
+            assertEquals(patternPc, patternFgs);
+
+        }
     }
 
     private void printDegreeDistribution(Graph dag, PrintStream out) {
