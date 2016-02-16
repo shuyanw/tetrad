@@ -92,11 +92,17 @@ public class GraphScore implements GesScore {
         Node x = variables.get(extra);
         List<Node> scoreParents = getVariableList(parents);
 //        scoreParents.add(x);
+
+//        if (scoreParents.contains(x)) throw new RuntimeException("Score parents containx x");
 //
-//        double diff = score1(y, x, scoreParents);
-//        double diff = score2(y, x, scoreParents);
+//        scoreParents.remove(x);
+
+//        if (scoreParents.contains(x)) throw new IllegalArgumentException();
+//
+        double diff = score1(x, y, scoreParents);
+//        double diff = score2(x, y, scoreParents);
 //        double diff = score3(x, y, scoreParents);
-        double diff = score4(y, x, scoreParents);
+//        double diff = score4(x, y, scoreParents);
 //        double diff = score5(x, y, scoreParents);
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
@@ -104,16 +110,24 @@ public class GraphScore implements GesScore {
         return diff;
     }
 
-    private double score1(Node y, Node x, List<Node> scoreParents) {
-        double diff = 0;
+    private double score1(Node x, Node y, List<Node> scoreParents) {
+        double diff;
+//        scoreParents.add(x);
+        scoreParents.remove(x);
 
-        if (dag.isDConnectedTo(x, y, scoreParents)) {
-            diff += 1;
+        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
+            diff  = -1;
+        } else {
+            diff = 1;
         }
+
+//        System.out.println("dsep " + x + "_||_" + y + "|" + scoreParents + " = " + diff);
+
+
         return diff;
     }
 
-    private double score2(Node y, Node x, List<Node> scoreParents) {
+    private double score2(Node x, Node y, List<Node> scoreParents) {
         double diff = 0;
 
         if (dag.isDConnectedTo(x, y, scoreParents)) {
@@ -218,28 +232,31 @@ public class GraphScore implements GesScore {
     }
     private double score5(Node x, Node y, List<Node> scoreParents) {
         List<Node> vars = new ArrayList<>(scoreParents);
-        vars.add(x);
+//        vars.remove(x);
 
-//        int count = 0;
-//
-//        for (Node z : scoreParents) {
-//            List<Node> sepset = dag.getSepset(x, z);
-//
-//            if (sepset != null && !sepset.contains(y)) {
-//                count++;
-//            }
-//        }
+        int count = 0;
+
+        for (Node z : scoreParents) {
+            List<Node> sepset = dag.getSepset(x, z);
+
+            if (sepset != null && !sepset.contains(y)) {
+                count++;
+            }
+        }
+
+        scoreParents.add(x);
+
 
         double score;
 
         if (dag.isDSeparatedFrom(x, y, vars)) {
-            score = -1 - scoreParents.size();
+            score = -scoreParents.size();
         } else {
             score = 1 + scoreParents.size();
 
         }
 
-//        System.out.println("x = " + x + " y = " + y + " scoreParents = " + scoreParents + " score = " + score);
+//        System.out.println( "x = " + x + " y = " + y + " scoreParents = " + scoreParents + " score = " + score);
 
         return score;
     }

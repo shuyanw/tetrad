@@ -3349,10 +3349,11 @@ public final class GraphUtils {
                     if (c == y) return true;
 
                     EdgeNode u = new EdgeNode(edge2, b);
-                    if (V.contains(u)) continue;
 
-                    V.add(u);
-                    Q.offer(u);
+                    if (!V.contains(u)) {
+                        V.add(u);
+                        Q.offer(u);
+                    }
                 }
             }
         }
@@ -3636,7 +3637,14 @@ public final class GraphUtils {
             return true;
         }
 
-        boolean ancestor = isAncestor(b, z, graph);
+
+        boolean ancestor = zAncestors(z, graph).contains(b);
+        boolean ancestor2 = isAncestor(b, z, graph);
+
+//        if (ancestor != ancestor2) {
+//            System.out.println("Ancestors of " + z + " are " + zAncestors(z, graph));
+//        }
+
         return collider && ancestor;
     }
 
@@ -3696,9 +3704,10 @@ public final class GraphUtils {
             Node t = Q.poll();
 
             for (Node c : graph.getParents(t)) {
-                if (V.contains(c)) continue;
-                V.add(c);
-                Q.offer(c);
+                if (!V.contains(c)) {
+                    Q.offer(c);
+                    V.add(c);
+                }
             }
         }
 

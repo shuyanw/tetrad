@@ -652,13 +652,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             score += bump;
 
-            Set<Node> toProcess = reapplyOrientation(x, y);
-
-//            try {
-//                Graph dagFromPattern = SearchGraphUtils.dagFromPattern2(new EdgeListGraphSingleConnections(graph));
-//            } catch (Exception e) {
-//                System.out.println("Found a cycle when picking a DAG in the pattern (FES).");
-//            }
+            Set<Node> toProcess = reapplyOrientation(x, y, null);
 
             storeGraph();
             reevaluateForward(toProcess);
@@ -689,26 +683,13 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             }
 
             if (!graph.isAdjacentTo(x, y)) continue;
+//
+            if (graph.getEdge(x, y).pointsTowards(x)) continue;
 
             HashSet<Node> diff = new HashSet<>(arrow.getNaYX());
             diff.removeAll(arrow.getHOrT());
 
             if (!isClique(diff)) continue;
-
-            Edge j = graph.getEdge(x, y);
-            graph.removeEdge(x, y);
-
-//            if (existsUnblockedSemiDirectedPath(x, y, diff, cycleBound)) {
-//                System.out.println("Unblocked semidirected path " + x + "~~>" + y + " | " + diff);
-//                continue;
-//            }
-
-//            if (existsUnblockedSemiDirectedPath(y, x, diff, cycleBound)) {
-//                System.out.println("Unblocked semidirected path " + y + "~~>" + x + " | " + diff);
-//                continue;
-//            }
-
-            graph.addEdge(j);
 
             Set<Node> h = arrow.getHOrT();
             double bump = arrow.getBump();
@@ -718,41 +699,39 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             clearArrow(x, y);
 
-            Set<Node> toProcess = reapplyOrientation(x, y);
+            Set<Node> extras = new HashSet<>(h);
+            extras.addAll(graph.getAdjacentNodes(y)); // For R2.
 
-//            try {
-//                Graph dagFromPattern = SearchGraphUtils.dagFromPattern2(new EdgeListGraphSingleConnections(graph));
-//            } catch (Exception e) {
-//                System.out.println("Found a cycle when picking a DAG in the pattern (BES).");
-//            }
+            Set<Node> toProcess = reapplyOrientation(x, y, extras);
 
+            System.out.println("toProcess = " + toProcess);
 
             storeGraph();
             reevaluateBackward(toProcess);
         }
     }
 
-    private Set<Node> reapplyOrientation(Node x, Node y) {
+    private Set<Node> getCommonChildren(Node x, Node y) {
+        Set<Node> commonChildren = new HashSet<>(graph.getChildren(x));
+        commonChildren.addAll(graph.getChildren(y));
+        return commonChildren;
+    }
 
-//        Set<Node> visited = rebuildPatternRestricted(x, y);
+    private Set<Node> reapplyOrientation(Node x, Node y, Set<Node> newArrows) {
+
         Set<Node> toProcess = new HashSet<>();
-
-//        for (Node node : visited) {
-//            final Set<Node> neighbors = getNeighbors(node);
-//            final Set<Node> storedNeighbors = this.neighbors.get(node);
-//
-//            if (!neighbors.equals(storedNeighbors)) {
-//                toProcess.add(node);
-//            }
-//        }
 
         toProcess.add(x);
         toProcess.add(y);
 
-//        toProcess.addAll(graph.getAdjacentNodes(x));
-//        toProcess.addAll(graph.getAdjacentNodes(y));
-//
-//        toProcess.addAll(visited);
+        if (newArrows != null) {
+            toProcess.addAll(newArrows);
+        }
+
+        if (graph.getEdge(x, y) != null) {
+            toProcess.addAll(graph.getChildren(x));
+            toProcess.addAll(graph.getChildren(y));
+        }
 
         return meekOrientRestricted(new ArrayList<Node>(toProcess), getKnowledge());
 
@@ -778,8 +757,13 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 }
             }
 
-            if (Edges.isDirectedEdge(edge)) {
+            clearArrow(x, y);
+            clearArrow(y, x);
+
+            if (edge.pointsTowards(y)) {
                 calculateArrowsBackward(x, y);
+            } else if (edge.pointsTowards(x)) {
+                calculateArrowsBackward(y, x);
             } else {
                 calculateArrowsBackward(x, y);
                 calculateArrowsBackward(y, x);
@@ -824,6 +808,9 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                             if (w == x) continue;
 
                             if (!graph.isAdjacentTo(w, x)) {
+                                clearArrow(w, x);
+//                                clearArrow(x, w);
+
                                 calculateArrowsForward(w, x);
 //                                calculateArrowsForward(x, w);
                             }
@@ -867,13 +854,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         Set<Node> naYX = getNaYX(a, b);
         if (!isClique(naYX)) return;
 
-        clearArrow(a, b);
-
         List<Node> TNeighbors = getTNeighbors(a, b);
 
         final int _depth = Math.min(TNeighbors.size(), depth == -1 ? 1000 : depth);
 
-//        List<Set<Node>> lastSubsets = null;
+        List<Set<Node>> lastSubsets = null;
 
         for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(TNeighbors.size(), i);
@@ -911,6 +896,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 }
 
                 double bump = insertEval(a, b, T, naYX, hashIndices);
+
+//                if (bump <= 0) {
+//                    clearArrow(a, b);
+//                    return;
+//                }
 
                 if (bump > 0.0) {
                     addArrow(a, b, naYX, T, bump, null);
@@ -954,11 +944,18 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 if (to - from <= chunk) {
                     for (int _w = from; _w < to; _w++) {
                         final Node w = adj.get(_w);
+                        Edge e = graph.getEdge(w, r);
 
-                        if (graph.isAdjacentTo(w, r)) {
-                            if (graph.isParentOf(w, r)) {
-                                calculateArrowsBackward(w, r);
+                        if (e != null) {
+                            if (e.pointsTowards(r)) {
+//                                clearArrow(w, r);
+//                                clearArrow(r, w);
+//
+//                                calculateArrowsBackward(w, r);
                             } else {
+                                clearArrow(w, r);
+                                clearArrow(r, w);
+
                                 calculateArrowsBackward(w, r);
                                 calculateArrowsBackward(r, w);
                             }
@@ -998,8 +995,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         }
 
         Set<Node> naYX = getNaYX(a, b);
-
-        clearArrow(a, b);
 
         List<Node> _naYX = new ArrayList<>(naYX);
 

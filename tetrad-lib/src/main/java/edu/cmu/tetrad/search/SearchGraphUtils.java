@@ -1069,7 +1069,7 @@ public final class SearchGraphUtils {
      * identification with greedy search" Journal of Machine Learning Research. </p> R. Silva, June 2004
      */
     public static void pdagToDag(Graph g) {
-        Graph p = new EdgeListGraph(g);
+        Graph p = new EdgeListGraphSingleConnections(g);
         List<Edge> undirectedEdges = new ArrayList<Edge>();
 
         for (Edge edge : g.getEdges()) {
@@ -1230,6 +1230,7 @@ public final class SearchGraphUtils {
 
             graph.removeEdge(nextUndirected);
             graph.addUndirectedEdge(node1, node2);
+            System.out.println("Making undirected: " + graph.getEdge(node1, node2));
         }
     }
 
@@ -1305,7 +1306,7 @@ public final class SearchGraphUtils {
      */
     public static void dagToPdag(Graph graph) {
         //do topological sort on the nodes
-        Graph graphCopy = new EdgeListGraph(graph);
+        Graph graphCopy = new EdgeListGraphSingleConnections(graph);
         Node orderedNodes[] = new Node[graphCopy.getNodes().size()];
         int count = 0;
         while (graphCopy.getNodes().size() > 0) {
@@ -1438,7 +1439,7 @@ public final class SearchGraphUtils {
 //        IndTestDSep test = new IndTestDSep(dag);
 //        return new Pc(test).search();
 //
-        Graph graph = new EdgeListGraph(dag);
+        Graph graph = new EdgeListGraphSingleConnections(dag);
         SearchGraphUtils.basicPattern(graph, false);
         MeekRules rules = new MeekRules();
         rules.orientImplied(graph);
@@ -1777,7 +1778,7 @@ public final class SearchGraphUtils {
         int[] comb;
 
         while ((comb = gen.next()) != null) {
-            Graph graph = new EdgeListGraph(skeleton.getNodes());
+            Graph graph = new EdgeListGraphSingleConnections(skeleton.getNodes());
 
             for (Edge edge : edges) {
                 if (!Edges.isUndirectedEdge(edge)) {
@@ -2196,7 +2197,7 @@ public final class SearchGraphUtils {
 //        IndTestDSep test = new IndTestDSep(dag);
 //        return new Pc(test).search();
 //
-        Graph pattern = new EdgeListGraph(dag);
+        Graph pattern = new EdgeListGraphSingleConnections(dag);
         SearchGraphUtils.basicPattern(pattern, false);
         MeekRules rules = new MeekRules();
         rules.orientImplied(pattern);
@@ -2205,7 +2206,7 @@ public final class SearchGraphUtils {
     }
 
     public static Graph patternForDag(final Graph dag, IKnowledge knowledge) {
-        Graph pattern = new EdgeListGraph(dag);
+        Graph pattern = new EdgeListGraphSingleConnections(dag);
         SearchGraphUtils.basicPattern(pattern, false);
         orientRequired(knowledge, pattern, pattern.getNodes());
         MeekRules rules = new MeekRules();
