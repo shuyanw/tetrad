@@ -99,10 +99,10 @@ public class GraphScore implements GesScore {
 
 //        if (scoreParents.contains(x)) throw new IllegalArgumentException();
 //
-        double diff = score1(x, y, scoreParents);
+//        double diff = score1(x, y, scoreParents);
 //        double diff = score2(x, y, scoreParents);
 //        double diff = score3(x, y, scoreParents);
-//        double diff = score4(x, y, scoreParents);
+        double diff = score4(x, y, scoreParents);
 //        double diff = score5(x, y, scoreParents);
 
 //        System.out.println("Score diff for " + x + "-->" + y + " given " + scoreParents + " = " + diff);
@@ -213,22 +213,31 @@ public class GraphScore implements GesScore {
     private double score4(Node x, Node y, List<Node> scoreParents) {
         int count = 0;
 
-
         for (Node z : scoreParents) {
             List<Node> sepset = dag.getSepset(x, z);
 
-            if (sepset != null && !sepset.contains(y)) {
-                count++;
+            if (sepset != null) {
+                if (!sepset.contains(y)) {
+                    count++;
+                } else {
+                    count--;
+                }
             }
         }
 
-        scoreParents.add(x);
-
-        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
-            return -1 - count;
-        } else {
+//        scoreParents.add(x);
+//        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
+        if (dag.isAdjacentTo(x, y)) {
             return 1 + count;
+        } else {
+            return -1 - count;
         }
+
+//        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
+//            return -1 - count;
+//        } else {
+//            return 1 + count;
+//        }
     }
     private double score5(Node x, Node y, List<Node> scoreParents) {
         List<Node> vars = new ArrayList<>(scoreParents);
