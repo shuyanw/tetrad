@@ -684,7 +684,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             if (!graph.isAdjacentTo(x, y)) continue;
 //
-            if (graph.getEdge(x, y).pointsTowards(x)) continue;
+            Edge edge = graph.getEdge(x, y);
+            if (edge.pointsTowards(x)) continue;
 
             HashSet<Node> diff = new HashSet<>(arrow.getNaYX());
             diff.removeAll(arrow.getHOrT());
@@ -699,10 +700,13 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             clearArrow(x, y);
 
-            Set<Node> extras = new HashSet<>(h);
-            extras.addAll(graph.getAdjacentNodes(y)); // For R2.
+            Set<Node> toProcess = new HashSet<>(h);
+            toProcess.addAll(graph.getAdjacentNodes(y)); // For R2.
+            if (Edges.isUndirectedEdge(edge)) {
+                toProcess.addAll(graph.getAdjacentNodes(x));
+            }
 
-            Set<Node> toProcess = reapplyOrientation(x, y, extras);
+            toProcess.addAll(reapplyOrientation(x, y, toProcess));
 
             System.out.println("toProcess = " + toProcess);
 
@@ -733,10 +737,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             toProcess.addAll(graph.getChildren(y));
         }
 
-        return meekOrientRestricted(new ArrayList<Node>(toProcess), getKnowledge());
-
-
-//        return toProcess;
+        return meekOrientRestricted(new ArrayList<>(toProcess), getKnowledge());
     }
 
     // Returns true if knowledge is not empty.
@@ -858,7 +859,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
         final int _depth = Math.min(TNeighbors.size(), depth == -1 ? 1000 : depth);
 
-        List<Set<Node>> lastSubsets = null;
+//        List<Set<Node>> lastSubsets = null;
 
         for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(TNeighbors.size(), i);
