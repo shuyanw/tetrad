@@ -228,9 +228,9 @@ public class GraphScore implements GesScore {
 //        scoreParents.add(x);
 //        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
         if (dag.isAdjacentTo(x, y)) {
-            return 1 + count;
+            return 1 + count;   
         } else {
-            return -1 - count;
+            return -1;
         }
 
 //        if (dag.isDSeparatedFrom(x, y, scoreParents)) {
