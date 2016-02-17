@@ -42,34 +42,35 @@ public class MeekRules implements ImpliedOrientation {
 
     private IKnowledge knowledge;
 
-    /**
-     * True if cycles are to be aggressively prevented. May be expensive for large graphs (but also useful for large
-     * graphs).
-     */
+    //True if cycles are to be aggressively prevented. May be expensive for large graphs (but also useful for large
+    //graphs).
     private boolean aggressivelyPreventCycles = false;
 
-    /**
-     * If knowledge is available.
-     */
+    // If knowledge is available.
     boolean useRule4;
 
+    //The logger to use.
+    private Map<Edge, Edge> changedEdges = new HashMap<>();
 
-    /**
-     * The logger to use.
-     */
-    private Map<Edge, Edge> changedEdges = new HashMap<Edge, Edge>();
-
+    // The stack of nodes to be visited.
     private LinkedList<Node> directStack = new LinkedList<>();
-    private boolean orientInPlace = false;
-    private PrintStream out;
 
-    private List<Node> nodes = new ArrayList<>();
-    private Set<Node> visited = new HashSet<>();
-    private HashSet<Edge> oriented;
+    // Whether verbose output should be generated.
+
     private boolean verbose = false;
 
+    // Where verbose output should be sent.
+    private PrintStream out;
 
-//    private Set<Node> colliderNodes = null;
+    // The initial list of nodes to visit.
+
+    private List<Node> nodes = new ArrayList<>();
+
+    // The lsit of nodes actually visited.
+    private Set<Node> visited = new HashSet<>();
+
+    // Edges already oriented by the algorithm to avoid repeats and prevent cycles.
+    private HashSet<Edge> oriented;
 
     /**
      * Constructs the <code>MeekRules</code> with no logging.
@@ -79,7 +80,6 @@ public class MeekRules implements ImpliedOrientation {
     }
 
     //======================== Public Methods ========================//
-
 
     public void orientImplied(Graph graph) {
         orientImplied(graph, graph.getNodes());
@@ -99,6 +99,30 @@ public class MeekRules implements ImpliedOrientation {
         this.knowledge = knowledge;
     }
 
+
+    public boolean isAggressivelyPreventCycles() {
+        return aggressivelyPreventCycles;
+    }
+
+    public void setAggressivelyPreventCycles(boolean aggressivelyPreventCycles) {
+        this.aggressivelyPreventCycles = aggressivelyPreventCycles;
+    }
+
+    public Map<Edge, Edge> getChangedEdges() {
+        return changedEdges;
+    }
+
+    public void setOut(PrintStream out) {
+        this.out = out;
+    }
+
+    public PrintStream getOut() {
+        return out;
+    }
+
+    public Set<Node> getVisited() {
+        return visited;
+    }
 
     //============================== Private Methods ===================================//
 
@@ -154,23 +178,16 @@ public class MeekRules implements ImpliedOrientation {
 
     private void r1Helper(Node a, Node b, Node c, Graph graph, IKnowledge knowledge) {
         if (!graph.isAdjacentTo(a, c) && graph.isDirectedFromTo(a, b) && graph.isUndirectedFromTo(b, c)) {
-//            if (!isUnshieldedNoncollider(a, b, c, graph)) {
-//                return true;
-//            }
+            if (!isUnshieldedNoncollider(a, b, c, graph)) {
+                return;
+            }
 
-//            if (isArrowpointAllowed(b, c, knowledge)) {
-            direct(b, c, graph);
-            String message = SearchLogUtils.edgeOrientedMsg(
-                    "Meek R1 triangle (" + b + "-->" + a + "---" + c + ")", graph.getEdge(a, c));
-            log(message);
-//            }
-        }
-    }
-
-    private void log(String message) {
-        if (verbose) {
-            System.out.println(message);
-            TetradLogger.getInstance().log("impliedOrientations", message);
+            if (isArrowpointAllowed(b, c, knowledge)) {
+                direct(b, c, graph);
+                String message = SearchLogUtils.edgeOrientedMsg(
+                        "Meek R1 triangle (" + b + "-->" + a + "---" + c + ")", graph.getEdge(a, c));
+                log(message);
+            }
         }
     }
 
@@ -203,10 +220,10 @@ public class MeekRules implements ImpliedOrientation {
         if (graph.isDirectedFromTo(a, b) &&
                 graph.isDirectedFromTo(b, c) &&
                 graph.isUndirectedFromTo(a, c)) {
-//            if (isArrowpointAllowed(a, c, knowledge)) {
-            direct(a, c, graph);
-            log(SearchLogUtils.edgeOrientedMsg("Meek R2", graph.getEdge(b, c)));
-//            }
+            if (isArrowpointAllowed(a, c, knowledge)) {
+                direct(a, c, graph);
+                log(SearchLogUtils.edgeOrientedMsg("Meek R2", graph.getEdge(b, c)));
+            }
         }
     }
 
@@ -236,14 +253,14 @@ public class MeekRules implements ImpliedOrientation {
                     boolean isKite = isKite(a, d, b, c, graph);
 
                     if (isKite) {
-//                    if (isArrowpointAllowed(d, a, knowledge)) {
-//                        if (!isUnshieldedNoncollider(c, d, b, graph)) {
-//                            continue;
-//                        }
+                        if (isArrowpointAllowed(d, a, knowledge)) {
+                            if (!isUnshieldedNoncollider(c, d, b, graph)) {
+                                continue;
+                            }
 
-                        direct(d, a, graph);
-                        log(SearchLogUtils.edgeOrientedMsg("Meek R3", graph.getEdge(d, a)));
-//                    }
+                            direct(d, a, graph);
+                            log(SearchLogUtils.edgeOrientedMsg("Meek R3", graph.getEdge(d, a)));
+                        }
                     }
                 }
             }
@@ -284,39 +301,39 @@ public class MeekRules implements ImpliedOrientation {
 
                 if (!(graph.isAdjacentTo(a, b) && graph.isAdjacentTo(a, d) && graph.isAdjacentTo(b, c) && graph.isAdjacentTo(d, c) && graph.isAdjacentTo(a, c))) {
                     if (graph.isDirectedFromTo(b, c) && graph.isDirectedFromTo(c, d) && graph.isUndirectedFromTo(a, d)) {
-//                        if (isArrowpointAllowed(a, c, knowledge)) {
-//                            if (!isUnshieldedNoncollider(b, a, d, graph)) {
-//                                continue;
-//                            }
-
-//                            if (isArrowpointAllowed(c, d, knowledge)) {
-                        direct(c, d, graph);
-                        log(SearchLogUtils.edgeOrientedMsg("Meek R4", graph.getEdge(c, d)));
-//                                continue;
-//                            }
-                    }
-                }
-
-                Node e = d;
-                d = b;
-                b = e;
-
-                if (graph.isDirectedFromTo(b, c) && graph.isDirectedFromTo(c, d) && graph.isUndirectedFromTo(a, d)) {
-//                        if (isArrowpointAllowed(a, c, knowledge)) {
-//                            if (!isUnshieldedNoncollider(b, a, d, graph)) {
-//                                continue;
-//                            }
+                        if (isArrowpointAllowed(a, c, knowledge)) {
+                            if (!isUnshieldedNoncollider(b, a, d, graph)) {
+                                continue;
+                            }
 //
-//                            if (isArrowpointAllowed(c, d, knowledge)) {
-                    direct(c, d, graph);
-                    log(SearchLogUtils.edgeOrientedMsg("Meek R4", graph.getEdge(c, d)));
-//                            }
-//                        }
-//                }
+                            if (isArrowpointAllowed(c, d, knowledge)) {
+                                direct(c, d, graph);
+                                log(SearchLogUtils.edgeOrientedMsg("Meek R4", graph.getEdge(c, d)));
+                                continue;
+                            }
+                        }
+                    }
+
+                    Node e = d;
+                    d = b;
+                    b = e;
+
+                    if (graph.isDirectedFromTo(b, c) && graph.isDirectedFromTo(c, d) && graph.isUndirectedFromTo(a, d)) {
+                        if (isArrowpointAllowed(a, c, knowledge)) {
+                            if (!isUnshieldedNoncollider(b, a, d, graph)) {
+                                continue;
+                            }
+
+                            if (isArrowpointAllowed(c, d, knowledge)) {
+                                direct(c, d, graph);
+                                log(SearchLogUtils.edgeOrientedMsg("Meek R4", graph.getEdge(c, d)));
+                                continue;
+                            }
+                        }
+                    }
                 }
             }
         }
-
     }
 
     private void direct(Node a, Node c, Graph graph) {
@@ -367,49 +384,6 @@ public class MeekRules implements ImpliedOrientation {
                 !knowledge.isForbidden(from.toString(), to.toString());
     }
 
-    /**
-     * @return true if orienting x-->y would create a cycle.
-     */
-    private boolean createsCycle(Node x, Node y, Graph graph) {
-//        if (aggressivelyPreventCycles) {
-//            return graph.isAncestorOf(y, x);
-//        } else {
-        return false;
-//        }
-    }
-
-    public boolean isAggressivelyPreventCycles() {
-        return aggressivelyPreventCycles;
-    }
-
-    public void setAggressivelyPreventCycles(boolean aggressivelyPreventCycles) {
-        this.aggressivelyPreventCycles = aggressivelyPreventCycles;
-    }
-
-    public Map<Edge, Edge> getChangedEdges() {
-        return changedEdges;
-    }
-
-    public boolean isOrientInPlace() {
-        return orientInPlace;
-    }
-
-    public void setOrientInPlace(boolean orientInPlace) {
-        this.orientInPlace = orientInPlace;
-    }
-
-    public void setOut(PrintStream out) {
-        this.out = out;
-    }
-
-    public PrintStream getOut() {
-        return out;
-    }
-
-    public Set<Node> getVisited() {
-        return visited;
-    }
-
     private void undirectUnforcedEdges(Node y, Graph graph) {
         Set<Node> parentsToUndirect = new HashSet<>();
         List<Node> parents = graph.getParents(y);
@@ -447,6 +421,14 @@ public class MeekRules implements ImpliedOrientation {
             }
         }
     }
+
+    private void log(String message) {
+        if (verbose) {
+            System.out.println(message);
+            TetradLogger.getInstance().log("impliedOrientations", message);
+        }
+    }
+
 }
 
 

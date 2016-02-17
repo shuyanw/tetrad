@@ -1173,14 +1173,11 @@ public final class GesOrienter implements GraphSearch, GraphScorer, Reorienter {
      */
     private void meekOrient(Graph graph, IKnowledge knowledge) {
         MeekRules rules = new MeekRules();
-        rules.setOrientInPlace(false);
         rules.setKnowledge(knowledge);
         rules.orientImplied(graph);
     }
 
     private void setDataSet(DataSet dataSet) {
-        List<String> _varNames = dataSet.getVariableNames();
-
         this.variables = dataSet.getVariables();
         this.dataSet = dataSet;
         this.discrete = dataSet.isDiscrete();
