@@ -152,6 +152,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     // The graph being constructed.
     private Graph graph;
 
+    // Arrows with the same score are stored in this list to distinguish their order in sortedArrows.
+    // The ordering doesn't matter; it just have to be transitive.
     int arrowIndex = 0;
 
     //===========================CONSTRUCTORS=============================//
@@ -300,8 +302,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         } else {
             return 2.0;
         }
-
-//        throw new UnsupportedOperationException("Penalty discount supported only for SemBicScore.");
     }
 
     /**
@@ -316,9 +316,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         if (gesScore instanceof SemBicScore) {
             ((SemBicScore) gesScore).setPenaltyDiscount(penaltyDiscount);
         }
-//        else {
-//            throw new UnsupportedOperationException("Penalty discount supported only for SemBicScore.");
-//        }
     }
 
     /**
@@ -546,7 +543,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                         for (int j = i + 1; j < nodes.size(); j++) {
                             if (i == j) continue;
                             Node x = nodes.get(j);
-//
+
                             if (existsKnowledge()) {
                                 if (getKnowledge().isForbidden(x.getName(), y.getName()) && getKnowledge().isForbidden(y.getName(), x.getName())) {
                                     continue;
@@ -763,8 +760,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
     // Returns true if knowledge is not empty.
     private boolean existsKnowledge() {
-        return false;
-//        return !knowledge.isEmpty();
+        return !knowledge.isEmpty();
     }
 
     // Initiaizes the sorted arrows lists for the backward search.
@@ -964,7 +960,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
                                 calculateArrowsBackward(w, r);
                                 calculateArrowsBackward(r, w);
-//                            }
                             }
                         }
                     }
@@ -993,13 +988,12 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     }
 
     // Calculates the arrows for the removal in the backward direction.
-
     private void calculateArrowsBackward(Node a, Node b) {
-//        if (existsKnowledge()) {
-//            if (!getKnowledge().noEdgeRequired(a.getName(), b.getName())) {
-//                return;
-//            }
-//        }
+        if (existsKnowledge()) {
+            if (!getKnowledge().noEdgeRequired(a.getName(), b.getName())) {
+                return;
+            }
+        }
 
         Set<Node> naYX = getNaYX(a, b);
 
@@ -1017,11 +1011,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 Set<Node> h = new HashSet<>(_naYX);
                 h.removeAll(diff);
 
-//                if (existsKnowledge()) {
-//                    if (!validSetByKnowledge(b, h)) {
-//                        continue;
-//                    }
-//                }
+                if (existsKnowledge()) {
+                    if (!validSetByKnowledge(b, h)) {
+                        continue;
+                    }
+                }
 
                 double bump = deleteEval(a, b, diff, naYX, hashIndices);
 
@@ -1103,20 +1097,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             return compare;
         }
-
-//        public boolean equals(Object o) {
-//            if (!(o instanceof Arrow)) {
-//                return false;
-//            }
-//
-//            Arrow a = (Arrow) o;
-//
-//            return a.a.equals(this.a) && a.b.equals(this.b) && a.hOrT.equals(this.hOrT) && a.naYX.equals(this.naYX);
-//        }
-
-//        public int hashCode() {
-//            return 11 * a.hashCode() + 13 * b.hashCode() + 17 * hOrT.hashCode() + 19 * naYX.hashCode();
-//        }
 
         public String toString() {
             return "Arrow<" + a + "->" + b + " bump = " + bump + " t/h = " + hOrT + " naYX = " + naYX + ">";
@@ -1200,7 +1180,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     private boolean insert(Node x, Node y, Set<Node> T, double bump) {
         if (graph.isAdjacentTo(x, y)) {
             return false; // The initial graph may already have put this edge in the graph.
-//            throw new IllegalArgumentException(x + " and " + y + " are already adjacent in the graph.");
         }
 
         Edge trueEdge = null;
