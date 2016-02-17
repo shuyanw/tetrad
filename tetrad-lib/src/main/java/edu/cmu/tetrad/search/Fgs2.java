@@ -813,7 +813,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 //                                clearArrow(x, w);
 
                                 calculateArrowsForward(w, x);
-//                                calculateArrowsForward(x, w);
+                                calculateArrowsForward(x, w);
                             }
                         }
                     }
@@ -861,6 +861,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
 //        List<Set<Node>> lastSubsets = null;
 
+        Set<Node> maxNaYX = null;
+        Set<Node> maxT = null;
+        double maxBump = Double.NaN;
+        int maxSize = -1;
+
         for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(TNeighbors.size(), i);
             int[] choice;
@@ -890,11 +895,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 //                    if (!foundASubset) continue;
 //                }
 
-                if (existsKnowledge()) {
-                    if (!validSetByKnowledge(b, T)) {
-                        continue;
-                    }
-                }
+//                if (existsKnowledge()) {
+//                    if (!validSetByKnowledge(b, T)) {
+//                        continue;
+//                    }
+//                }
 
                 double bump = insertEval(a, b, T, naYX, hashIndices);
 
@@ -903,14 +908,26 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 //                    return;
 //                }
 
+//                int size = naYX.size() + T.size() + graph.getParents(b).size() + 1;
+
+//                if (size >= 0) {
                 if (bump > 0.0) {
-                    addArrow(a, b, naYX, T, bump, null);
+                    maxNaYX = naYX;
+                    maxT = T;
+                    maxBump = bump;
+//                        maxSize = size;
+//                        addArrow(a, b, naYX, T, bump, null);
                 }
+//                }
             }
 
             if (!found) break;
 
 //            lastSubsets = subsets;
+        }
+
+        if (maxNaYX != null) {
+            addArrow(a, b, maxNaYX, maxT, maxBump, null);
         }
     }
 
@@ -948,18 +965,18 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                         Edge e = graph.getEdge(w, r);
 
                         if (e != null) {
-                            if (e.pointsTowards(r)) {
+//                            if (e.pointsTowards(r)) {
 //                                clearArrow(w, r);
 //                                clearArrow(r, w);
 //
 //                                calculateArrowsBackward(w, r);
-                            } else {
+//                            } if (Edges.isUndirectedEdge(graph.getEdge(w, r))) {
                                 clearArrow(w, r);
                                 clearArrow(r, w);
 
                                 calculateArrowsBackward(w, r);
                                 calculateArrowsBackward(r, w);
-                            }
+//                            }
                         }
                     }
 
@@ -989,11 +1006,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
     // Calculates the arrows for the removal in the backward direction.
     private void calculateArrowsBackward(Node a, Node b) {
-        if (existsKnowledge()) {
-            if (!getKnowledge().noEdgeRequired(a.getName(), b.getName())) {
-                return;
-            }
-        }
+//        if (existsKnowledge()) {
+//            if (!getKnowledge().noEdgeRequired(a.getName(), b.getName())) {
+//                return;
+//            }
+//        }
 
         Set<Node> naYX = getNaYX(a, b);
 
@@ -1001,12 +1018,9 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
         final int _depth = Math.min(_naYX.size(), depth == -1 ? 1000 : depth);
 
-        List<Set<Node>> lastSubsets = null;
-
         for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(_naYX.size(), i);
             int[] choice;
-            List<Set<Node>> subsets = new ArrayList<>();
 
             while ((choice = gen.next()) != null) {
                 Set<Node> diff = GraphUtils.asSet(choice, _naYX);
@@ -1014,39 +1028,19 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 Set<Node> h = new HashSet<>(_naYX);
                 h.removeAll(diff);
 
-                if (!isClique(diff)) continue;
-
-                if (lastSubsets != null) {
-                    boolean foundASubset = false;
-
-                    for (Set<Node> set : lastSubsets) {
-                        if (diff.containsAll(set)) {
-                            foundASubset = true;
-                            break;
-                        }
-                    }
-
-                    if (!foundASubset) continue;
-                }
-
-                subsets.add(diff);
-
-                if (existsKnowledge()) {
-                    if (!validSetByKnowledge(b, h)) {
-                        continue;
-                    }
-                }
+//                if (existsKnowledge()) {
+//                    if (!validSetByKnowledge(b, h)) {
+//                        continue;
+//                    }
+//                }
 
                 double bump = deleteEval(a, b, diff, naYX, hashIndices);
 
-                if (bump >= 0.0) {
+                if (bump > 0.0) {
                     addArrow(a, b, naYX, h, bump, diff);
                 }
             }
-
-            lastSubsets = subsets;
         }
-
     }
 
     public void setSamplePrior(double samplePrior) {

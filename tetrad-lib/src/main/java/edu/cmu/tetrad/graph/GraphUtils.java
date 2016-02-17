@@ -3115,6 +3115,37 @@ public final class GraphUtils {
         throw new IllegalArgumentException("Unsupported edge type : " + edgeLeft);
     }
 
+    public static Set<Set<Node>> maximalCliques(Graph graph, List<Node> nodes) {
+        Set<Set<Node>> report = new HashSet<>();
+        brokKerbosh1(new HashSet<Node>(), new HashSet<>(nodes), new HashSet<Node>(), report, graph);
+        return report;
+    }
+
+    //        BronKerbosch1(R, P, X):
+    //            if P and X are both empty:
+    //                   report R as a maximal clique
+    //            for each vertex v in P:
+    //                   BronKerbosch1(R â {v}, P â N(v), X â N(v))
+    //                   P := P \ {v}
+    //                   X := X â {v}
+    private static void brokKerbosh1(Set<Node> R, Set<Node> P, Set<Node> X, Set<Set<Node>> report, Graph graph) {
+        if (P.isEmpty() && X.isEmpty()) {
+            report.add(new HashSet<>(R));
+        }
+
+        for (Node v : new HashSet<>(P)) {
+            Set<Node> _R = new HashSet<>(R);
+            Set<Node> _P = new HashSet<>(P);
+            Set<Node> _X = new HashSet<>(X);
+            _R.add(v);
+            _P.retainAll(graph.getAdjacentNodes(v));
+            _X.retainAll(graph.getAdjacentNodes(v));
+            brokKerbosh1(_R, _P, _X, report, graph);
+            P.remove(v);
+            X.add(v);
+        }
+    }
+
     public static class GraphComparison {
         private int adjFn;
         private int adjFp;

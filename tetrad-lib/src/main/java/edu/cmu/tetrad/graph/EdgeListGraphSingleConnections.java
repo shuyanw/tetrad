@@ -452,18 +452,18 @@ public class EdgeListGraphSingleConnections implements Graph {
      * @return the list of children for a node.
      */
     public List<Node> getChildren(Node node) {
-        List<Node> children = new ArrayList<>(2);
+        List<Node> childen = new ArrayList<>();
 
-        for (Object o : getEdges(node)) {
-            Edge edge = (Edge) (o);
-            Node sub = Edges.traverseDirected(node, edge);
+        for (Edge edge : edgeLists.get(node)) {
+            Endpoint endpoint1 = edge.getProximalEndpoint(node);
+            Endpoint endpoint2 = edge.getDistalEndpoint(node);
 
-            if (sub != null) {
-                children.add(sub);
+            if (endpoint1 == Endpoint.TAIL && endpoint2 == Endpoint.ARROW) {
+                childen.add(edge.getDistalNode(node));
             }
         }
 
-        return children;
+        return childen;
     }
 
     public int getConnectivity() {
@@ -536,11 +536,8 @@ public class EdgeListGraphSingleConnections implements Graph {
      */
     public List<Node> getParents(Node node) {
         List<Node> parents = new ArrayList<>();
-        List<Edge> edges = edgeLists.get(node);
 
-        for (Edge edge : edges) {
-//            if (edge == null) continue;
-
+        for (Edge edge : edgeLists.get(node)) {
             Endpoint endpoint1 = edge.getDistalEndpoint(node);
             Endpoint endpoint2 = edge.getProximalEndpoint(node);
 

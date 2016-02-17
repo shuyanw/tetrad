@@ -114,7 +114,7 @@ public class GraphScore implements GesScore {
     private double score1(Node x, Node y, List<Node> scoreParents) {
         double diff;
 //        scoreParents.add(x);
-        scoreParents.remove(x);
+//        scoreParents.remove(x);
 
         if (dag.isDSeparatedFrom(x, y, scoreParents)) {
             diff  = -1;
@@ -242,28 +242,13 @@ public class GraphScore implements GesScore {
     }
     private double score5(Node x, Node y, List<Node> scoreParents) {
         List<Node> vars = new ArrayList<>(scoreParents);
-//        vars.remove(x);
-
-        int count = 0;
-
-        for (Node z : scoreParents) {
-            List<Node> sepset = dag.getSepset(x, z);
-
-            if (sepset != null && !sepset.contains(y)) {
-                count++;
-            }
-        }
-
-        scoreParents.add(x);
-
 
         double score;
 
         if (dag.isDSeparatedFrom(x, y, vars)) {
-            score = -scoreParents.size();
+            score = -1 - scoreParents.size();
         } else {
             score = 1 + scoreParents.size();
-
         }
 
 //        System.out.println( "x = " + x + " y = " + y + " scoreParents = " + scoreParents + " score = " + score);
@@ -288,7 +273,7 @@ public class GraphScore implements GesScore {
             }
         }
 
-        scoreParents.add(x);
+//        scoreParents.add(x);
         if (!dag.isDSeparatedFrom(x, y, scoreParents)) {
 //        if (dag.isAdjacentTo(x, y)) {
             return 1 + count;

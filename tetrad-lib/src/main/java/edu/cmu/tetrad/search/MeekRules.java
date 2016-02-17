@@ -59,7 +59,7 @@ public class MeekRules implements ImpliedOrientation {
      */
     private Map<Edge, Edge> changedEdges = new HashMap<Edge, Edge>();
 
-    private Queue<Node> directQueue = new ArrayDeque<>();
+    private LinkedList<Node> directQueue = new LinkedList<>();
     private boolean orientInPlace = false;
     private PrintStream out;
 
@@ -106,23 +106,27 @@ public class MeekRules implements ImpliedOrientation {
 
         oriented = new HashSet<>();
 
-        for (Node node : this.nodes) {
+        for (Node node : nodes) {
             undirectUnforcedEdges(node, graph);
-            meekR1(node, graph, knowledge);
-            meekR2(node, graph, knowledge);
-            meekR3(node, graph, knowledge);
-            meekR4(node, graph, knowledge);
+            directQueue.addAll(graph.getParents(node));
+        }
+
+        for (Node node : this.nodes) {
+            runMeekRules(node, graph, knowledge);
         }
 
         while (!directQueue.isEmpty()) {
-            Node node = directQueue.remove();
+            Node node = directQueue.removeLast();
             undirectUnforcedEdges(node, graph);
-            meekR1(node, graph, knowledge);
-            meekR2(node, graph, knowledge);
-            meekR3(node, graph, knowledge);
-            meekR4(node, graph, knowledge);
-            meekR3(node, graph, knowledge);
+            runMeekRules(node, graph, knowledge);
         }
+    }
+
+    private void runMeekRules(Node node, Graph graph, IKnowledge knowledge) {
+        meekR1(node, graph, knowledge);
+        meekR2(node, graph, knowledge);
+        meekR3(node, graph, knowledge);
+        meekR4(node, graph, knowledge);
     }
 
     /**
@@ -217,28 +221,30 @@ public class MeekRules implements ImpliedOrientation {
         }
 
         for (Node d : adjacentNodes) {
-            List<Node> otherAdjacents = new LinkedList<>(adjacentNodes);
-            otherAdjacents.remove(d);
+            if (Edges.isUndirectedEdge(graph.getEdge(a, d))) {
+                List<Node> otherAdjacents = new ArrayList<>(adjacentNodes);
+                otherAdjacents.remove(d);
 
-            ChoiceGenerator cg = new ChoiceGenerator(otherAdjacents.size(), 2);
-            int[] choice;
+                ChoiceGenerator cg = new ChoiceGenerator(otherAdjacents.size(), 2);
+                int[] choice;
 
-            while ((choice = cg.next()) != null) {
-                List<Node> nodes = GraphUtils.asList(choice, otherAdjacents);
-                Node b = nodes.get(0);
-                Node c = nodes.get(1);
+                while ((choice = cg.next()) != null) {
+                    List<Node> nodes = GraphUtils.asList(choice, otherAdjacents);
+                    Node b = nodes.get(0);
+                    Node c = nodes.get(1);
 
-                boolean isKite = isKite(a, d, b, c, graph);
+                    boolean isKite = isKite(a, d, b, c, graph);
 
-                if (isKite) {
+                    if (isKite) {
 //                    if (isArrowpointAllowed(d, a, knowledge)) {
 //                        if (!isUnshieldedNoncollider(c, d, b, graph)) {
 //                            continue;
 //                        }
 
-                    direct(d, a, graph);
-                    log(SearchLogUtils.edgeOrientedMsg("Meek R3", graph.getEdge(d, a)));
+                        direct(d, a, graph);
+                        log(SearchLogUtils.edgeOrientedMsg("Meek R3", graph.getEdge(d, a)));
 //                    }
+                    }
                 }
             }
         }
@@ -330,7 +336,8 @@ public class MeekRules implements ImpliedOrientation {
 
         oriented.add(after);
 
-        directQueue.add(c);
+        directQueue.addLast(a);
+        directQueue.addLast(c);
     }
 
     private static boolean isUnshieldedNoncollider(Node a, Node b, Node c,
@@ -406,47 +413,45 @@ public class MeekRules implements ImpliedOrientation {
         return visited;
     }
 
-    private void undirectUnforcedEdges(Node node, Graph graph) {
-        Set<Edge> undirectedEdges = new HashSet<>();
+    private void undirectUnforcedEdges(Node y, Graph graph) {
+        Set<Node> parentsToUndirect = new HashSet<>();
+        List<Node> parents = graph.getParents(y);
 
         NEXT_EDGE:
-        for (Edge edge : graph.getEdges(node)) {
-            if (!edge.isDirected()) {
-                continue;
-            }
-
-//                if (orientedEdges.contains(edge)) {
-//                    continue;
-//                }
-
-            Node _x = Edges.getDirectedEdgeTail(edge);
-            Node _y = Edges.getDirectedEdgeHead(edge);
-
-            for (Node parent : graph.getParents(_y)) {
-                if (parent != _x) {
-                    if (!graph.isAdjacentTo(parent, _x)) {
-                        oriented.add(edge);
+        for (Node x : parents) {
+            for (Node parent : parents) {
+                if (parent != x) {
+                    if (!graph.isAdjacentTo(parent, x)) {
+                        oriented.add(graph.getEdge(x, y));
                         continue NEXT_EDGE;
                     }
                 }
             }
 
-            if (!graph.getAdjacentNodes(node).isEmpty() && !oriented.contains(edge)) {
-                undirectedEdges.add(edge);
+            parentsToUndirect.add(x);
+        }
+
+        for (Node x : parentsToUndirect) {
+            boolean didit = false;
+
+            if (!oriented.contains(graph.getEdge(x, y))) {
+                graph.removeEdge(x, y);
+                graph.addUndirectedEdge(x, y);
+                didit = true;
+            }
+
+            if (didit) {
+                for (Node z : graph.getAdjacentNodes(y)) {
+                    directQueue.addLast(z);
+                }
+
+                directQueue.addLast(y);
+
+                visited.add(x);
+                visited.add(y);
             }
         }
-
-        for (Edge nextUndirected : undirectedEdges) {
-            Node node1 = nextUndirected.getNode1();
-            Node node2 = nextUndirected.getNode2();
-            graph.removeEdge(nextUndirected);
-            graph.addUndirectedEdge(node1, node2);
-            directQueue.add(node1);
-            visited.add(node1);
-            visited.add(node2);
-        }
     }
-
 }
 
 

@@ -948,7 +948,6 @@ public final class BuildPureClusters {
      * the number of impurities in the true graph. Therefore, we also use a counter to stop the computation after a
      * given number of calls. </p> This is an implementation of Algorithm 2 from Bron and Kerbosch (1973).
      */
-
     private List<int[]> findMaximalCliques(int elements[], int ng[][]) {
         boolean connected[][] = new boolean[this.numVariables()][this.numVariables()];
         for (int i = 0; i < connected.length; i++) {
