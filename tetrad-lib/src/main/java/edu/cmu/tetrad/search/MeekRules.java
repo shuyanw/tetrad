@@ -59,13 +59,13 @@ public class MeekRules implements ImpliedOrientation {
      */
     private Map<Edge, Edge> changedEdges = new HashMap<Edge, Edge>();
 
-    private LinkedList<Node> directQueue = new LinkedList<>();
+    private LinkedList<Node> directStack = new LinkedList<>();
     private boolean orientInPlace = false;
     private PrintStream out;
 
     private List<Node> nodes = new ArrayList<>();
     private Set<Node> visited = new HashSet<>();
-    private HashSet<Object> oriented;
+    private HashSet<Edge> oriented;
     private boolean verbose = false;
 
 
@@ -108,15 +108,15 @@ public class MeekRules implements ImpliedOrientation {
 
         for (Node node : nodes) {
             undirectUnforcedEdges(node, graph);
-            directQueue.addAll(graph.getParents(node));
+            directStack.addAll(graph.getAdjacentNodes(node));
         }
 
         for (Node node : this.nodes) {
             runMeekRules(node, graph, knowledge);
         }
 
-        while (!directQueue.isEmpty()) {
-            Node node = directQueue.removeLast();
+        while (!directStack.isEmpty()) {
+            Node node = directStack.removeLast();
             undirectUnforcedEdges(node, graph);
             runMeekRules(node, graph, knowledge);
         }
@@ -328,16 +328,13 @@ public class MeekRules implements ImpliedOrientation {
 
         Edge after = Edges.directedEdge(a, c);
 
-        visited.add(a);
-//        visited.add(c);
+        visited.add(c);
 
         graph.removeEdge(before);
         graph.addEdge(after);
 
         oriented.add(after);
-
-        directQueue.addLast(a);
-        directQueue.addLast(c);
+        directStack.addLast(c);
     }
 
     private static boolean isUnshieldedNoncollider(Node a, Node b, Node c,
@@ -442,13 +439,11 @@ public class MeekRules implements ImpliedOrientation {
 
             if (didit) {
                 for (Node z : graph.getAdjacentNodes(y)) {
-                    directQueue.addLast(z);
+                    directStack.addLast(z);
                 }
 
-                directQueue.addLast(y);
-
+                directStack.addLast(y);
                 visited.add(x);
-                visited.add(y);
             }
         }
     }

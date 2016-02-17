@@ -573,8 +573,8 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                             }
 
                             if (bump > 0.0) {
-                                addArrow(x, y, emptySet, emptySet, bump, null);
-                                addArrow(y, x, emptySet, emptySet, bump, null);
+                                addArrow(x, y, emptySet, emptySet, bump);
+                                addArrow(y, x, emptySet, emptySet, bump);
                             }
                         }
                     }
@@ -652,7 +652,20 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             score += bump;
 
-            Set<Node> toProcess = reapplyOrientation(x, y, null);
+            Set<Node> visited = reapplyOrientation(x, y, null);
+            Set<Node> toProcess = new HashSet<>();
+
+            for (Node node : visited) {
+                final Set<Node> neighbors = getNeighbors(node);
+                final Set<Node> storedNeighbors = this.neighbors.get(node);
+
+                if (!(neighbors.equals(storedNeighbors))) {
+                    toProcess.add(node);
+                }
+            }
+
+            toProcess.add(x);
+            toProcess.add(y);
 
             storeGraph();
             reevaluateForward(toProcess);
@@ -700,13 +713,22 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
             clearArrow(x, y);
 
-            Set<Node> toProcess = new HashSet<>(h);
-            toProcess.addAll(graph.getAdjacentNodes(y)); // For R2.
-            if (Edges.isUndirectedEdge(edge)) {
-                toProcess.addAll(graph.getAdjacentNodes(x));
+            Set<Node> visited = reapplyOrientation(x, y, h);
+
+            Set<Node> toProcess = new HashSet<>();
+
+            for (Node node : visited) {
+                final Set<Node> neighbors = getNeighbors(node);
+                final Set<Node> storedNeighbors = this.neighbors.get(node);
+
+                if (!(neighbors.equals(storedNeighbors))) {
+                    toProcess.add(node);
+                }
             }
 
-            toProcess.addAll(reapplyOrientation(x, y, toProcess));
+            toProcess.add(x);
+            toProcess.add(y);
+            toProcess.addAll(getCommonAdjacents(x, y));
 
             System.out.println("toProcess = " + toProcess);
 
@@ -721,20 +743,19 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         return commonChildren;
     }
 
+    private Set<Node> getCommonAdjacents(Node x, Node y) {
+        Set<Node> commonChildren = new HashSet<>(graph.getAdjacentNodes(x));
+        commonChildren.addAll(graph.getAdjacentNodes(y));
+        return commonChildren;
+    }
+
     private Set<Node> reapplyOrientation(Node x, Node y, Set<Node> newArrows) {
-
         Set<Node> toProcess = new HashSet<>();
-
         toProcess.add(x);
         toProcess.add(y);
 
         if (newArrows != null) {
             toProcess.addAll(newArrows);
-        }
-
-        if (graph.getEdge(x, y) != null) {
-            toProcess.addAll(graph.getChildren(x));
-            toProcess.addAll(graph.getChildren(y));
         }
 
         return meekOrientRestricted(new ArrayList<>(toProcess), getKnowledge());
@@ -769,6 +790,9 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 calculateArrowsBackward(x, y);
                 calculateArrowsBackward(y, x);
             }
+
+            this.neighbors.put(x, getNeighbors(x));
+            this.neighbors.put(y, getNeighbors(y));
         }
     }
 
@@ -810,7 +834,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
                             if (!graph.isAdjacentTo(w, x)) {
                                 clearArrow(w, x);
-//                                clearArrow(x, w);
+                                clearArrow(x, w);
 
                                 calculateArrowsForward(w, x);
                                 calculateArrowsForward(x, w);
@@ -859,8 +883,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
         final int _depth = Math.min(TNeighbors.size(), depth == -1 ? 1000 : depth);
 
-//        List<Set<Node>> lastSubsets = null;
-
         Set<Node> maxNaYX = null;
         Set<Node> maxT = null;
         double maxBump = Double.NaN;
@@ -869,7 +891,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         for (int i = 0; i <= _depth; i++) {
             final ChoiceGenerator gen = new ChoiceGenerator(TNeighbors.size(), i);
             int[] choice;
-//            List<Set<Node>> subsets = new ArrayList<>();
             boolean found = false;
 
             while ((choice = gen.next()) != null) {
@@ -880,58 +901,25 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
                 if (!isClique(union)) continue;
                 found = true;
-//                subsets.add(T);
-//
-//                if (lastSubsets != null) {
-//                    boolean foundASubset = false;
-//
-//                    for (Set<Node> set : lastSubsets) {
-//                        if (union.containsAll(set)) {
-//                            foundASubset = true;
-//                            break;
-//                        }
-//                    }
-//
-//                    if (!foundASubset) continue;
-//                }
-
-//                if (existsKnowledge()) {
-//                    if (!validSetByKnowledge(b, T)) {
-//                        continue;
-//                    }
-//                }
 
                 double bump = insertEval(a, b, T, naYX, hashIndices);
 
-//                if (bump <= 0) {
-//                    clearArrow(a, b);
-//                    return;
-//                }
-
-//                int size = naYX.size() + T.size() + graph.getParents(b).size() + 1;
-
-//                if (size >= 0) {
                 if (bump > 0.0) {
                     maxNaYX = naYX;
                     maxT = T;
                     maxBump = bump;
-//                        maxSize = size;
-//                        addArrow(a, b, naYX, T, bump, null);
                 }
-//                }
             }
 
             if (!found) break;
-
-//            lastSubsets = subsets;
         }
 
         if (maxNaYX != null) {
-            addArrow(a, b, maxNaYX, maxT, maxBump, null);
+            addArrow(a, b, maxNaYX, maxT, maxBump);
         }
     }
 
-    private void addArrow(Node a, Node b, Set<Node> naYX, Set<Node> hOrT, double bump, Set<Node> diff) {
+    private void addArrow(Node a, Node b, Set<Node> naYX, Set<Node> hOrT, double bump) {
         Arrow arrow = new Arrow(bump, a, b, hOrT, naYX, arrowIndex++);
         sortedArrows.add(arrow);
         addLookupArrow(a, b, arrow);
@@ -965,18 +953,19 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                         Edge e = graph.getEdge(w, r);
 
                         if (e != null) {
-//                            if (e.pointsTowards(r)) {
-//                                clearArrow(w, r);
-//                                clearArrow(r, w);
-//
-//                                calculateArrowsBackward(w, r);
-//                            } if (Edges.isUndirectedEdge(graph.getEdge(w, r))) {
+                            if (e.pointsTowards(r)) {
+                                clearArrow(w, r);
+                                clearArrow(r, w);
+
+                                calculateArrowsBackward(w, r);
+                            } else if (Edges.isUndirectedEdge(graph.getEdge(w, r))) {
                                 clearArrow(w, r);
                                 clearArrow(r, w);
 
                                 calculateArrowsBackward(w, r);
                                 calculateArrowsBackward(r, w);
 //                            }
+                            }
                         }
                     }
 
@@ -997,14 +986,14 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         }
 
         for (Node r : toProcess) {
-//            System.out.println("To process " + r);
-            neighbors.put(r, getNeighbors(r));
+            this.neighbors.put(r, getNeighbors(r));
             List<Node> adjacentNodes = graph.getAdjacentNodes(r);
             pool.invoke(new BackwardTask(r, adjacentNodes, minChunk, 0, adjacentNodes.size(), hashIndices));
         }
     }
 
     // Calculates the arrows for the removal in the backward direction.
+
     private void calculateArrowsBackward(Node a, Node b) {
 //        if (existsKnowledge()) {
 //            if (!getKnowledge().noEdgeRequired(a.getName(), b.getName())) {
@@ -1037,7 +1026,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 double bump = deleteEval(a, b, diff, naYX, hashIndices);
 
                 if (bump > 0.0) {
-                    addArrow(a, b, naYX, h, bump, diff);
+                    addArrow(a, b, naYX, h, bump);
                 }
             }
         }
@@ -1056,10 +1045,10 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     }
 
     // Basic data structure for an arrow a->b considered for additiom or removal from the graph, together with
-// associated sets needed to make this determination. For both forward and backward direction, NaYX is needed.
-// For the forward direction, T neighbors are needed; for the backward direction, H neighbors are needed.
-// See Chickering (2002). The score difference resulting from added in the edge (hypothetically) is recorded
-// as the "bump".
+    // associated sets needed to make this determination. For both forward and backward direction, NaYX is needed.
+    // For the forward direction, T neighbors are needed; for the backward direction, H neighbors are needed.
+    // See Chickering (2002). The score difference resulting from added in the edge (hypothetically) is recorded
+    // as the "bump".
     private static class Arrow implements Comparable<Arrow> {
         private double bump;
         private Node a;
@@ -1067,7 +1056,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         private Set<Node> hOrT;
         private Set<Node> naYX;
         private int index = 0;
-
 
         public Arrow(double bump, Node a, Node b, Set<Node> hOrT, Set<Node> naYX, int index) {
             this.bump = bump;
@@ -1325,9 +1313,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
     private boolean validInsert(Node x, Node y, Set<Node> s, Set<Node> naYX) {
         Set<Node> union = new HashSet<>(s);
         union.addAll(naYX);
-        if (!isClique(union)) return false;
-        return !existsUnblockedSemiDirectedPath(y, x, union, cycleBound);
-
+        return isClique(union) && !existsUnblockedSemiDirectedPath(y, x, union, cycleBound);
     }
 
     // Returns true if all of the members of 'union' are neighbors of y.
@@ -1459,7 +1445,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         Q.offer(from);
         V.add(from);
         Node e = null;
-//        int distance = 0;
+        int distance = 0;
 
         while (!Q.isEmpty()) {
             Node t = Q.remove();
@@ -1467,11 +1453,11 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 return true;
             }
 
-//            if (e == t) {
-//                e = null;
-//                distance++;
-//                if (distance > (bound == -1 ? 1000 : bound)) return false;
-//            }
+            if (e == t) {
+                e = null;
+                distance++;
+                if (distance > (bound == -1 ? 1000 : bound)) return false;
+            }
 
             for (Node u : graph.getAdjacentNodes(t)) {
                 Edge edge = graph.getEdge(t, u);
@@ -1486,10 +1472,10 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
                 if (!V.contains(c)) {
                     V.add(c);
                     Q.offer(c);
-//
-//                    if (e == null) {
-//                        e = u;
-//                    }
+
+                    if (e == null) {
+                        e = u;
+                    }
                 }
             }
         }
@@ -1511,40 +1497,9 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         return null;
     }
 
-    // Runs the Meek rules on just the changed adj.
-    private Set<Node> rebuildPatternRestricted(Node x, Node y) {
-        Set<Node> visited = new HashSet<>();
-
-        Set<Node> toProcess = new HashSet<>();
-        toProcess.add(x);
-        toProcess.add(y);
-        toProcess.addAll(graph.getAdjacentNodes(x));
-        toProcess.addAll(graph.getAdjacentNodes(y));
-
-        for (Node node : toProcess) {
-            SearchGraphUtils.basicPatternRestricted2(node, graph);
-        }
-
-        storeGraph();
-
-//        for (Node node : toProcess) {
-        visited.addAll(reorientNode(new ArrayList<Node>(toProcess)));
-//        }
-
-        if (TetradLogger.getInstance().isEventActive("rebuiltPatterns")) {
-            TetradLogger.getInstance().log("rebuiltPatterns", "Rebuilt pattern = " + graph);
-        }
-
-        return visited;
-    }
-
     // Runs Meek rules on just the changed adj.
     private Set<Node> reorientNode(List<Node> nodes) {
         addRequiredEdges(graph);
-
-//        List<Node> nodes = new ArrayList<>();
-//        nodes.add(a);
-
         return meekOrientRestricted(nodes, getKnowledge());
     }
 
@@ -1645,8 +1600,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
     // Stores the graph, if its score knocks out one of the top ones.
     private void storeGraph() {
-//        if (true) return;
-
         if (getNumPatternsToStore() > 0) {
             Graph graphCopy = new EdgeListGraphSingleConnections(graph);
             topGraphs.addLast(new ScoredGraph(graphCopy, score));

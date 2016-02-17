@@ -1150,7 +1150,7 @@ public abstract class AbstractWorkbench extends JComponent
             }
         }
 
-        for (Object o : getDisplayToModel().keySet()) {
+        for (Object o : new HashSet(getDisplayToModel().keySet())) {
             if (!(o instanceof DisplayNode)) continue;
             DisplayNode displayNode = (DisplayNode) o;
             Node _node = (Node) getDisplayToModel().get(displayNode);

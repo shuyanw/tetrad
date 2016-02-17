@@ -265,7 +265,7 @@ public final class TabularComparison implements SessionModel {
 
         if (!(adjFn == 0 && adjFp == 0 && arrowptFn == 0 && arrowptFp == 0)) {
             System.out.println("ERROR!");
-//            System.out.println("Reference graph = " + referenceGraph);
+//            System.out.println("Reference graph = " + referenceGraph);q
             System.out.println("Target graph = " + targetGraph);
             System.out.println("adj fn = " + adjFn + " adj fp = " + adjFp + " arrowptfn = " + arrowptFn +
                     " arrowptfp = " + arrowptFp);
@@ -274,9 +274,9 @@ public final class TabularComparison implements SessionModel {
         }
 
         if (this.params != null) {
-            this.params.addRecord(getAdjCorrect(), getAdjFn(), getAdjFp(),
-                    getArrowptCorrect(), getArrowptFn(), getArrowptFp(),
-                    getTwoCycleCorrect(), getTwoCycleFn(), getTwoCycleFp());
+            this.params.addRecord(adjCorrect, adjFn, adjFp,
+                    arrowptCorrect, arrowptFn, arrowptFp,
+                    twoCycleCorrect, twoCycleFn, twoCycleFp);
         }
 
         TetradLogger.getInstance().log("info", "Graph Comparison");
