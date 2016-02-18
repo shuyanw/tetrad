@@ -828,10 +828,10 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
                             if (!graph.isAdjacentTo(w, x)) {
                                 clearArrow(w, x);
-                                clearArrow(x, w);
+//                                clearArrow(x, w);
 
                                 calculateArrowsForward(w, x);
-                                calculateArrowsForward(x, w);
+//                                calculateArrowsForward(x, w);
                             }
                         }
                     }
