@@ -736,13 +736,13 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
     private Set<Node> getCommonChildren(Node x, Node y) {
         Set<Node> commonChildren = new HashSet<>(graph.getChildren(x));
-        commonChildren.addAll(graph.getChildren(y));
+        commonChildren.retainAll(graph.getChildren(y));
         return commonChildren;
     }
 
     private Set<Node> getCommonAdjacents(Node x, Node y) {
         Set<Node> commonChildren = new HashSet<>(graph.getAdjacentNodes(x));
-        commonChildren.addAll(graph.getAdjacentNodes(y));
+        commonChildren.retainAll(graph.getAdjacentNodes(y));
         return commonChildren;
     }
 

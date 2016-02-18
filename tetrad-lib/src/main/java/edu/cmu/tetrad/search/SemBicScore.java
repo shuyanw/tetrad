@@ -111,7 +111,15 @@ public class SemBicScore implements GesScore {
 
     @Override
     public double localScoreDiff(int i, int[] parents, int extra) {
-        return localScore(i, append(parents, extra)) - localScore(i, parents);
+        double v = localScore(i, append(parents, extra)) - localScore(i, parents);
+
+        if (v > 0) {
+            v += Math.tanh(parents.length) / 1000;
+        } else {
+            v -= Math.tanh(parents.length) / 1000;
+        }
+
+        return v;
     }
 
     int[] append(int[] parents, int extra) {

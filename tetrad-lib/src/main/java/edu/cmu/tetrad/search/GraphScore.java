@@ -246,9 +246,10 @@ public class GraphScore implements GesScore {
         double score;
 
         if (dag.isDSeparatedFrom(x, y, vars)) {
-            score = -1 - scoreParents.size();
+//            score = -1 - scoreParents.size();
+            score = -1 - Math.tanh(scoreParents.size()) / 1000.;
         } else {
-            score = 1 + scoreParents.size();
+            score = 1 + Math.tanh(scoreParents.size()) / 1000.;
         }
 
 //        System.out.println( "x = " + x + " y = " + y + " scoreParents = " + scoreParents + " score = " + score);
