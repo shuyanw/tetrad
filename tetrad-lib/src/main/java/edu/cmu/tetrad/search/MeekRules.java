@@ -402,23 +402,23 @@ public class MeekRules implements ImpliedOrientation {
             parentsToUndirect.add(x);
         }
 
-        for (Node x : parentsToUndirect) {
-            boolean didit = false;
+        boolean didit = false;
 
+        for (Node x : parentsToUndirect) {
             if (!oriented.contains(graph.getEdge(x, y))) {
                 graph.removeEdge(x, y);
                 graph.addUndirectedEdge(x, y);
+                visited.add(x);
                 didit = true;
             }
+        }
 
-            if (didit) {
-                for (Node z : graph.getAdjacentNodes(y)) {
-                    directStack.addLast(z);
-                }
-
-                directStack.addLast(y);
-                visited.add(x);
+        if (didit) {
+            for (Node z : graph.getAdjacentNodes(y)) {
+                directStack.addLast(z);
             }
+
+            directStack.addLast(y);
         }
     }
 
