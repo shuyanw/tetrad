@@ -727,8 +727,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             toProcess.add(y);
             toProcess.addAll(getCommonAdjacents(x, y));
 
-            System.out.println("toProcess = " + toProcess);
-
             storeGraph();
             reevaluateBackward(toProcess);
         }
