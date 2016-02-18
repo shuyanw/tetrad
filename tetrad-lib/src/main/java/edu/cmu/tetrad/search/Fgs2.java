@@ -693,7 +693,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             }
 
             if (!graph.isAdjacentTo(x, y)) continue;
-//
+
             Edge edge = graph.getEdge(x, y);
             if (edge.pointsTowards(x)) continue;
 
@@ -730,12 +730,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
             storeGraph();
             reevaluateBackward(toProcess);
         }
-    }
-
-    private Set<Node> getCommonChildren(Node x, Node y) {
-        Set<Node> commonChildren = new HashSet<>(graph.getChildren(x));
-        commonChildren.retainAll(graph.getChildren(y));
-        return commonChildren;
     }
 
     private Set<Node> getCommonAdjacents(Node x, Node y) {
@@ -828,10 +822,7 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
                             if (!graph.isAdjacentTo(w, x)) {
                                 clearArrow(w, x);
-//                                clearArrow(x, w);
-
                                 calculateArrowsForward(w, x);
-//                                calculateArrowsForward(x, w);
                             }
                         }
                     }
@@ -1291,21 +1282,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
         Set<Node> union = new HashSet<>(s);
         union.addAll(naYX);
         return isClique(union) && !existsUnblockedSemiDirectedPath(y, x, union, cycleBound);
-    }
-
-    // Returns true if all of the members of 'union' are neighbors of y.
-    private boolean allNeighbors(Node y, Set<Node> union) {
-        for (Node n : union) {
-            Edge e = graph.getEdge(y, n);
-            if (e == null) {
-                return false;
-            }
-            if (!Edges.isUndirectedEdge(e)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     // Adds edges required by knowledge.
