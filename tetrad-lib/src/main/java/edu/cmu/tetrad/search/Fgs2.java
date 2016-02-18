@@ -248,8 +248,6 @@ public final class Fgs2 implements GraphSearch, GraphScorer {
 
         topGraphs.clear();
 
-//        storeGraph();
-
         long start = System.currentTimeMillis();
         score = 0.0;
 
