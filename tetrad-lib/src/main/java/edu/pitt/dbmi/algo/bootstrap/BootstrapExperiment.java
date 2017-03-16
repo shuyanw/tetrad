@@ -1,3 +1,4 @@
+package edu.pitt.dbmi.algo.bootstrap;
 import edu.cmu.tetrad.data.CovarianceMatrixOnTheFly;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.ICovarianceMatrix;
@@ -519,7 +520,7 @@ public class BootstrapExperiment {
 
         fci.setVerbose(false);
         fci.setMaxPathLength(maxPathLength);
-        fci.setMaxIndegree(depth);
+        fci.setMaxDegree(depth);
         fci.setFaithfulnessAssumed(false);
         fci.setCompleteRuleSetUsed(true);
         Graph outGraph = fci.search();
@@ -531,7 +532,7 @@ public class BootstrapExperiment {
         BDeuScore score = new BDeuScore(dataSet);
         score.setSamplePrior(samplePrior);
         score.setStructurePrior(structurePrior);
-        Fgs ges = new Fgs(score);
+        Fges ges = new Fges(score);
         ges.setVerbose(false);
         ges.setNumPatternsToStore(0);
         ges.setFaithfulnessAssumed(true);

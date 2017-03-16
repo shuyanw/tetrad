@@ -1,3 +1,4 @@
+package edu.pitt.dbmi.algo.bootstrap;
 import edu.cmu.tetrad.bayes.BayesIm;
 import edu.cmu.tetrad.bayes.BayesPm;
 import edu.cmu.tetrad.bayes.MlBayesIm;
@@ -9,7 +10,7 @@ import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.search.DagToPag;
-import edu.cmu.tetrad.sem.LargeSemSimulator;
+import edu.cmu.tetrad.sem.LargeScaleSimulation;
 import edu.cmu.tetrad.util.RandomUtil;
 
 import java.io.IOException;
@@ -60,8 +61,8 @@ public class TestBootstrap {
         truePag = GraphUtils.replaceNodes(truePag, dag.getNodes());
 
         // data simulation
-        LargeSemSimulator simulator = new LargeSemSimulator(dag);
-        DataSet data = simulator.simulateDataAcyclic(numCases);
+        LargeScaleSimulation simulator = new LargeScaleSimulation(dag);
+        DataSet data = simulator.simulateDataRecursive(numCases);
         // To remove the columns related to latent variables from dataset
         data = DataUtils.restrictToMeasured(data);
         //        Run in parallel mode
@@ -144,9 +145,9 @@ public class TestBootstrap {
         }
         Graph dag = GraphUtils.randomGraphRandomForwardEdges(vars, numLatentConfounders, (int) (numVars * edgesPerNode),
                 10, 10, 10, false, false);
-        LargeSemSimulator simulator = new LargeSemSimulator(dag);
+        LargeScaleSimulation simulator = new LargeScaleSimulation(dag);
         simulator.setCoefRange(coefLow, coefHigh);
-        DataSet data = simulator.simulateDataAcyclic(numCases);
+        DataSet data = simulator.simulateDataRecursive(numCases);
         data = DataUtils.restrictToMeasured(data);
 
         //        Run in sequential mode
