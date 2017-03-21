@@ -45,6 +45,8 @@ public class Fges implements Algorithm, TakesInitialGraph, HasKnowledge {
             initial = initialGraph.search(dataSet, parameters);
         }
 
+        System.out.println("dataSet: " + dataSet);
+        
         edu.cmu.tetrad.search.Fges search
                 = new edu.cmu.tetrad.search.Fges(score.getScore(dataSet, parameters));
         search.setFaithfulnessAssumed(parameters.getBoolean("faithfulnessAssumed"));
