@@ -18,7 +18,7 @@ import edu.cmu.tetrad.util.Parameters;
 public class BootstrapSearch {
 
     private BootstrapAlgName algName = BootstrapAlgName.RFCI;
-    private int numBootstrap = 5;
+    private int numBootstrap = 1;
     private boolean runParallel = false;
     private boolean verbose = false;
     private List<Graph> PAGs = new ArrayList<>();

@@ -1,4 +1,5 @@
 package edu.pitt.dbmi.algo.bootstrap;
+
 import edu.cmu.tetrad.bayes.BayesIm;
 import edu.cmu.tetrad.bayes.BayesPm;
 import edu.cmu.tetrad.bayes.MlBayesIm;
@@ -22,6 +23,7 @@ import java.util.List;
  * Created by mahdi on 1/24/17.
  */
 public class TestBootstrap {
+    
     public static void main(String[] args) throws IOException {
         String algorithm = "gfci";
         for ( int i = 0; i < args.length; i++ ) {
@@ -163,7 +165,7 @@ public class TestBootstrap {
         int edgesPerNode = 2;
 
         int numCases = 1000;
-        int numBootstrapSamples = 5;
+        int numBootstrapSamples = 1000;
         boolean verbose = true;
 
         List<Node> vars = new ArrayList<>();
