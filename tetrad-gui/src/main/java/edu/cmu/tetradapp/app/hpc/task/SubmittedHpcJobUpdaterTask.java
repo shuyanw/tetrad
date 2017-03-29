@@ -66,7 +66,6 @@ public class SubmittedHpcJobUpdaterTask extends TimerTask {
 			Long id = hpcJobInfo.getId();
 
 			if (!rowMap.containsKey(id)) {
-				// System.out.println("hpcJobInfo not found in rowMap");
 				continue;
 			}
 
@@ -78,9 +77,6 @@ public class SubmittedHpcJobUpdaterTask extends TimerTask {
 				for (HpcJobInfo submittedJob : submittedJobSet) {
 					if (submittedJob.getId() == hpcJobInfo.getId()) {
 						hpcJobInfo = submittedJob;
-						// System.out
-						// .println("Found submittedJob in the
-						// submittedHpcJobInfoMap id matched!");
 						continue;
 					}
 				}

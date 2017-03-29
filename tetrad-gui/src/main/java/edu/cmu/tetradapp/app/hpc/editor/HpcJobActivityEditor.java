@@ -29,6 +29,9 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.tetradapp.app.TetradDesktop;
 import edu.cmu.tetradapp.app.hpc.action.DeleteHpcJobInfoAction;
 import edu.cmu.tetradapp.app.hpc.action.KillHpcJobAction;
@@ -55,6 +58,8 @@ public class HpcJobActivityEditor extends JPanel implements FinalizingEditor {
 
 	private static final long serialVersionUID = -6178713484456753741L;
 
+	private final Logger LOGGER = LoggerFactory.getLogger(HpcJobActivityEditor.class);
+	
 	private final List<HpcAccount> checkedHpcAccountList;
 
 	private final Set<HpcJobInfo> pendingDisplayHpcJobInfoSet;
@@ -623,7 +628,7 @@ public class HpcJobActivityEditor extends JPanel implements FinalizingEditor {
 
 	public synchronized void addSubmittedDisplayHpcJobInfo(final Set<HpcJobInfo> submittedJobSet) {
 		for (HpcJobInfo job : submittedJobSet) {
-			System.out.println("addSubmittedDisplayHpcJobInfo: job: " + job.getId());
+			LOGGER.debug("addSubmittedDisplayHpcJobInfo: job: " + job.getId());
 		}
 		submittedDisplayHpcJobInfoSet.addAll(submittedJobSet);
 	}
