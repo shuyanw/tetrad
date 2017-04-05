@@ -1,4 +1,4 @@
-package edu.pitt.dbmi.algo.bootstrap;
+package edu.pitt.dbmi.algo.bootstrap.task;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,7 @@ import java.util.concurrent.RecursiveAction;
 
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.DataUtils;
+import edu.pitt.dbmi.algo.bootstrap.BootstrapSearch;
 
 /**
  * 

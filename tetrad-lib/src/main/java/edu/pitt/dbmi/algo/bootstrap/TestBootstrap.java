@@ -21,6 +21,9 @@ import java.util.List;
 
 /**
  * Created by mahdi on 1/24/17.
+ * 
+ * Updated: Chirayu Kong Wongchokprasitti, PhD on 4/5/2017
+ * 
  */
 public class TestBootstrap {
     
@@ -85,22 +88,22 @@ public class TestBootstrap {
         parameters.set("verbose", false);
         
         //        Run in parallel mode
-        BootstrapExperiment bootstrapExpObj = new BootstrapExperiment(data, BootstrapAlgName.RFCI, numBootstrapSamples);
-        bootstrapExpObj.setTrueGraph(truePag);
-        bootstrapExpObj.setOut("~/bootstrapsearch/tmp101","testBRFCI_parallel");
-        bootstrapExpObj.setParallelMode(true);
-        bootstrapExpObj.setParameters(parameters);
-        bootstrapExpObj.setVerbose(verbose);
-        bootstrapExpObj.runExperiment();
+        BootstrapExperiment bootstrapExp = new BootstrapExperiment(data, BootstrapAlgName.RFCI, numBootstrapSamples);
+        bootstrapExp.setTrueGraph(truePag);
+        bootstrapExp.setOut("~/bootstrapsearch/tmp101","testBRFCI_parallel");
+        bootstrapExp.setParallelMode(true);
+        bootstrapExp.setParameters(parameters);
+        bootstrapExp.setVerbose(verbose);
+        bootstrapExp.runExperiment();
 
         //        Run in sequential mode
-        bootstrapExpObj = new BootstrapExperiment(data, BootstrapAlgName.RFCI, numBootstrapSamples);
-        bootstrapExpObj.setTrueGraph(truePag);
-        bootstrapExpObj.setOut("~/bootstrapsearch/tmp101","testBRFCI_sequential");
-        bootstrapExpObj.setParallelMode(false);
-        bootstrapExpObj.setParameters(parameters);
-        bootstrapExpObj.setVerbose(verbose);
-        bootstrapExpObj.runExperiment();
+        //bootstrapExp = new BootstrapExperiment(data, BootstrapAlgName.RFCI, numBootstrapSamples);
+        //bootstrapExp.setTrueGraph(truePag);
+        bootstrapExp.setOut("~/bootstrapsearch/tmp101","testBRFCI_sequential");
+        bootstrapExp.setParallelMode(false);
+        //bootstrapExp.setParameters(parameters);
+        //bootstrapExp.setVerbose(verbose);
+        bootstrapExp.runExperiment();
 
         System.out.println("Done!");
 
@@ -140,12 +143,12 @@ public class TestBootstrap {
         bootstrapExpObj.runExperiment();
 
         //        Run in parallel mode
-        bootstrapExpObj = new BootstrapExperiment(data, BootstrapAlgName.FGES, numBootstrapSamples);
-        bootstrapExpObj.setTrueGraph(dag);
+        //bootstrapExpObj = new BootstrapExperiment(data, BootstrapAlgName.FGES, numBootstrapSamples);
+        //bootstrapExpObj.setTrueGraph(dag);
         bootstrapExpObj.setOut("~/bootstrapsearch/tmp101","testFGES_parallel");
         bootstrapExpObj.setParallelMode(true);
-        bootstrapExpObj.setParameters(parameters);
-        bootstrapExpObj.setVerbose(verbose);
+        //bootstrapExpObj.setParameters(parameters);
+        //bootstrapExpObj.setVerbose(verbose);
         bootstrapExpObj.runExperiment();
         System.out.println("Done!");
     }
@@ -197,12 +200,12 @@ public class TestBootstrap {
         bootstrapExpObj.runExperiment();
 
         //        Run in parallel mode
-        bootstrapExpObj = new BootstrapExperiment(data, BootstrapAlgName.GFCI, numBootstrapSamples);
-        bootstrapExpObj.setTrueGraph(dag);
+        //bootstrapExpObj = new BootstrapExperiment(data, BootstrapAlgName.GFCI, numBootstrapSamples);
+        //bootstrapExpObj.setTrueGraph(dag);
         bootstrapExpObj.setOut("~/bootstrapsearch/tmp101","testBGFci_parallel");
         bootstrapExpObj.setParallelMode(true);
-        bootstrapExpObj.setParameters(parameters);
-        bootstrapExpObj.setVerbose(verbose);
+        //bootstrapExpObj.setParameters(parameters);
+        //bootstrapExpObj.setVerbose(verbose);
         bootstrapExpObj.runExperiment();
         System.out.println("Done!");
     }

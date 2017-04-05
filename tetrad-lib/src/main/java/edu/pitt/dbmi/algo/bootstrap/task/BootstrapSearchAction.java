@@ -1,4 +1,4 @@
-package edu.pitt.dbmi.algo.bootstrap;
+package edu.pitt.dbmi.algo.bootstrap.task;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +18,8 @@ import edu.cmu.tetrad.search.Rfci;
 import edu.cmu.tetrad.search.Score;
 import edu.cmu.tetrad.search.SemBicScore;
 import edu.cmu.tetrad.util.Parameters;
+import edu.pitt.dbmi.algo.bootstrap.BootstrapAlgName;
+import edu.pitt.dbmi.algo.bootstrap.BootstrapSearch;
 
 /**
  * 
@@ -53,7 +55,7 @@ public class BootstrapSearchAction extends RecursiveAction {
 	this.verbose = verbose;
     }
 
-    private Graph learnGraph(DataSet dataSet) {
+    public Graph learnGraph(DataSet dataSet) {
 	Score score = null;
 	
 	if (dataSet.isContinuous()) {
@@ -113,7 +115,7 @@ public class BootstrapSearchAction extends RecursiveAction {
     }
 
     @Override
-    protected void compute() {
+    public void compute() {
 	if (workLoad < 2) {
 	    long start, stop;
 	    start = System.currentTimeMillis();
