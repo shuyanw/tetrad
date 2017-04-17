@@ -43,7 +43,6 @@ public class Edge implements TetradSerializable, Comparable {
 
     public enum Property {dd, nl, pd, pl}
 
-
     private Node node1;
     private Node node2;
     private Endpoint endpoint1;
@@ -55,6 +54,8 @@ public class Edge implements TetradSerializable, Comparable {
     private boolean dashed = false;
 
     private List<Property> properties = new ArrayList<>();
+    
+    private List<EdgeTypeProbability> edgeTypeProbabilities = new ArrayList<>();
 
     //=========================CONSTRUCTORS============================//
 
@@ -397,6 +398,22 @@ public class Edge implements TetradSerializable, Comparable {
     public ArrayList<Property> getProperties() {
         return new ArrayList<>(this.properties);
     }
+
+    public void addEdgeTypeProbability(EdgeTypeProbability prob){
+	if(!edgeTypeProbabilities.contains(prob)){
+		this.edgeTypeProbabilities.add(prob);
+	}
+    }
+    
+    public void removeEdgeTypeProbability(EdgeTypeProbability prob){
+	this.edgeTypeProbabilities.remove(prob);
+    }
+    
+    public List<EdgeTypeProbability> getEdgeTypeProbabilities() {
+        return edgeTypeProbabilities;
+    }
+
+    
 }
 
 

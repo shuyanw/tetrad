@@ -3842,6 +3842,8 @@ public final class GraphUtils {
             count++;
 
             ArrayList<Edge.Property> properties = edge.getProperties();
+            
+            List<EdgeTypeProbability> edgeTypeDist = edge.getEdgeTypeProbabilities();
 
             if (count < size) {
                 String f = "%d. %s";
@@ -3860,6 +3862,22 @@ public final class GraphUtils {
                 }
 
                 fmt.format(f, o);
+                
+                //Bootstrap edge type distribution
+                f = " ";
+                
+                for (int i = 0; i < edgeTypeDist.size(); i++) {
+                    f += "%s ";
+                }
+                o = new Object[edgeTypeDist.size()];
+                
+                for (int i = 0; i < edgeTypeDist.size(); i++) {
+                    EdgeTypeProbability etp = edgeTypeDist.get(i);
+                    o[i] = "" + etp.getEdgeType() + ":" + etp.getProbability();
+                }
+                
+                fmt.format(f, o);
+                
                 fmt.format("\n");
             } else {
                 String f = "%d. %s";
@@ -3877,6 +3895,22 @@ public final class GraphUtils {
                 }
 
                 fmt.format(f, o);
+
+                //Bootstrap edge type distribution
+                f = " ";
+                
+                for (int i = 0; i < edgeTypeDist.size(); i++) {
+                    f += "%s ";
+                }
+                o = new Object[edgeTypeDist.size()];
+                
+                for (int i = 0; i < edgeTypeDist.size(); i++) {
+                    EdgeTypeProbability etp = edgeTypeDist.get(i);
+                    o[i] = "" + etp.getEdgeType() + ":" + etp.getProbability();
+                }
+                
+                fmt.format(f, o);
+                
                 fmt.format("\n");
             }
         }
