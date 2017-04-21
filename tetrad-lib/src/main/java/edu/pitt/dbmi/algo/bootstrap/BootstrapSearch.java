@@ -148,7 +148,7 @@ public class BootstrapSearch {
 		start = System.currentTimeMillis();
 
 		BootstrapSearchAction task = new BootstrapSearchAction(i1, 1,
-			algName, parameters, this, true);
+			algName, parameters, this, verbose);
 		task.setKnowledge(knowledge);
 		task.compute();
 
@@ -168,7 +168,7 @@ public class BootstrapSearch {
 	    Parameters parameters = getParameters();
 
 	    BootstrapSearchAction task = new BootstrapSearchAction(0,
-		    numBootstrap, algName, parameters, this, true);
+		    numBootstrap, algName, parameters, this, verbose);
 	    task.setKnowledge(knowledge);
 
 	    pool.invoke(task);
