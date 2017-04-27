@@ -40,16 +40,16 @@ public class TestBootstrapTest {
     }*/
     
     @Test
-    public static void testRFCIc() {
+    public void testRFCIc() {
 	int penaltyDiscount = 2;
 	boolean faithfulnessAssumed = false;
 	int maxDegree = -1;
 
 	int numVars = 40;
 	int edgesPerNode = 2;
-	int numLatentConfounders = 5;
-	int numCases = 1000;
-	int numBootstrapSamples = 100;
+	int numLatentConfounders = 2;
+	int numCases = 100;
+	int numBootstrapSamples = 10;
 	boolean verbose = false;
 
 	Graph dag = makeContinuousDAG(numVars, numLatentConfounders, edgesPerNode);
@@ -100,16 +100,16 @@ public class TestBootstrapTest {
     }
     
     @Test
-    public static void testRFCId() {
+    public void testRFCId() {
 	double structurePrior = 1, samplePrior = 1;
 	boolean faithfulnessAssumed = false;
 	int maxDegree = -1;
 
 	int numVars = 40;
 	int edgesPerNode = 2;
-	int numLatentConfounders = 5;
-	int numCases = 1000;
-	int numBootstrapSamples = 100;
+	int numLatentConfounders = 2;
+	int numCases = 100;
+	int numBootstrapSamples = 10;
 	boolean verbose = false;
 	long seed = 123;
 
@@ -156,16 +156,16 @@ public class TestBootstrapTest {
     }
     
     @Test
-    public static void testGFCIc() {
+    public void testGFCIc() {
 	int penaltyDiscount = 2;
 	boolean faithfulnessAssumed = false;
 	int maxDegree = -1;
 
 	int numVars = 40;
 	int edgesPerNode = 2;
-	int numLatentConfounders = 5;
-	int numCases = 1000;
-	int numBootstrapSamples = 100;
+	int numLatentConfounders = 2;
+	int numCases = 100;
+	int numBootstrapSamples = 10;
 	boolean verbose = false;
 
 	Graph dag = makeContinuousDAG(numVars, numLatentConfounders, edgesPerNode);
@@ -216,16 +216,16 @@ public class TestBootstrapTest {
     }
     
     @Test
-    public static void testGFCId() {
+    public void testGFCId() {
 	double structurePrior = 1, samplePrior = 1;
 	boolean faithfulnessAssumed = false;
 	int maxDegree = -1;
 
 	int numVars = 40;
 	int edgesPerNode = 2;
-	int numLatentConfounders = 5;
-	int numCases = 1000;
-	int numBootstrapSamples = 100;
+	int numLatentConfounders = 2;
+	int numCases = 100;
+	int numBootstrapSamples = 10;
 	boolean verbose = false;
 	long seed = 123;
 
@@ -272,7 +272,7 @@ public class TestBootstrapTest {
     }
 
     @Test
-    public static void testFGESc() {
+    public void testFGESc() {
 	int penaltyDiscount = 2;
 	boolean faithfulnessAssumed = false;
 	int maxDegree = -1;
@@ -280,8 +280,8 @@ public class TestBootstrapTest {
 	int numVars = 40;
 	int edgesPerNode = 2;
 	int numLatentConfounders = 0;
-	int numCases = 1000;
-	int numBootstrapSamples = 100;
+	int numCases = 100;
+	int numBootstrapSamples = 10;
 	boolean verbose = false;
 
 	Graph dag = makeContinuousDAG(numVars, numLatentConfounders, edgesPerNode);
@@ -328,7 +328,7 @@ public class TestBootstrapTest {
     }
 
     @Test
-    private static void testFGESd() {
+    public void testFGESd() {
 	double structurePrior = 1, samplePrior = 1;
 	boolean faithfulnessAssumed = false;
 	int maxDegree = -1;
@@ -336,8 +336,8 @@ public class TestBootstrapTest {
 	int numVars = 40;
 	int edgesPerNode = 2;
 	int numLatentConfounders = 0;
-	int numCases = 1000;
-	int numBootstrapSamples = 100;
+	int numCases = 100;
+	int numBootstrapSamples = 10;
 	boolean verbose = false;
 	long seed = 123;
 
