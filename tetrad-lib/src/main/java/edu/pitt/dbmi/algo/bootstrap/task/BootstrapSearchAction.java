@@ -48,6 +48,11 @@ public class BootstrapSearchAction extends RecursiveAction {
     private boolean verbose;
 
     /**
+     * An initial graph to start from.
+     */
+    private Graph initialGraph = null;
+
+    /**
      * Specification of forbidden and required edges.
      */
     private IKnowledge knowledge = new Knowledge2();
@@ -71,22 +76,13 @@ public class BootstrapSearchAction extends RecursiveAction {
 	if (dataSet.isContinuous()) {
 	    ICovarianceMatrix cov = new CovarianceMatrixOnTheFly(dataSet);
 	    SemBicScore semBicScore = new SemBicScore(cov);
-	    double penaltyDiscount = 4.0;
-	    if (parameters.get("penaltyDiscount") != null) {
-		penaltyDiscount = parameters.getDouble("penaltyDiscount");
-	    }
+	    double penaltyDiscount = parameters.getDouble("penaltyDiscount", 4.0);
 	    semBicScore.setPenaltyDiscount(penaltyDiscount);
 	    score = semBicScore;
 	} else if (dataSet.isDiscrete()) {
 	    BDeuScore bDeuScore = new BDeuScore(dataSet);
-	    double samplePrior = 1.0;
-	    if (parameters.get("samplePrior") != null) {
-		samplePrior = parameters.getDouble("samplePrior");
-	    }
-	    double structurePrior = 1.0;
-	    if (parameters.get("structurePrior") != null) {
-		structurePrior = parameters.getDouble("structurePrior");
-	    }
+	    double samplePrior = parameters.getDouble("samplePrior", 1.0);
+	    double structurePrior = parameters.getDouble("structurePrior", 1.0);
 	    bDeuScore.setSamplePrior(samplePrior);
 	    bDeuScore.setStructurePrior(structurePrior);
 	    score = bDeuScore;
@@ -103,6 +99,8 @@ public class BootstrapSearchAction extends RecursiveAction {
 	    Fges fges = new Fges(score);
 	    fges.setFaithfulnessAssumed(parameters.getBoolean("faithfulnessAssumed", true));
 	    fges.setNumPatternsToStore(parameters.getInt("numPatternsToStore", 0));
+	    fges.setSymmetricFirstStep(parameters.getBoolean("symmetricFirstStep"));
+	    if(initialGraph != null)fges.setInitialGraph(initialGraph);
 	    return fges.search();
 	} else if (algName == BootstrapAlgName.GFCI) {
 	    GFci gFci = new GFci(independenceTest, score);
@@ -179,6 +177,14 @@ public class BootstrapSearchAction extends RecursiveAction {
     public void setKnowledge(IKnowledge knowledge) {
         if (knowledge == null) throw new NullPointerException();
         this.knowledge = knowledge;
+    }
+
+    public Graph getInitialGraph() {
+        return initialGraph;
+    }
+
+    public void setInitialGraph(Graph initialGraph) {
+        this.initialGraph = initialGraph;
     }
 
     /**

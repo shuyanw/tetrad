@@ -39,6 +39,11 @@ public class BootstrapTest {
 
     private BootstrapEdgeSelection edgeSelection = BootstrapEdgeSelection.Preserved;
 
+    /**
+     * An initial graph to start from.
+     */
+    private Graph initialGraph;
+
     public void setParallelMode(boolean runParallel) {
 	this.runParallel = runParallel;
     }
@@ -74,6 +79,10 @@ public class BootstrapTest {
 	this.parameters = parameters;
     }
 
+    public void setNumBootstrapSamples(int numBootstrapSamples) {
+        this.bootstrapSearch.setNumOfBootstrap(numBootstrapSamples);
+    }
+
     /**
      * @return the background knowledge.
      */
@@ -102,6 +111,26 @@ public class BootstrapTest {
 	this.edgeSelection = edgeSelection;
     }
 
+    /**
+     * @return the initial graph for the search. The search is initialized to this graph and
+     * proceeds from there.
+     */
+    public Graph getInitialGraph() {
+        return initialGraph;
+    }
+
+    /**
+     * Sets the initial graph.
+     */
+    public void setInitialGraph(Graph initialGraph) {
+        this.initialGraph = initialGraph;
+    }
+
+     public BootstrapTest(DataSet data, BootstrapAlgName algName){
+	this.algName = algName;
+	bootstrapSearch = new BootstrapSearch(data);
+    }
+    
     public BootstrapTest(DataSet data, BootstrapAlgName algName,
 	    int numBootstrapSamples) {
 	this.algName = algName;

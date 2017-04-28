@@ -155,6 +155,10 @@ public class ParamDescriptions {
                 "Yes if the heuristic a symmetric first step should be used for FGES",
                 false));
 
+        // Bootstrapping
+        put("bootstrapSampleSize", new ParamDescription(
+        	"The number of bootstrapping sample size", 
+        	10, 1, Integer.MAX_VALUE));
     }
 
     public static ParamDescriptions instance() {

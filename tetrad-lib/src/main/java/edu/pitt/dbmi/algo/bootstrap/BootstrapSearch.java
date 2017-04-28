@@ -45,6 +45,11 @@ public class BootstrapSearch {
 
     private Parameters parameters;
 
+    /**
+     * An initial graph to start from.
+     */
+    private Graph initialGraph;
+
     public BootstrapSearch(DataSet data) {
 	this.data = data;
 	pool = ForkJoinPoolInstance.getInstance().getPool();
@@ -87,6 +92,7 @@ public class BootstrapSearch {
 		e.printStackTrace();
 	    }
 	}
+	out.println("Bootstrapping dataset are all generated.");
     }
 
     public Parameters getParameters() {
@@ -115,6 +121,14 @@ public class BootstrapSearch {
 	if (knowledge == null)
 	    throw new NullPointerException();
 	this.knowledge = knowledge;
+    }
+
+    public Graph getInitialGraph() {
+	return initialGraph;
+    }
+
+    public void setInitialGraph(Graph initialGraph) {
+	this.initialGraph = initialGraph;
     }
 
     /**
@@ -165,11 +179,11 @@ public class BootstrapSearch {
 			+ numBootstrap);
 	    }
 
-	    Parameters parameters = getParameters();
-
 	    BootstrapSearchAction task = new BootstrapSearchAction(0,
 		    numBootstrap, algName, parameters, this, verbose);
-	    task.setKnowledge(knowledge);
+	    if (knowledge != null) {
+		task.setKnowledge(knowledge);
+	    }
 
 	    pool.invoke(task);
 	}

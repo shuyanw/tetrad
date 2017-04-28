@@ -14,7 +14,12 @@ import edu.cmu.tetrad.data.DiscreteVariable;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.graph.Node;
+import edu.cmu.tetrad.search.BDeuScore;
 import edu.cmu.tetrad.search.DagToPag;
+import edu.cmu.tetrad.search.GFci;
+import edu.cmu.tetrad.search.IndTestChiSquare;
+import edu.cmu.tetrad.search.IndependenceTest;
+import edu.cmu.tetrad.search.Score;
 import edu.cmu.tetrad.sem.LargeScaleSimulation;
 import edu.cmu.tetrad.util.Parameters;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapAlgName;
@@ -30,14 +35,14 @@ import edu.pitt.dbmi.algo.bootstrap.BootstrapTest;
  */
 public class TestBootstrapTest {
 
-    /*public static void main(String[] args) {
-	//testFGESc();
+    public static void main(String[] args) {
+	testFGESc();
 	//testFGESd();
 	//testGFCIc();
 	//testGFCId();
 	//testRFCIc();
 	//testRFCId();
-    }*/
+    }
     
     @Test
     public void testRFCIc() {
@@ -216,16 +221,16 @@ public class TestBootstrapTest {
     }
     
     @Test
-    public void testGFCId() {
+    public static void testGFCId() {
 	double structurePrior = 1, samplePrior = 1;
 	boolean faithfulnessAssumed = false;
 	int maxDegree = -1;
 
 	int numVars = 40;
 	int edgesPerNode = 2;
-	int numLatentConfounders = 2;
+	int numLatentConfounders = 4;
 	int numCases = 100;
-	int numBootstrapSamples = 10;
+	int numBootstrapSamples = 100;
 	boolean verbose = false;
 	long seed = 123;
 
@@ -256,7 +261,7 @@ public class TestBootstrapTest {
 	bootstrapTest.setParameters(parameters);
 	bootstrapTest.setEdgeSelection(BootstrapEdgeSelection.Highest);
 	Graph resultGraph = bootstrapTest.search();
-	System.out.println("Estimated PAG Graph:");
+	System.out.println("Estimated Bootstrapped PAG Graph:");
 	System.out.println(resultGraph.toString());
 
 	// Adjacency Confusion Matrix
@@ -269,10 +274,34 @@ public class TestBootstrapTest {
 		resultGraph);
 
 	printEdgeTypeConfusionMatrix(edgeAr);
+	
+	BDeuScore bDeuScore = new BDeuScore(data);
+	bDeuScore.setSamplePrior(samplePrior);
+	bDeuScore.setStructurePrior(structurePrior);
+	Score score = bDeuScore;
+	
+	IndependenceTest test = new IndTestChiSquare(data, parameters.getDouble("alpha", 0.5));
+	
+	GFci gfci = new GFci(test, score);
+	resultGraph = gfci.search();
+	System.out.println("Estimated PAG Graph:");
+	System.out.println(resultGraph.toString());
+
+	// Adjacency Confusion Matrix
+	adjAr = BootstrapTest.getAdjConfusionMatrix(truePag, resultGraph);
+
+	printAdjConfusionMatrix(adjAr);
+
+	// Edge Type Confusion Matrix
+	edgeAr = BootstrapTest.getEdgeTypeConfusionMatrix(truePag,
+		resultGraph);
+
+	printEdgeTypeConfusionMatrix(edgeAr);
+	
     }
 
     @Test
-    public void testFGESc() {
+    public static void testFGESc() {
 	int penaltyDiscount = 2;
 	boolean faithfulnessAssumed = false;
 	int maxDegree = -1;
@@ -280,9 +309,9 @@ public class TestBootstrapTest {
 	int numVars = 40;
 	int edgesPerNode = 2;
 	int numLatentConfounders = 0;
-	int numCases = 100;
-	int numBootstrapSamples = 10;
-	boolean verbose = false;
+	int numCases = 1000;
+	int numBootstrapSamples = 100;
+	boolean verbose = true;
 
 	Graph dag = makeContinuousDAG(numVars, numLatentConfounders, edgesPerNode);
 	
@@ -402,9 +431,9 @@ public class TestBootstrapTest {
     private static void printEdgeTypeConfusionMatrix(int[][] edgeAr) {
 	int numEdges = sum2DArray(edgeAr, 0, edgeAr.length-1, 0, edgeAr[0].length-1);
 
-	System.out.println("============================");
-	System.out.println("Edge Type Confustion Matrix");
-	System.out.println("============================");
+	System.out.println("=================================");
+	System.out.println("Edge Orientation Confusion Matrix");
+	System.out.println("=================================");
 	System.out.println("\t\tEstimated");
 	System.out.println("n=" + numEdges
 		+ "\t\tnil\t-->\t<--\to->\t<-o\to-o\t<->\t---");
@@ -462,7 +491,7 @@ public class TestBootstrapTest {
 	int numEdges = sum2DArray(adjAr, 0, adjAr.length-1, 0, adjAr[0].length-1);
 
 	System.out.println("============================");
-	System.out.println("Adjacency Confustion Matrix");
+	System.out.println("Adjacency Confusion Matrix");
 	System.out.println("============================");
 	System.out.println("\t\tEstimated");
 	System.out.println("n=" + numEdges + "\t\tNo\tYes");
