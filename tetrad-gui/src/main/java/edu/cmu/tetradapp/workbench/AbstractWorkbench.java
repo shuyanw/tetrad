@@ -29,6 +29,7 @@ import edu.cmu.tetradapp.model.SessionWrapper;
 import edu.cmu.tetradapp.util.*;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
@@ -2078,6 +2079,71 @@ public abstract class AbstractWorkbench extends JComponent
                 break;
         }
     }
+    
+    private void handleMouseEntered(MouseEvent e) {
+        Object source = e.getSource();
+        
+        if(source instanceof DisplayEdge){
+            IDisplayEdge displayEdge = (DisplayEdge)source;
+            Edge edge = displayEdge.getModelEdge();
+            if(graph.containsEdge(edge)){
+        	List<EdgeTypeProbability> edgeProb = edge.getEdgeTypeProbabilities();
+        	if(edgeProb != null){
+        	    String text = edge.getNode1().getName() + " -- " + edge.getNode2().getName() + " ";
+        	    for(EdgeTypeProbability edgeTypeProb : edgeProb){
+        		String _type = "" + edgeTypeProb.getEdgeType();
+        		switch(edgeTypeProb.getEdgeType()){
+        		case nil:
+        		    _type = "no edge";
+        		    break;
+        		case ta:
+        		    _type = "-->";
+        		    break;
+        		case at:
+        		    _type = "<--";
+        		    break;
+        		case ca:
+        		    _type = "o->";
+        		    break;
+        		case ac:
+        		    _type = "<-o";
+        		    break;
+        		case cc:
+        		    _type = "o-o";
+        		    break;
+        		case aa:
+        		    _type = "<->";
+        		    break;
+        		case tt:
+        		    _type = "---";
+        		    break;
+			default:
+			    break;
+        		}
+        		text += "[" + _type + "]:" + String.format("%.4f", edgeTypeProb.getProbability()) + " ";
+        	    }
+        	    
+        	    setEdgeLabel(edge, new JLabel(text));
+        	    
+        	}
+            }
+        }
+    }
+
+    private void handleMouseExited(MouseEvent e) {
+        Object source = e.getSource();
+        
+        if(source instanceof DisplayEdge){
+            IDisplayEdge displayEdge = (IDisplayEdge)source;
+            Edge edge = displayEdge.getModelEdge();
+            if(graph.containsEdge(edge)){
+        	List<EdgeTypeProbability> edgeProb = edge.getEdgeTypeProbabilities();
+        	if(edgeProb != null){
+        	    setEdgeLabel(edge, null);
+        	}
+            }
+        }
+    }
 
     private void snapSingleNodeFromNegative(Object source) {
         DisplayNode node = (DisplayNode) source;
@@ -2595,6 +2661,14 @@ public abstract class AbstractWorkbench extends JComponent
 
         public final void mouseReleased(MouseEvent e) {
             workbench.handleMouseReleased(e);
+        }
+        
+        public final void mouseEntered(MouseEvent e) {
+            workbench.handleMouseEntered(e);
+        }
+        
+        public final void mouseExited(MouseEvent e) {
+            workbench.handleMouseExited(e);
         }
     }
 

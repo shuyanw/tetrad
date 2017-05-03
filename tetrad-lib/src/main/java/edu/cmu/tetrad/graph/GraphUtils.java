@@ -27,6 +27,7 @@ import edu.cmu.tetrad.util.PointXy;
 import edu.cmu.tetrad.util.RandomUtil;
 import edu.cmu.tetrad.util.TaskManager;
 import edu.cmu.tetrad.util.TextTable;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.CharArrayReader;
@@ -57,6 +58,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.RecursiveTask;
 import java.util.regex.Matcher;
+
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -3873,7 +3875,37 @@ public final class GraphUtils {
                 
                 for (int i = 0; i < edgeTypeDist.size(); i++) {
                     EdgeTypeProbability etp = edgeTypeDist.get(i);
-                    o[i] = "" + etp.getEdgeType() + ":" + etp.getProbability();
+		    String _type = "" + etp.getEdgeType();
+		    switch (etp.getEdgeType()) {
+		    case nil:
+			_type = "no edge";
+			break;
+		    case ta:
+			_type = "-->";
+			break;
+		    case at:
+			_type = "<--";
+			break;
+		    case ca:
+			_type = "o->";
+			break;
+		    case ac:
+			_type = "<-o";
+			break;
+		    case cc:
+			_type = "o-o";
+			break;
+		    case aa:
+			_type = "<->";
+			break;
+		    case tt:
+			_type = "---";
+			break;
+		    default:
+			break;
+		    }
+                    
+                    o[i] = "[" + _type + "]:" + String.format("%.4f", etp.getProbability());
                 }
                 
                 fmt.format(f, o);
@@ -3906,7 +3938,37 @@ public final class GraphUtils {
                 
                 for (int i = 0; i < edgeTypeDist.size(); i++) {
                     EdgeTypeProbability etp = edgeTypeDist.get(i);
-                    o[i] = "" + etp.getEdgeType() + ":" + etp.getProbability();
+		    String _type = "" + etp.getEdgeType();
+		    switch (etp.getEdgeType()) {
+		    case nil:
+			_type = "no edge";
+			break;
+		    case ta:
+			_type = "-->";
+			break;
+		    case at:
+			_type = "<--";
+			break;
+		    case ca:
+			_type = "o->";
+			break;
+		    case ac:
+			_type = "<-o";
+			break;
+		    case cc:
+			_type = "o-o";
+			break;
+		    case aa:
+			_type = "<->";
+			break;
+		    case tt:
+			_type = "---";
+			break;
+		    default:
+			break;
+		    }
+                    
+                    o[i] = "[" + _type + "]:" + String.format("%.4f", etp.getProbability());
                 }
                 
                 fmt.format(f, o);

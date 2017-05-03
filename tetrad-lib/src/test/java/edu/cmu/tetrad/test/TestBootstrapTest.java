@@ -23,7 +23,7 @@ import edu.cmu.tetrad.search.Score;
 import edu.cmu.tetrad.sem.LargeScaleSimulation;
 import edu.cmu.tetrad.util.Parameters;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapAlgName;
-import edu.pitt.dbmi.algo.bootstrap.BootstrapEdgeSelection;
+import edu.pitt.dbmi.algo.bootstrap.BootstrapEdgeEnsemble;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapTest;
 
 /**
@@ -86,7 +86,7 @@ public class TestBootstrapTest {
 		BootstrapAlgName.RFCI, numBootstrapSamples);
 	bootstrapTest.setVerbose(verbose);
 	bootstrapTest.setParameters(parameters);
-	bootstrapTest.setEdgeSelection(BootstrapEdgeSelection.Highest);
+	bootstrapTest.setEdgeEnsemble(BootstrapEdgeEnsemble.Highest);
 	Graph resultGraph = bootstrapTest.search();
 	System.out.println("Estimated PAG Graph:");
 	System.out.println(resultGraph.toString());
@@ -143,7 +143,7 @@ public class TestBootstrapTest {
 		BootstrapAlgName.RFCI, numBootstrapSamples);
 	bootstrapTest.setVerbose(verbose);
 	bootstrapTest.setParameters(parameters);
-	bootstrapTest.setEdgeSelection(BootstrapEdgeSelection.Highest);
+	bootstrapTest.setEdgeEnsemble(BootstrapEdgeEnsemble.Highest);
 	Graph resultGraph = bootstrapTest.search();
 	System.out.println("Estimated PAG Graph:");
 	System.out.println(resultGraph.toString());
@@ -202,7 +202,7 @@ public class TestBootstrapTest {
 		BootstrapAlgName.GFCI, numBootstrapSamples);
 	bootstrapTest.setVerbose(verbose);
 	bootstrapTest.setParameters(parameters);
-	bootstrapTest.setEdgeSelection(BootstrapEdgeSelection.Highest);
+	bootstrapTest.setEdgeEnsemble(BootstrapEdgeEnsemble.Highest);
 	Graph resultGraph = bootstrapTest.search();
 	System.out.println("Estimated PAG Graph:");
 	System.out.println(resultGraph.toString());
@@ -259,7 +259,7 @@ public class TestBootstrapTest {
 		BootstrapAlgName.GFCI, numBootstrapSamples);
 	bootstrapTest.setVerbose(verbose);
 	bootstrapTest.setParameters(parameters);
-	bootstrapTest.setEdgeSelection(BootstrapEdgeSelection.Highest);
+	bootstrapTest.setEdgeEnsemble(BootstrapEdgeEnsemble.Highest);
 	Graph resultGraph = bootstrapTest.search();
 	System.out.println("Estimated Bootstrapped PAG Graph:");
 	System.out.println(resultGraph.toString());
@@ -339,7 +339,7 @@ public class TestBootstrapTest {
 		BootstrapAlgName.FGES, numBootstrapSamples);
 	bootstrapTest.setVerbose(verbose);
 	bootstrapTest.setParameters(parameters);
-	bootstrapTest.setEdgeSelection(BootstrapEdgeSelection.Highest);
+	bootstrapTest.setEdgeEnsemble(BootstrapEdgeEnsemble.Highest);
 	Graph resultGraph = bootstrapTest.search();
 	System.out.println("Estimated Graph:");
 	System.out.println(resultGraph.toString());
@@ -392,7 +392,7 @@ public class TestBootstrapTest {
 		BootstrapAlgName.FGES, numBootstrapSamples);
 	bootstrapTest.setVerbose(verbose);
 	bootstrapTest.setParameters(parameters);
-	bootstrapTest.setEdgeSelection(BootstrapEdgeSelection.Highest);
+	bootstrapTest.setEdgeEnsemble(BootstrapEdgeEnsemble.Highest);
 	Graph resultGraph = bootstrapTest.search();
 	System.out.println("Estimated Graph:");
 	System.out.println(resultGraph.toString());

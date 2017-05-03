@@ -37,7 +37,7 @@ public class BootstrapTest {
      */
     private IKnowledge knowledge = new Knowledge2();
 
-    private BootstrapEdgeSelection edgeSelection = BootstrapEdgeSelection.Preserved;
+    private BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
 
     /**
      * An initial graph to start from.
@@ -103,12 +103,12 @@ public class BootstrapTest {
 	this.knowledge = knowledge;
     }
 
-    public BootstrapEdgeSelection getEdgeSelection() {
-	return edgeSelection;
+    public BootstrapEdgeEnsemble getEdgeEnsemble() {
+	return edgeEnsemble;
     }
 
-    public void setEdgeSelection(BootstrapEdgeSelection edgeSelection) {
-	this.edgeSelection = edgeSelection;
+    public void setEdgeEnsemble(BootstrapEdgeEnsemble edgeEnsemble) {
+	this.edgeEnsemble = edgeEnsemble;
     }
 
     /**
@@ -186,7 +186,14 @@ public class BootstrapTest {
     }
 
     private Graph generateBootstrapGraph() {
-	Graph complete = new EdgeListGraph(PAGs.get(0).getNodes());
+	Graph pag = null;
+	for(Graph g : PAGs){
+	    if(g != null){
+		pag = g;
+		break;
+	    }
+	}
+	Graph complete = new EdgeListGraph(pag.getNodes());
 	complete.fullyConnect(Endpoint.TAIL);
 
 	Graph graph = new EdgeListGraph();
@@ -265,7 +272,7 @@ public class BootstrapTest {
 		maxEdgeProb = AuB;
 	    }
 
-	    switch (edgeSelection) {
+	    switch (edgeEnsemble) {
 	    case Highest:
 		if (AnilB > maxEdgeProb) {
 		    edge = null;

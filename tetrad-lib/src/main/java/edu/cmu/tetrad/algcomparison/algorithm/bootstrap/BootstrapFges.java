@@ -14,6 +14,7 @@ import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.search.SearchGraphUtils;
 import edu.cmu.tetrad.util.Parameters;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapAlgName;
+import edu.pitt.dbmi.algo.bootstrap.BootstrapEdgeEnsemble;
 
 import java.io.PrintStream;
 import java.util.List;
@@ -25,7 +26,8 @@ import java.util.List;
  * @author Chirayu (Kong) Wongchokprasitti, PhD
  * 
  */
-public class BootstrapFges implements Algorithm, TakesInitialGraph, HasKnowledge {
+public class BootstrapFges implements Algorithm, TakesInitialGraph,
+	HasKnowledge {
 
     static final long serialVersionUID = 23L;
     private ScoreWrapper score;
@@ -33,81 +35,96 @@ public class BootstrapFges implements Algorithm, TakesInitialGraph, HasKnowledge
     private IKnowledge knowledge = new Knowledge2();
 
     public BootstrapFges(ScoreWrapper score) {
-        this.score = score;
+	this.score = score;
     }
 
     public BootstrapFges(ScoreWrapper score, Algorithm initialGraph) {
-        this.score = score;
-        this.initialGraph = initialGraph;
+	this.score = score;
+	this.initialGraph = initialGraph;
     }
 
     @Override
     public Graph search(DataModel dataSet, Parameters parameters) {
-        Graph initial = null;
+	Graph initial = null;
 
-        if (initialGraph != null) {
-            initial = initialGraph.search(dataSet, parameters);
-        }
+	if (initialGraph != null) {
+	    initial = initialGraph.search(dataSet, parameters);
+	}
 
-        if (dataSet == null || !(dataSet instanceof DataSet)) {
-            throw new IllegalArgumentException("Sorry, I was expecting a (tabular) data set.");
-        }
-        DataSet data = (DataSet) dataSet;
-        edu.pitt.dbmi.algo.bootstrap.BootstrapTest search
-        = new edu.pitt.dbmi.algo.bootstrap.BootstrapTest(
-        	data, BootstrapAlgName.FGES);
-        search.setParameters(parameters);
-        search.setKnowledge(knowledge);
-        search.setVerbose(parameters.getBoolean("verbose"));
-        search.setNumBootstrapSamples(parameters.getInt("bootstrapSampleSize"));
+	if (dataSet == null || !(dataSet instanceof DataSet)) {
+	    throw new IllegalArgumentException(
+		    "Sorry, I was expecting a (tabular) data set.");
+	}
+	DataSet data = (DataSet) dataSet;
+	edu.pitt.dbmi.algo.bootstrap.BootstrapTest search = new edu.pitt.dbmi.algo.bootstrap.BootstrapTest(
+		data, BootstrapAlgName.FGES);
+	search.setParameters(parameters);
+	search.setKnowledge(knowledge);
+	search.setVerbose(parameters.getBoolean("verbose"));
+	search.setNumBootstrapSamples(parameters.getInt("bootstrapSampleSize"));
 
-        Object obj = parameters.get("printStedu.cmream");
-        if (obj instanceof PrintStream) {
-            search.setOut((PrintStream) obj);
-        }
+	BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+	switch (parameters.getInt("bootstrapEnsemble", 1)) {
+	case 0:
+	    edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
+	    break;
+	case 1:
+	    edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+	    break;
+	case 2:
+	    edgeEnsemble = BootstrapEdgeEnsemble.Majority;
+	}
+	search.setEdgeEnsemble(edgeEnsemble);
 
-        if (initial != null) {
-            search.setInitialGraph(initial);
-        }
+	Object obj = parameters.get("printStedu.cmream");
+	if (obj instanceof PrintStream) {
+	    search.setOut((PrintStream) obj);
+	}
 
-        return search.search();
+	if (initial != null) {
+	    search.setInitialGraph(initial);
+	}
+
+	return search.search();
     }
 
     @Override
     public Graph getComparisonGraph(Graph graph) {
-//        return new EdgeListGraph(graph);
-        return SearchGraphUtils.patternForDag(new EdgeListGraph(graph));
+	// return new EdgeListGraph(graph);
+	return SearchGraphUtils.patternForDag(new EdgeListGraph(graph));
     }
 
     @Override
     public String getDescription() {
-        return "Bootstrapping FGES (Fast Greedy Equivalence Search) using " + score.getDescription();
+	return "Bootstrapping FGES (Fast Greedy Equivalence Search) using "
+		+ score.getDescription();
     }
 
     @Override
     public DataType getDataType() {
-        return score.getDataType();
+	return score.getDataType();
     }
 
     @Override
     public List<String> getParameters() {
-        List<String> parameters = score.getParameters();
-        parameters.add("symmetricFirstStep");
-        parameters.add("faithfulnessAssumed");
-        parameters.add("maxDegree");
-        parameters.add("verbose");
-        parameters.add("bootstrapSampleSize");
-        return parameters;
+	List<String> parameters = score.getParameters();
+	parameters.add("symmetricFirstStep");
+	parameters.add("faithfulnessAssumed");
+	parameters.add("maxDegree");
+	parameters.add("verbose");
+	parameters.add("bootstrapSampleSize");
+	parameters.add("bootstrapEnsemble");
+	return parameters;
     }
 
     @Override
     public IKnowledge getKnowledge() {
-        return knowledge;
+	return knowledge;
     }
 
     @Override
     public void setKnowledge(IKnowledge knowledge) {
-        this.knowledge = knowledge;
+	this.knowledge = knowledge;
     }
 
 }

@@ -7,7 +7,7 @@ package edu.pitt.dbmi.algo.bootstrap;
  * @author Chirayu (Kong) Wongchokprasitti, PhD
  * 
  */
-public enum BootstrapEdgeSelection {
+public enum BootstrapEdgeEnsemble {
     // Choose an edge iff its prob. is the highest (even it's nil, which means
     // that there is no edge).
     Highest,
