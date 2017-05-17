@@ -100,6 +100,7 @@ public class BootstrapSearchAction extends RecursiveAction {
 	    fges.setFaithfulnessAssumed(parameters.getBoolean("faithfulnessAssumed", true));
 	    fges.setNumPatternsToStore(parameters.getInt("numPatternsToStore", 0));
 	    fges.setSymmetricFirstStep(parameters.getBoolean("symmetricFirstStep"));
+	    fges.setParallelism(parameters.getInt("numofthreads", 2));
 	    if(initialGraph != null)fges.setInitialGraph(initialGraph);
 	    return fges.search();
 	} else if (algName == BootstrapAlgName.GFCI) {
