@@ -111,6 +111,14 @@ public class BootstrapTest {
 		this.edgeEnsemble = edgeEnsemble;
 	}
 
+	public void setEdgeEnsemble(String edgeEnsemble) {
+		if(edgeEnsemble.equalsIgnoreCase("Highest")){
+			this.edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+		}else if(edgeEnsemble.equalsIgnoreCase("Majority")){
+			this.edgeEnsemble = BootstrapEdgeEnsemble.Majority;
+		}
+	}
+
 	/**
 	 * @return the initial graph for the search. The search is initialized to
 	 *         this graph and proceeds from there.
