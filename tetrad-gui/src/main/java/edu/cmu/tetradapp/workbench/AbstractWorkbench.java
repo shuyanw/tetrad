@@ -2089,7 +2089,8 @@ public abstract class AbstractWorkbench extends JComponent
             if(graph.containsEdge(edge)){
         	List<EdgeTypeProbability> edgeProb = edge.getEdgeTypeProbabilities();
         	if(edgeProb != null){
-        	    String text = edge.getNode1().getName() + " -- " + edge.getNode2().getName() + " ";
+        	    String text = edge.getNode1().getName() + " -- " + edge.getNode2().getName() + "\n";
+        	    int i = 0;
         	    for(EdgeTypeProbability edgeTypeProb : edgeProb){
         		String _type = "" + edgeTypeProb.getEdgeType();
         		switch(edgeTypeProb.getEdgeType()){
@@ -2120,7 +2121,13 @@ public abstract class AbstractWorkbench extends JComponent
 			default:
 			    break;
         		}
-        		text += "[" + _type + "]:" + String.format("%.4f", edgeTypeProb.getProbability()) + " ";
+        		text += "[" + _type + "]:" + String.format("%.4f", edgeTypeProb.getProbability());
+        		if(i==3){
+        		    text += "\n";
+        		}else{
+        		    text += " ";
+        		}
+        		i++;
         	    }
         	    
         	    setEdgeLabel(edge, new JLabel(text));

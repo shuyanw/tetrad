@@ -157,7 +157,7 @@ public class ParamDescriptions {
 
         // Bootstrapping
         put("bootstrapSampleSize", new ParamDescription(
-        	"The number of bootstrapping sample size", 
+        	"The number of bootstraps", 
         	10, 1, Integer.MAX_VALUE));
 	put("bootstrapEnsemble", new ParamDescription("Ensemble method: Preserved (0), Highest (1), Majority (2)", 1, 0, 2));
     }
