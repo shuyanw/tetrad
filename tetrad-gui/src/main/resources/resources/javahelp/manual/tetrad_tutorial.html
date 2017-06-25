@@ -554,56 +554,25 @@ sup {
 <p>. </p>
 
 <blockquote>
+
 <p><strong>GUI example:</strong></p>
-
-<p>I&#39;ll use the <a href="https://archive.ics.uci.edu/ml/datasets/Acute+Inflammations">&#39;Acute Inflammations&#39; (AI) dataset</a> from UC Irvine&#39;s <a href="https://archive.ics.uci.edu/ml/index.html">repository of datasets for machine learning</a>. I&#39;ve done four things to make the data cleaner and easier to import into Tetrad:</p>
-
-<ol>
-<li>The AI dataset uses commas for a decimal point. I replaced them with periods.</li>
-<li>I removed invisible characters.</li>
-<li>I put variable names at the top of the file.</li>
-<li>I dichotomized the &#39;temperature&#39; variable into a binary indicator I named &#39;fever&#39;, using 39°C as the cutoff (the temperature distribution is bimodal and the low point between the modes is about 39).</li>
-</ol>
-
-<p>You can download my modified file <a href="">here</a>. </p>
-
+<p>In this example we'll load a 'mixed' data set, a data set that contains both discrete and continuous values.</p>
 <p>To create a dataset object in Tetrad, do the following:</p>
-
 <table>
 <thead>
-<tr>
-<th style="text-align: center">Step</th>
-<th style="text-align: center">Screenshots</th>
-</tr>
+<tr><th style="text-align:center">Step</th><th style="text-align:center">Screenshots</th></tr>
 </thead>
-
 <tbody>
-<tr>
-<td style="text-align: center">1. Place a data box on the workspace; double click to open it.</td>
-<td style="text-align: center"><img src="images/place_data_box.png" alt="place data"></td>
-</tr>
-<tr>
-<td style="text-align: center">2. Select &quot;data&quot; from the drop-down menu.</td>
-<td style="text-align: center"><img src="images/choose_data.png" alt="choose data"></td>
-</tr>
-<tr>
-<td style="text-align: center">3. Select File -&gt; Load. Choose the AI dataset file.</td>
-<td style="text-align: center"><img src="images/choose_load_data.png" alt="choose load data"></td>
-</tr>
-<tr>
-<td style="text-align: center">4. Make sure the loading options are set like so, and click &quot;Load&quot;.</td>
-<td style="text-align: center"><img src="images/click_load.png" alt=""></td>
-</tr>
-<tr>
-<td style="text-align: center">5. Click &quot;Save&quot;.</td>
-<td style="text-align: center"><img src="images/save_data.png" alt=""></td>
-</tr>
-<tr>
-<td style="text-align: center">6. Click &quot;Done&quot;.</td>
-<td style="text-align: center"><img src="images/click_done_data.png" alt=""></td>
-</tr>
+<tr><td style="text-align:center">1. Place a data box on the work space; double click to open it.</td><td style="text-align:center"><img src="images/data_loader_1.PNG" alt="Place data box"></td></tr>
+<tr><td style="text-align:center">2. Click &quot;file&quot; and then &quot;load&quot; in the drop down menu and the data loader window will appear.</td><td style="text-align:center"><img src="images/data_loader_2.PNG" alt="Click file and load"></td></tr>
+<tr><td style="text-align:center">3. Choose a file to load.</td><td style="text-align:center"><img src="images/data_loader_3.PNG" alt="Choose load data"></td></tr>
+<tr><td style="text-align:center">4. Make sure the loading options are set according to your file properties and click &quot;Validate&quot;.</td><td style="text-align:center"><img src="images/data_loader_4.PNG" alt="Click Validate"></td></tr>
+<tr><td style="text-align:center">5. Click &quot;Load&quot; if there are no errors.</td><td style="text-align:center"><img src="images/data_loader_5.PNG" alt="Load on no errors"></td></tr>
+<tr><td style="text-align:center">6. The loaded data will appear in the data loader window.</td><td style="text-align:center"><img src="images/data_loader_6.PNG" alt="Review loaded data"></td></tr>
 </tbody>
 </table>
+
+
 </blockquote>
 
 <hr>

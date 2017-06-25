@@ -27,6 +27,7 @@ import edu.cmu.tetrad.data.KnowledgeBoxInput;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.Node;
+import edu.cmu.tetrad.graph.NodeType;
 import edu.cmu.tetrad.session.ParamsResettable;
 import edu.cmu.tetrad.session.SessionModel;
 import edu.cmu.tetrad.util.Parameters;
@@ -53,6 +54,8 @@ public class KnowledgeBoxModel implements SessionModel, ParamsResettable, Knowle
     private List<String> variableNames = new ArrayList<>();
     private final Graph sourceGraph = new EdgeListGraph();
     private IKnowledge knowledge = new Knowledge2();
+    private int numTiers = 3;
+
 
     public KnowledgeBoxModel(GeneralAlgorithmRunner runner) {
         this.knowledge = runner.getKnowledge();
@@ -76,8 +79,15 @@ public class KnowledgeBoxModel implements SessionModel, ParamsResettable, Knowle
         SortedSet<String> variableNames = new TreeSet<>();
 
         for (KnowledgeBoxInput input : inputs) {
-            variableNodes.addAll(input.getVariables());
-            variableNames.addAll(input.getVariableNames());
+            for (Node node : input.getVariables()) {
+                if (node.getNodeType() == NodeType.MEASURED) {
+                    variableNodes.add(node);
+                    variableNames.add(node.getName());
+                }
+            }
+
+//            variableNodes.addAll(input.getVariables());
+//            variableNames.addAll(input.getVariableNames());
         }
 
         this.variables = new ArrayList<>(variableNodes);
@@ -185,6 +195,14 @@ public class KnowledgeBoxModel implements SessionModel, ParamsResettable, Knowle
 
     void setKnowledgeBoxInput(KnowledgeBoxInput knowledgeBoxInput) {
         this.knowledgeBoxInput = knowledgeBoxInput;
+    }
+
+    public int getNumTiers() {
+        return numTiers;
+    }
+
+    public void setNumTiers(int numTiers) {
+        this.numTiers = numTiers;
     }
 }
 

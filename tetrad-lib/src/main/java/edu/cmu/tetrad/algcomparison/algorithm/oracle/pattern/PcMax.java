@@ -22,12 +22,14 @@ import java.util.List;
  */
 public class PcMax implements Algorithm, TakesInitialGraph, HasKnowledge {
     static final long serialVersionUID = 23L;
+    private boolean compareToTrue = false;
     private IndependenceWrapper test;
     private Algorithm initialGraph = null;
     private IKnowledge knowledge = new Knowledge2();
 
-    public PcMax(IndependenceWrapper test) {
+    public PcMax(IndependenceWrapper test, boolean compareToTrue) {
         this.test = test;
+        this.compareToTrue = compareToTrue;
     }
 
     @Override
@@ -38,13 +40,17 @@ public class PcMax implements Algorithm, TakesInitialGraph, HasKnowledge {
         search.setMaxPathLength(parameters.getInt("maxPOrientationMaxPathLength"));
         search.setDepth(parameters.getInt("depth"));
         search.setKnowledge(knowledge);
+        search.setVerbose(parameters.getBoolean("verbose"));
         return search.search();
     }
 
     @Override
     public Graph getComparisonGraph(Graph graph) {
-//        return new EdgeListGraph(graph);
-        return SearchGraphUtils.patternForDag(new EdgeListGraph(graph));
+        if (compareToTrue) {
+            return new EdgeListGraph(graph);
+        } else {
+            return SearchGraphUtils.patternForDag(new EdgeListGraph(graph));
+        }
     }
 
     @Override
@@ -65,6 +71,7 @@ public class PcMax implements Algorithm, TakesInitialGraph, HasKnowledge {
         parameters.add("depth");
         parameters.add("useMaxPOrientationHeuristic");
         parameters.add("maxPOrientationMaxPathLength");
+        parameters.add("verbose");
         return parameters;
     }
 
@@ -76,5 +83,9 @@ public class PcMax implements Algorithm, TakesInitialGraph, HasKnowledge {
     @Override
     public void setKnowledge(IKnowledge knowledge) {
         this.knowledge = knowledge;
+    }
+
+    public boolean isCompareToTrue() {
+        return compareToTrue;
     }
 }

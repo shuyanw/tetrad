@@ -21,18 +21,17 @@
 
 package edu.cmu.tetrad.search;
 
-import edu.cmu.tetrad.data.CovarianceMatrixOnTheFly;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.graph.Node;
 
 import java.util.List;
 
 /**
- * Implements a conditional Gaussian BIC score for FGES.
+ * Implements a conditional Gaussian BIC score for FGS.
  *
  * @author Joseph Ramsey
  */
-public class SemBicScore2 implements Score {
+public class ConditionalGaussianOtherScore implements Score {
 
     private DataSet dataSet;
 
@@ -40,42 +39,52 @@ public class SemBicScore2 implements Score {
     private List<Node> variables;
 
     // Likelihood function
-    private SemLikelihood2 likelihood;
+    private ConditionalGaussianOtherLikelihood likelihood;
 
     private double penaltyDiscount = 1;
+    private int numCategoriesToDiscretize = 3;
+    private double sp;
 
     /**
      * Constructs the score using a covariance matrix.
      */
-    public SemBicScore2(DataSet dataSet) {
+    public ConditionalGaussianOtherScore(DataSet dataSet, double sp, boolean discretize) {
         if (dataSet == null) {
             throw new NullPointerException();
         }
 
         this.dataSet = dataSet;
         this.variables = dataSet.getVariables();
+        this.sp = sp;
 
-        this.likelihood = new SemLikelihood2(new CovarianceMatrixOnTheFly(dataSet));
+        this.likelihood = new ConditionalGaussianOtherLikelihood(dataSet);
+        //this.likelihood.setDiscretize(discretize);
     }
 
     /**
      * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model
      */
     public double localScore(int i, int... parents) {
-        SemLikelihood2.Ret ret = likelihood.getLikelihood(i, parents);
+        likelihood.setNumCategoriesToDiscretize(numCategoriesToDiscretize);
+        likelihood.setPenaltyDiscount(penaltyDiscount);
+
+        ConditionalGaussianOtherLikelihood.Ret ret = likelihood.getLikelihood(i, parents);
 
         int N = dataSet.getNumRows();
         double lik = ret.getLik();
         int k = ret.getDof();
 
-        return 2.0 * lik - getPenaltyDiscount() * k * Math.log(N);
+        return 2.0 * lik - /*getPenaltyDiscount() **/ k * Math.log(N) + getStructurePrior(parents);
     }
 
     private double getStructurePrior(int[] parents) {
-        int i = parents.length + 1;
-        int c = dataSet.getNumColumns();
-        double p = 2 / (double) c;
-        return i * Math.log(p) + (c - i) * Math.log(1.0 - p);
+        if (sp <= 0) { return 0; }
+        else {
+            int i = parents.length + 1;
+            int c = dataSet.getNumColumns();
+            double p = sp / (double) c;
+            return i * Math.log(p) + (c - i) * Math.log(1.0 - p);
+        }
     }
 
     public double localScoreDiff(int x, int y, int[] z) {
@@ -122,14 +131,6 @@ public class SemBicScore2 implements Score {
         return variables;
     }
 
-    public boolean getAlternativePenalty() {
-        return false;
-    }
-
-    public void setAlternativePenalty(double alpha) {
-
-    }
-
     @Override
     public Node getVariable(String targetName) {
         for (Node node : variables) {
@@ -146,12 +147,21 @@ public class SemBicScore2 implements Score {
         return (int) Math.ceil(Math.log(dataSet.getNumRows()));
     }
 
+    @Override
+    public boolean determines(List<Node> z, Node y) {
+        return false;
+    }
+
     public double getPenaltyDiscount() {
         return penaltyDiscount;
     }
 
     public void setPenaltyDiscount(double penaltyDiscount) {
         this.penaltyDiscount = penaltyDiscount;
+    }
+
+    public void setNumCategoriesToDiscretize(int numCategoriesToDiscretize) {
+        this.numCategoriesToDiscretize = numCategoriesToDiscretize;
     }
 }
 

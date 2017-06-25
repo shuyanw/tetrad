@@ -18,14 +18,11 @@
 // along with this program; if not, write to the Free Software               //
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA //
 ///////////////////////////////////////////////////////////////////////////////
-
 package edu.cmu.tetradapp.editor;
 
 import edu.cmu.tetrad.algcomparison.Comparison;
 import edu.cmu.tetrad.algcomparison.graph.*;
-import edu.cmu.tetrad.algcomparison.independence.FisherZ;
 import edu.cmu.tetrad.algcomparison.simulation.*;
-import edu.cmu.tetrad.algcomparison.utils.TakesData;
 import edu.cmu.tetrad.data.DataModelList;
 import edu.cmu.tetrad.data.IKnowledge;
 import edu.cmu.tetrad.graph.EdgeListGraph;
@@ -38,7 +35,6 @@ import edu.cmu.tetradapp.model.KnowledgeEditable;
 import edu.cmu.tetradapp.model.Simulation;
 import edu.cmu.tetradapp.util.WatchedProcess;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -49,13 +45,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.prefs.Preferences;
+import javax.swing.*;
 
 /**
- * Displays a simulation and lets the user create new simulations. A simulation is an ordered
- * pair of a Graph and a list of DataSets. These can be created in a variety of ways, either
- * standalone or taking graphs, IM's, or PM's as parents, and using the information those
- * objects contain. For a Simulation you need a RandomGraph and you need to pick a particular
- * style of Simulation.
+ * Displays a simulation and lets the user create new simulations. A simulation
+ * is an ordered pair of a Graph and a list of DataSets. These can be created in
+ * a variety of ways, either standalone or taking graphs, IM's, or PM's as
+ * parents, and using the information those objects contain. For a Simulation
+ * you need a RandomGraph and you need to pick a particular style of Simulation.
  *
  * @author Joseph Ramsey
  */
@@ -79,11 +76,11 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
             List<Graph> trueGraphs = new ArrayList<>();
             DataModelList dataModelList = new DataModelList();
 
-            int numDataSets = simulation.getSimulation().getNumDataSets();
+            int numDataSets = simulation.getSimulation().getNumDataModels();
 
             for (int i = 0; i < numDataSets; i++) {
                 trueGraphs.add(simulation.getSimulation().getTrueGraph(i));
-                dataModelList.add(simulation.getSimulation().getDataSet(i));
+                dataModelList.add(simulation.getSimulation().getDataModel(i));
             }
 
             graphEditor = new GraphSelectionEditor(new GraphSelectionWrapper(trueGraphs, new Parameters()));
@@ -159,7 +156,9 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                         } catch (Exception e) {
                             e.printStackTrace();
                             Throwable cause = e;
-                            if (e.getCause() != null) cause = e.getCause();
+                            if (e.getCause() != null) {
+                                cause = e.getCause();
+                            }
 
                             if (cause.getMessage() == null || cause.getMessage().trim().isEmpty()) {
                                 throw new IllegalArgumentException(
@@ -172,7 +171,7 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                         firePropertyChange("modelChanged", null, null);
 
                         List<Graph> graphs = new ArrayList<>();
-                        for (int i = 0; i < _simulation.getNumDataSets(); i++) {
+                        for (int i = 0; i < _simulation.getNumDataModels(); i++) {
                             graphs.add(_simulation.getTrueGraph(i));
                         }
 
@@ -215,7 +214,6 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                 }
 
                 // Check to make sure the directory has the right structure.
-
                 File[] files = file.listFiles();
 
                 if (files == null) {
@@ -233,7 +231,9 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                     for (File _file : files) {
                         File[] _files = _file.listFiles();
 
-                        if (_files == null) continue;
+                        if (_files == null) {
+                            continue;
+                        }
 
                         if (isCorrectStructure(_files)) {
                             count++;
@@ -243,19 +243,18 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
 
                     if (thisOne == null) {
                         JOptionPane.showMessageDialog((SimulationEditor.this),
-                                "That file was not a simulation, and none of its subdirectories was either. " +
-                                        "\nNeed a directory with a 'data' subdirectory, a 'graph' subdirectory, " +
-                                        "\nand a 'parameters.txt' file.");
+                                "That file was not a simulation, and none of its subdirectories was either. "
+                                        + "\nNeed a directory with a 'data' subdirectory, a 'graph' subdirectory, "
+                                        + "\nand a 'parameters.txt' file.");
                         return;
                     }
 
                     if (count > 1) {
                         JOptionPane.showMessageDialog((SimulationEditor.this),
-                                "More than one subdirectory of that directory was a simulation; please select " +
-                                        "\none of the subdirectories.");
+                                "More than one subdirectory of that directory was a simulation; please select "
+                                        + "\none of the subdirectories.");
                         return;
                     }
-
 
                     file = thisOne;
                 }
@@ -267,7 +266,7 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                 Graph trueGraph = _simulation.getTrueGraph(0);
                 edu.cmu.tetrad.graph.GraphUtils.circleLayout(trueGraph, 225, 200, 150);
                 List<Graph> graphs = new ArrayList<>();
-                for (int i = 0; i < _simulation.getNumDataSets(); i++) {
+                for (int i = 0; i < _simulation.getNumDataModels(); i++) {
                     graphs.add(_simulation.getTrueGraph(i));
                 }
 
@@ -276,8 +275,8 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
 
                 DataModelList list = new DataModelList();
 
-                for (int i = 0; i < _simulation.getNumDataSets(); i++) {
-                    list.add(_simulation.getDataSet(i));
+                for (int i = 0; i < _simulation.getNumDataModels(); i++) {
+                    list.add(_simulation.getDataModel(i));
                 }
 
                 wrapper.setDataModelList(list);
@@ -333,7 +332,6 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
 //                                    "or creating an empty directory.");
 //                    return;
 //                }
-
                 new Comparison().saveToFiles(file.getAbsolutePath(), simulation.getSimulation(),
                         simulation.getParams());
             }
@@ -351,7 +349,7 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
         edu.cmu.tetrad.algcomparison.simulation.Simulation _simulation = simulation.getSimulation();
 
         List<Graph> graphs = new ArrayList<>();
-        for (int i = 0; i < _simulation.getNumDataSets(); i++) {
+        for (int i = 0; i < _simulation.getNumDataModels(); i++) {
             graphs.add(_simulation.getTrueGraph(i));
         }
 
@@ -409,10 +407,12 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                     simulation.setSimulation(new SemSimulation(randomGraph), simulation.getParams());
                 } else if (simulationItem.equals(simulationItems[2])) {
                     simulation.setSimulation(new LinearFisherModel(randomGraph), simulation.getParams());
+//                } else if (simulationItem.equals(simulationItems[3])) {
+//                    simulation.setSimulation(new GeneralSemSimulationSpecial1(randomGraph), simulation.getParams());
                 } else if (simulationItem.equals(simulationItems[3])) {
-                    simulation.setSimulation(new GeneralSemSimulationSpecial1(randomGraph), simulation.getParams());
-                } else if (simulationItem.equals(simulationItems[4])) {
                     simulation.setSimulation(new LeeHastieSimulation(randomGraph), simulation.getParams());
+                } else if (simulationItem.equals(simulationItems[4])) {
+                    simulation.setSimulation(new ConditionalGaussianSimulation(randomGraph), simulation.getParams());
                 } else if (simulationItem.equals(simulationItems[5])) {
                     simulation.setSimulation(new TimeSeriesSemSimulation(randomGraph), simulation.getParams());
                 } else {
@@ -435,14 +435,16 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                 } else if (simulationItem.equals(simulationItems[2])) {
                     simulation.setSimulation(new LinearFisherModel(randomGraph, simulation.getInputDataModelList()),
                             simulation.getParams());
+//                } else if (simulationItem.equals(simulationItems[3])) {
+//                    simulation.setSimulation(new GeneralSemSimulationSpecial1(randomGraph), simulation.getParams());
                 } else if (simulationItem.equals(simulationItems[3])) {
-                    simulation.setSimulation(new GeneralSemSimulationSpecial1(randomGraph), simulation.getParams());
-                } else if (simulationItem.equals(simulationItems[4])) {
                     simulation.setSimulation(new LeeHastieSimulation(randomGraph), simulation.getParams());
+                } else if (simulationItem.equals(simulationItems[4])) {
+                    simulation.setSimulation(new ConditionalGaussianSimulation(randomGraph), simulation.getParams());
                 } else if (simulationItem.equals(simulationItems[5])) {
                     simulation.setSimulation(new TimeSeriesSemSimulation(randomGraph), simulation.getParams());
-                } else if (simulationItem.equals(simulationItems[6])) {
-                    simulation.setSimulation(new BooleanGlassSimulation(randomGraph), simulation.getParams());
+//                } else if (simulationItem.equals(simulationItems[6])) {
+//                    simulation.setSimulation(new BooleanGlassSimulation(randomGraph), simulation.getParams());
                     simulation.setFixedGraph(true);
                 } else {
                     throw new IllegalArgumentException("Unrecognized simulation type: " + simulationItem);
@@ -460,8 +462,7 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
         if (simulation.isFixedSimulation()) {
             if (simulation.getSimulation() instanceof BayesNetSimulation) {
                 simulationItems = new String[]{
-                        "Bayes net",
-                };
+                        "Bayes net",};
             } else if (simulation.getSimulation() instanceof SemSimulation) {
                 simulationItems = new String[]{
                         "Structural Equation Model"
@@ -476,12 +477,10 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                 };
             } else if (simulation.getSimulation() instanceof GeneralSemSimulation) {
                 simulationItems = new String[]{
-                        "General Structural Equation Model",
-                };
+                        "General Structural Equation Model",};
             } else if (simulation.getSimulation() instanceof LoadContinuousDataAndGraphs) {
                 simulationItems = new String[]{
-                        "Loaded From Files",
-                };
+                        "Loaded From Files",};
             } else {
                 throw new IllegalStateException("Not expecting that model type: "
                         + simulation.getSimulation().getClass());
@@ -497,8 +496,9 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                         "Bayes net",
                         "Structural Equation Model",
                         "Linear Fisher Model",
-                        "General Structural Equation Model Special",
+                        //                        "General Structural Equation Model Special",
                         "Lee & Hastie",
+                        "Conditional Gaussian",
                         "Time Series"
                 };
             } else {
@@ -506,10 +506,10 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
                         "Bayes net",
                         "Structural Equation Model",
                         "Linear Fisher Model",
-                        "General Structural Equation Model Special",
+                        //                        "General Structural Equation Model Special",
                         "Lee & Hastie",
-                        "Time Series",
-                        "Boolean Glass"
+                        "Conditional Gaussian",
+                        "Time Series", //                        "Boolean Glass"
                 };
             }
         }
@@ -568,7 +568,6 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
         c.add(d0);
         c.add(Box.createVerticalStrut(10));
 
-
         Box e = Box.createHorizontalBox();
         e.add(Box.createHorizontalGlue());
         e.add(c);
@@ -612,7 +611,3 @@ public final class SimulationEditor extends JPanel implements KnowledgeEditable,
 
     }
 }
-
-
-
-

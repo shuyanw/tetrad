@@ -32,22 +32,23 @@ public class ImagesSemBic implements MultiDataSetAlgorithm, HasKnowledge {
     }
 
     @Override
-    public Graph search(List<DataSet> dataSets, Parameters parameters) {
-        List<DataModel> dataModels = new ArrayList<>();
+    public Graph search(List<DataModel> dataSets, Parameters parameters) {
+//        List<DataModel> dataModels = new ArrayList<>();
+//
+//        for (DataSet dataSet : dataSets) {
+//            dataModels.add(dataSet);
+//        }
 
-        for (DataSet dataSet : dataSets) {
-            dataModels.add(dataSet);
-        }
-
-        final SemBicScoreImages score = new SemBicScoreImages(dataModels);
+        final SemBicScoreImages score = new SemBicScoreImages(dataSets);
         score.setPenaltyDiscount(parameters.getDouble("penaltyDiscount"));
         edu.cmu.tetrad.search.Fges search = new edu.cmu.tetrad.search.Fges(score);
+        search.setKnowledge(knowledge);
         return search.search();
     }
 
     @Override
     public Graph search(DataModel dataSet, Parameters parameters) {
-        return search(Collections.singletonList(DataUtils.getContinuousDataSet(dataSet)), parameters);
+        return search(Collections.singletonList((DataModel) DataUtils.getContinuousDataSet(dataSet)), parameters);
     }
 
     @Override
@@ -69,8 +70,8 @@ public class ImagesSemBic implements MultiDataSetAlgorithm, HasKnowledge {
 
     @Override
     public List<String> getParameters() {
-        List<String> parameters = new Fges(new SemBicScore()).getParameters();
-        parameters.add("numRandomSelections");
+        List<String> parameters = new Fges(new SemBicScore(), false).getParameters();
+        parameters.add("numRuns");
         parameters.add("randomSelectionSize");
         return parameters;
     }

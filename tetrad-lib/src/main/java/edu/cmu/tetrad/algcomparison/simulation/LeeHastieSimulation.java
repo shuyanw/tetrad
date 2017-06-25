@@ -1,8 +1,8 @@
 package edu.cmu.tetrad.algcomparison.simulation;
 
 import edu.cmu.tetrad.algcomparison.graph.RandomGraph;
-import edu.cmu.tetrad.algcomparison.utils.HasParameterValues;
 import edu.cmu.tetrad.algcomparison.utils.HasParameters;
+import edu.cmu.tetrad.data.DataModel;
 import edu.cmu.tetrad.util.Parameters;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.DataType;
@@ -77,7 +77,7 @@ public class LeeHastieSimulation implements Simulation, HasParameters {
     }
 
     @Override
-    public DataSet getDataSet(int index) {
+    public DataModel getDataModel(int index) {
         return dataSets.get(index);
     }
 
@@ -98,7 +98,7 @@ public class LeeHastieSimulation implements Simulation, HasParameters {
     }
 
     @Override
-    public int getNumDataSets() {
+    public int getNumDataModels() {
         return dataSets.size();
     }
 
@@ -122,8 +122,8 @@ public class LeeHastieSimulation implements Simulation, HasParameters {
 
         for (int i = 0; i < nodes.size(); i++) {
             if (i < nodes.size() * parameters.getDouble("percentDiscrete") * 0.01) {
-                final int minNumCategories = parameters.getInt("minCategories");
-                final int maxNumCategories = parameters.getInt("maxCategories");
+                final int minNumCategories = parameters.getInt("numCategories");
+                final int maxNumCategories = parameters.getInt("numCategories");
                 final int value = pickNumCategories(minNumCategories, maxNumCategories);
                 nd.put(shuffledOrder.get(i).getName(), value);
             } else {
