@@ -54,9 +54,9 @@ public class ExampleCompareSimulation {
         parameters.set("differentGraphs", true);
         parameters.set("sampleSize", 1000);
 
-        parameters.set("numMeasures", 50);
+        parameters.set("numMeasures", 100);
         parameters.set("numLatents", 0);
-        parameters.set("avgDegree", 2.5);
+        parameters.set("avgDegree", 4);
         parameters.set("maxDegree", 100);
         parameters.set("maxIndegree", 100);
         parameters.set("maxOutdegree", 100);
@@ -111,12 +111,12 @@ public class ExampleCompareSimulation {
 
         Algorithms algorithms = new Algorithms();
 
-//        algorithms.add(new Pc(new FisherZ()));
+        algorithms.add(new Pc(new FisherZ()));
 //        algorithms.add(new Pc(new SemBicTest()));
 //        algorithms.add(new Cpc(new FisherZ()));
 //        algorithms.add(new PcStable(new FisherZ()));
 //        algorithms.add(new CpcStable(new FisherZ()));
-//        algorithms.add(new PcStableMax(new FisherZ(), false));
+        algorithms.add(new PcStableMax(new FisherZ(), false));
 //        algorithms.add(new PcStableMax(new SemBicTest(), false));
         algorithms.add(new Fges(new FisherZScore(), false));
 //        algorithms.add(new Fges(new SemBicScore(), false));
