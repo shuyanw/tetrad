@@ -19,28 +19,21 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA //
 ///////////////////////////////////////////////////////////////////////////////
 
-package edu.cmu.tetrad.util;
+package edu.cmu.tetrad.test.joes.examples;
 
-import java.util.concurrent.ForkJoinPool;
+import edu.cmu.tetrad.algcomparison.Comparison;
 
 /**
- * Static instance of a ForkJoinPool. Not sure this is necessary.
- * Created by josephramsey on 2/7/15.
+ * An example script to save out data files and graphs from a simulation.
+ *
+ * @author jdramsey
  */
-public class ForkJoinPoolInstance {
-    private static final ForkJoinPoolInstance INSTANCE = new ForkJoinPoolInstance();
-    private final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-
-    private ForkJoinPoolInstance() {
-
-    }
-
-    public static ForkJoinPoolInstance getInstance() {
-        return INSTANCE;
-    }
-
-    public ForkJoinPool getPool() {
-        return pool;
+public class RunConfig {
+    public static void main(String... args) {
+        new Comparison().configuration("comparison/Config.txt");
     }
 }
+
+
+
 

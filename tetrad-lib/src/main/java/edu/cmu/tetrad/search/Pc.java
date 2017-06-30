@@ -119,6 +119,11 @@ public class Pc implements GraphSearch {
 
     private boolean fdr = false;
 
+    /**
+     * True iff colliders should not be added if they will create bidirected edges.
+     */
+    private boolean enforcePattern = true;
+
     //=============================CONSTRUCTORS==========================//
 
     /**
@@ -276,12 +281,19 @@ public class Pc implements GraphSearch {
 //        enumerateTriples();
 
         SearchGraphUtils.pcOrientbk(knowledge, graph, nodes);
-        SearchGraphUtils.orientCollidersUsingSepsets(this.sepsets, knowledge, graph, verbose);
+        SearchGraphUtils.orientCollidersUsingSepsets(this.sepsets, knowledge, graph, verbose, false);
+
+        for (Edge edge : graph.getEdges()) {
+            if (Edges.isBidirectedEdge(edge)) {
+                graph.removeEdge(edge.getNode1(), edge.getNode2());
+                graph.addUndirectedEdge(edge.getNode1(), edge.getNode2());
+            }
+        }
 
         MeekRules rules = new MeekRules();
-        rules.setAggressivelyPreventCycles(this.aggressivelyPreventCycles);
+//        rules.setAggressivelyPreventCycles(false);
         rules.setKnowledge(knowledge);
-        rules.setUndirectUnforcedEdges(false);
+//        rules.setUndirectUnforcedEdges(false);
         rules.orientImplied(graph);
 
         this.logger.log("graph", "\nReturning this graph: " + graph);
@@ -432,6 +444,10 @@ public class Pc implements GraphSearch {
 
     public void setFdr(boolean fdr) {
         this.fdr = fdr;
+    }
+
+    public void setEnforcePattern(boolean enforcePattern) {
+        this.enforcePattern = enforcePattern;
     }
 }
 
