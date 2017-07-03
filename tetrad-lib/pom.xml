@@ -146,6 +146,18 @@
             <version>20160810</version>
         </dependency>
 
+        <!-- For net.digital_alexandria.lvm4j -->
+        <dependency>
+            <groupId>org.ejml</groupId>
+            <artifactId>all</artifactId>
+            <version>0.30</version>
+        </dependency>
+        <dependency>
+            <groupId>org.nd4j</groupId>
+            <artifactId>nd4j-native-platform</artifactId>
+            <version>0.8.0</version>
+        </dependency>
+
     </dependencies>
 
     <!--<distributionManagement> -->
