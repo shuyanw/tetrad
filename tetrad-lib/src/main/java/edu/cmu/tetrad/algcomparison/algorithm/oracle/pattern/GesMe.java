@@ -49,14 +49,6 @@ public class GesMe implements Algorithm, TakesInitialGraph/*, HasKnowledge*/ {
 
     @Override
     public Graph search(DataModel dataSet, Parameters parameters) {
-////        dataSet = DataUtils.center((DataSet) dataSet);
-//        CovarianceMatrix covarianceMatrix = new CovarianceMatrix((DataSet) dataSet);
-//
-////        edu.cmu.tetrad.search.FactorAnalysis analysis = new edu.cmu.tetrad.search.FactorAnalysis(covarianceMatrix);
-////        analysis.setThreshold(parameters.getDouble("convergenceThreshold"));
-////        analysis.setNumFactors(parameters.getInt("numFactors"));
-////        analysis.setNumFactors(((DataSet) dataSet).getNumColumns());
-
         int numFactors = parameters.getInt("numFactors");
         double[][] _L = new double[numFactors][];
 //
@@ -83,37 +75,6 @@ public class GesMe implements Algorithm, TakesInitialGraph/*, HasKnowledge*/ {
         System.out.println(MatrixUtils.toString(_L));
 
         TetradMatrix L = new TetradMatrix(_L).transpose();
-
-
-////        TetradMatrix unrotated = analysis.successiveResidual();
-////        TetradMatrix rotated = analysis.successiveFactorVarimax(unrotated);
-//
-//        if (parameters.getBoolean("verbose")) {
-//            NumberFormat nf = NumberFormatUtil.getInstance().getNumberFormat();
-//
-//            String output = "Unrotated Factor Loading Matrix:\n";
-//
-//            output += tableString(unrotated, nf, Double.POSITIVE_INFINITY);
-//
-//            if (unrotated.columns() != 1) {
-//                output += "\n\nRotated Matrix (using sequential varimax):\n";
-//                output += tableString(rotated, nf, parameters.getDouble("fa_threshold"));
-//            }
-//
-//            System.out.println(output);
-//            TetradLogger.getInstance().forceLogMessage(output);
-//        }
-//
-//        TetradMatrix _L;
-//
-//        if (parameters.getBoolean("useVarimax")) {
-//            _L = rotated;
-//        } else {
-//            _L = unrotated;
-//        }
-//
-//
-//        TetradMatrix residual = analysis.getResidual();
 
         ICovarianceMatrix covFa = new CovarianceMatrix(dataSet.getVariables(), L.times(L.transpose()),
                 ((DataSet) dataSet).getNumRows());
@@ -186,7 +147,6 @@ public class GesMe implements Algorithm, TakesInitialGraph/*, HasKnowledge*/ {
         }
 
         if (parameters.getBoolean("verbose")) {
-//            NumberFormat nf = NumberFormatUtil.getInstance().getNumberFormat();
             String output = "Unrotated Factor Loading Matrix:\n";
             double threshold = parameters.getDouble("fa_threshold");
 
@@ -200,8 +160,6 @@ public class GesMe implements Algorithm, TakesInitialGraph/*, HasKnowledge*/ {
             System.out.println(output);
             TetradLogger.getInstance().forceLogMessage(output);
         }
-
-//        System.out.println("residual = " + residual);
 
         Graph out = search.search();
 
