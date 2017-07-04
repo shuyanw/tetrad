@@ -26,6 +26,7 @@ import edu.cmu.tetrad.algcomparison.algorithm.Algorithms;
 import edu.cmu.tetrad.algcomparison.algorithm.multi.Fang;
 import edu.cmu.tetrad.algcomparison.algorithm.multi.FasLofs;
 import edu.cmu.tetrad.algcomparison.simulation.LoadContinuousDataAndSingleGraph;
+import edu.cmu.tetrad.algcomparison.simulation.LoadContinuousDataSmithSim;
 import edu.cmu.tetrad.algcomparison.simulation.Simulations;
 import edu.cmu.tetrad.algcomparison.statistic.*;
 import edu.cmu.tetrad.data.*;
@@ -36,7 +37,6 @@ import edu.cmu.tetrad.regression.RegressionResult;
 import edu.cmu.tetrad.search.Lofs2;
 import edu.cmu.tetrad.sem.*;
 import edu.cmu.tetrad.util.Parameters;
-import edu.cmu.tetrad.util.StatUtils;
 import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.distribution.TDistribution;
 import org.junit.Test;
@@ -222,6 +222,10 @@ public class TestFang {
         comparison.compareFromSimulations("comparisonsmith", simulations, algorithms, statistics, parameters);
 //        comparison.compareFromFiles("comparison", algorithms, statistics, parameters);
 //        comparison.saveToFiles("comparison", new LinearFisherModel(new RandomForward()), parameters);
+
+    }
+
+    private void ousDataSmithSim(String s) {
 
     }
 
