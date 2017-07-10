@@ -77,7 +77,7 @@ public class GesMe implements Algorithm, TakesInitialGraph, HasKnowledge {
 
         switch (rotationIndex) {
             case 1:
-                rotationMethod = RotationMethod.BENTLER_Q;
+                rotationMethod = RotationMethod.QUARTIMIN;
                 break;
             default:
                 throw new IllegalArgumentException("Unrecognized rotation method.");
