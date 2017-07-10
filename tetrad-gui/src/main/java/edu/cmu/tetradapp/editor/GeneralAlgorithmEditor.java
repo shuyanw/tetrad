@@ -200,6 +200,7 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
         descriptions.add(new AlgorithmDescription(AlgName.CPCStable, AlgType.forbid_latent_common_causes, OracleType.Test));
         descriptions.add(new AlgorithmDescription(AlgName.PcStableMax, AlgType.forbid_latent_common_causes, OracleType.Test));
         descriptions.add(new AlgorithmDescription(AlgName.FGES, AlgType.forbid_latent_common_causes, OracleType.Score));
+        descriptions.add(new AlgorithmDescription(AlgName.GESME, AlgType.forbid_latent_common_causes, OracleType.None));
         descriptions.add(new AlgorithmDescription(AlgName.IMaGES_Discrete, AlgType.forbid_latent_common_causes, OracleType.None));
         descriptions.add(new AlgorithmDescription(AlgName.IMaGES_Continuous, AlgType.forbid_latent_common_causes, OracleType.None));
 //        descriptions.add(new AlgorithmDescription(AlgName.IMaGES_CCD, AlgType.forbid_latent_common_causes, OracleType.None));
@@ -927,6 +928,9 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
 //                algorithm = new Fges(scoreWrapper);
 //                }
                 break;
+            case GESME:
+                algorithm = new GesMe();
+                break;
 //            case FgesMeasurement:
 //                if (runner.getSourceGraph() != null && !runner.getDataModelList().isEmpty()) {
 //                    algorithm = new FgesMeasurement(scoreWrapper, new SingleGraphAlg(runner.getSourceGraph()));
@@ -1431,7 +1435,7 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
 
     private enum AlgName {
         PC, PCStable, CPC, CPCStable, FGES, /*PcLocal,*/ PcStableMax, FAS,
-        FgesMb, MBFS, Wfges, JCPC, /*FgesMeasurement,*/
+        FgesMb, MBFS, Wfges, JCPC, /*FgesMeasurement,*/ GESME,
         FCI, RFCI, CFCI, GFCI, TsFCI, TsGFCI, TsImages, CCD, CCD_MAX,
         LiNGAM, MGM,
         IMaGES_Discrete, IMaGES_Continuous, IMaGES_CCD,

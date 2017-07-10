@@ -193,6 +193,18 @@ public class ParamDescriptions {
                 	10, 1, Integer.MAX_VALUE));
         put("bootstrapEnsemble", new ParamDescription("Ensemble method: Preserved (0), Highest (1), Majority (2)", 1, 0, 2));
 
+        put("numFactors", new ParamDescription(
+                "The number of factors to extract",
+                3, 1, Integer.MAX_VALUE));
+
+        put("estimationMathod", new ParamDescription(
+                "1 = GLS, 2 = MINRES, 3 = ML, 4 = PRINOMP, 5 = WLS",
+                1, 1, 5));
+
+        put("determimismThreshold", new ParamDescription(
+                "Threshold for judging determism",
+                0.001, 0.0, Double.POSITIVE_INFINITY));
+
     }
 
     public static ParamDescriptions instance() {

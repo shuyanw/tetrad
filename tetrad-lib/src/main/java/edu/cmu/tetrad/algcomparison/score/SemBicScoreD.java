@@ -5,6 +5,7 @@ import edu.cmu.tetrad.data.DataType;
 import edu.cmu.tetrad.data.DataUtils;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.search.Score;
+import edu.cmu.tetrad.search.SemBicScoreDeterministic;
 import edu.cmu.tetrad.util.Parameters;
 
 import java.util.ArrayList;
@@ -22,8 +23,8 @@ public class SemBicScoreD implements ScoreWrapper {
     @Override
     public Score getScore(DataModel dataSet, Parameters parameters) {
         this.dataSet = dataSet;
-        edu.cmu.tetrad.search.SemBicScoreD semBicScore
-                = new edu.cmu.tetrad.search.SemBicScoreD(DataUtils.getCovMatrix(dataSet));
+        SemBicScoreDeterministic semBicScore
+                = new SemBicScoreDeterministic(DataUtils.getCovMatrix(dataSet));
         semBicScore.setPenaltyDiscount(parameters.getDouble("penaltyDiscount"));
         semBicScore.setDeterminismThreshold(parameters.getDouble("determinismThreshold"));
         return semBicScore;
