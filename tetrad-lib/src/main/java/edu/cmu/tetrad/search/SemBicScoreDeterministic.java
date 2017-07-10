@@ -104,6 +104,7 @@ public class SemBicScoreDeterministic implements Score {
         if (s2 <= small) {
             printDeterminism(i, parents);
             s2 = small;
+            return Double.NaN;
         }
 
         int n = getSampleSize();

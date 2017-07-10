@@ -75,8 +75,6 @@ public abstract class AbstractFactorMethod implements FactorMethod{
      * @return
      */
     public double getFactorLoadingAt(int i, int j){
-        System.out.println("i = " + i + " j = " + j);
-
         return factorLoading[i][j];
     }
 

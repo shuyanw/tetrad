@@ -11,7 +11,6 @@ import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.search.*;
-import edu.cmu.tetrad.search.Fges;
 import edu.cmu.tetrad.util.Parameters;
 import edu.cmu.tetrad.util.TetradMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -104,21 +103,10 @@ public class GesMe implements Algorithm, TakesInitialGraph, HasKnowledge {
         SemBicScoreDeterministic score = new SemBicScoreDeterministic(covariances);
         score.setDeterminismThreshold(parameters.getDouble("determimismThreshold"));
         score.setPenaltyDiscount(parameters.getDouble("penaltyDiscount"));
-        edu.cmu.tetrad.search.Fges search = new Fges(score);
+        edu.cmu.tetrad.search.Fges2 search = new Fges2(score);
         search.setFaithfulnessAssumed(parameters.getBoolean("faithfulnessAssumed"));
         search.setKnowledge(knowledge);
-        search.setVerbose(parameters.getBoolean("verbose"));
         search.setMaxDegree(parameters.getInt("maxDegree"));
-//        search.setSymmetricFirstStep(parameters.getBoolean("symmetricFirstStep"));
-
-        Object obj = parameters.get("printStream");
-        if (obj instanceof PrintStream) {
-            search.setOut((PrintStream) obj);
-        }
-
-        if (initial != null) {
-            search.setInitialGraph(initial);
-        }
 
         return search.search();
     }
