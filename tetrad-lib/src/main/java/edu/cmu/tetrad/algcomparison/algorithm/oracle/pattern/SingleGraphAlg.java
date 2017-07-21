@@ -19,7 +19,7 @@ import java.util.List;
  *
  * @author jdramsey
  */
-public class SingleGraphAlg implements Algorithm, TakesInitialGraph, HasKnowledge {
+public class SingleGraphAlg implements Algorithm, HasKnowledge {
     static final long serialVersionUID = 23L;
     private Graph graph;
 
@@ -60,4 +60,8 @@ public class SingleGraphAlg implements Algorithm, TakesInitialGraph, HasKnowledg
     @Override
     public void setKnowledge(IKnowledge knowledge) {
     }
+
+
+
+
 }

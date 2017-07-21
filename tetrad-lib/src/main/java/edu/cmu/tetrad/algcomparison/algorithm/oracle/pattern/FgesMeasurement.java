@@ -93,4 +93,9 @@ public class FgesMeasurement implements Algorithm, TakesInitialGraph, HasKnowled
     public void setKnowledge(IKnowledge knowledge) {
         this.knowledge = knowledge;
     }
+
+    @Override
+    public void setInitialGraph(Algorithm initialGraph) {
+        this.initialGraph = initialGraph;
+    }
 }

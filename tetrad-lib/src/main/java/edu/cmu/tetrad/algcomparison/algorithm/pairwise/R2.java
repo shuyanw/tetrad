@@ -67,4 +67,9 @@ public class R2 implements Algorithm, TakesInitialGraph {
     public List<String> getParameters() {
         return initialGraph.getParameters();
     }
+
+    @Override
+    public void setInitialGraph(Algorithm initialGraph) {
+        this.initialGraph = initialGraph;
+    }
 }

@@ -127,4 +127,8 @@ public class BootstrapFges implements Algorithm, TakesInitialGraph,
 	this.knowledge = knowledge;
     }
 
+	@Override
+	public void setInitialGraph(Algorithm initialGraph) {
+		this.initialGraph=initialGraph;
+	}
 }

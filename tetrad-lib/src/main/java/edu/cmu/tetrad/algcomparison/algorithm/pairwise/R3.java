@@ -70,4 +70,9 @@ public class R3 implements Algorithm, TakesInitialGraph {
     public void setKnowledge(IKnowledge knowledge) {
         this.knowledge = knowledge;
     }
+
+    @Override
+    public void setInitialGraph(Algorithm initialGraph) {
+        this.initialGraph = initialGraph;
+    }
 }

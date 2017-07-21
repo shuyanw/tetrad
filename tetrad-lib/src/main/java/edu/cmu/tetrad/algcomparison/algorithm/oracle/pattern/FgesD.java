@@ -120,4 +120,9 @@ public class FgesD implements Algorithm, TakesInitialGraph, HasKnowledge {
     public void setCompareToTrue(boolean compareToTrue) {
         this.compareToTrue = compareToTrue;
     }
+
+    @Override
+    public void setInitialGraph(Algorithm initialGraph) {
+        this.initialGraph = initialGraph;
+    }
 }

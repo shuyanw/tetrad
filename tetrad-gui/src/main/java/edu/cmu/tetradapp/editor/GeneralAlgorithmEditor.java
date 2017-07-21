@@ -39,6 +39,9 @@ import edu.cmu.tetrad.algcomparison.graph.SingleGraph;
 import edu.cmu.tetrad.algcomparison.independence.*;
 import edu.cmu.tetrad.algcomparison.score.*;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
+import edu.cmu.tetrad.algcomparison.utils.TakesIndependenceWrapper;
+import edu.cmu.tetrad.algcomparison.utils.TakesInitialGraph;
+import edu.cmu.tetrad.algcomparison.utils.UsesScoreWrapper;
 import edu.cmu.tetrad.annotation.AlgName;
 import edu.cmu.tetrad.annotation.AlgType;
 import edu.cmu.tetrad.annotation.OracleType;
@@ -85,6 +88,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -114,13 +119,13 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
 
     private static final long serialVersionUID = -5719467682865706447L;
 
-    private final HashMap<AlgName, AlgorithmDescriptionClass> mappedDescriptions;
+    private final HashMap<String, AlgorithmDescriptionClass> mappedDescriptions;
     private final GeneralAlgorithmRunner runner;
     private final JButton searchButton1 = new JButton("Search");
     private final JButton searchButton2 = new JButton("Search");
     private final JTabbedPane pane;
     private final JComboBox<String> algTypesDropdown = new JComboBox<>();
-    private final JComboBox<AlgName> algNamesDropdown = new JComboBox<>();
+    private final JComboBox<String> algNamesDropdown = new JComboBox<>();
     private final JComboBox<TestType> testDropdown = new JComboBox<>();
     private final JComboBox<ScoreType> scoreDropdown = new JComboBox<>();
     private final GraphSelectionEditor graphEditor;
@@ -530,10 +535,10 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
             public void watch() {
                 HpcAccount hpcAccount = null;
 
-                AlgName name = (AlgName) algNamesDropdown.getSelectedItem();
+                String name = (String) algNamesDropdown.getSelectedItem();
                 switch (name) {
-                    case FGES:
-                    case GFCI:
+                    case "FGES":
+                    case "GFCI":
                         hpcAccount = showRemoteComputingOptions(name);
                         break;
                     default:
@@ -557,7 +562,7 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
         };
     }
 
-    private HpcAccount showRemoteComputingOptions(AlgName name) {
+    private HpcAccount showRemoteComputingOptions(String name) {
         List<HpcAccount> hpcAccounts = desktop.getHpcAccountManager().getHpcAccounts();
 
         if (hpcAccounts == null || hpcAccounts.size() == 0) {
@@ -898,7 +903,7 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
     }
 
     public Algorithm getAlgorithmFromInterface() {
-        AlgName name = (AlgName) algNamesDropdown.getSelectedItem();
+        String name = (String) algNamesDropdown.getSelectedItem();
 
         if (name == null) {
             throw new NullPointerException();
@@ -924,19 +929,52 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
         return algorithm;
     }
 
-    private Algorithm getAlgorithm(AlgName name, IndependenceWrapper independenceWrapper, ScoreWrapper scoreWrapper) {
-        Algorithm algorithm;
+    private Algorithm getAlgorithm(String name, IndependenceWrapper independenceWrapper, ScoreWrapper scoreWrapper) {
+
+        Algorithm algorithm = AlgorithmDescriptionFactory.getInstance().getAlgorithmByName(name);
+
+        if (algorithm instanceof UsesScoreWrapper) {
+            ((UsesScoreWrapper) algorithm).setScoreWrapper(scoreWrapper);
+        }
+
+//        if (algorithm instanceof HasKnowledge) {
+//            ((HasKnowledge) algorithm).setKnowledge();
+//        }
+
+        if (algorithm instanceof TakesIndependenceWrapper) {
+            ((TakesIndependenceWrapper) algorithm).setIndependenceWrapper(independenceWrapper);
+        }
+
+        if (algorithm instanceof TakesInitialGraph) {
+            if (runner.getSourceGraph() != null && !runner.getDataModelList().isEmpty()) {
+                ((TakesInitialGraph) algorithm).setInitialGraph(new SingleGraphAlg(runner.getSourceGraph()));
+            }
+        }
 
 
-        switch (name) {
+
+
+
+
+
+
+        // TODO: get this out of here
+        AlgName enumName = AlgName.valueOf(name);
+
+
+
+
+        switch (enumName) {
+
+            /**
             case FGES:
                 algorithm = new Fges(scoreWrapper);
 
-//                if (runner.getSourceGraph() != null && !runner.getDataModelList().isEmpty()) {
-//                    algorithm = new Fges(scoreWrapper, new SingleGraphAlg(runner.getSourceGraph()));
-//                } else {
-//                algorithm = new Fges(scoreWrapper);
-//                }
+                if (runner.getSourceGraph() != null && !runner.getDataModelList().isEmpty()) {
+                    algorithm = new Fges(scoreWrapper, new SingleGraphAlg(runner.getSourceGraph()));
+                } else {
+                algorithm = new Fges(scoreWrapper);
+                }
                 break;
 //            case FgesMeasurement:
 //                if (runner.getSourceGraph() != null && !runner.getDataModelList().isEmpty()) {
@@ -952,6 +990,8 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
                     algorithm = new Pc(independenceWrapper);
                 }
                 break;
+
+
             case CPC:
                 if (runner.getSourceGraph() != null && !runner.getDataModelList().isEmpty()) {
                     algorithm = new Cpc(independenceWrapper, new SingleGraphAlg(runner.getSourceGraph()));
@@ -959,9 +999,13 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
                     algorithm = new Cpc(independenceWrapper);
                 }
                 break;
+
+
             case CPCStable:
                 algorithm = new CpcStable(independenceWrapper);
                 break;
+
+
             case PCStable:
                 if (runner.getSourceGraph() != null && !runner.getDataModelList().isEmpty()) {
                     algorithm = new PcStable(independenceWrapper, new SingleGraphAlg(runner.getSourceGraph()));
@@ -969,6 +1013,9 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
                     algorithm = new PcStable(independenceWrapper);
                 }
                 break;
+            **/
+
+
             case GFCI:
                 algorithm = new Gfci(independenceWrapper, scoreWrapper);
                 break;
@@ -1105,9 +1152,12 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
              	    break;
                 
             default:
-                throw new IllegalArgumentException("Please configure that algorithm: " + name);
+                Logger.getLogger(this.getClass()).log(Priority.INFO,"Please configure that algorithm: " + name);
 
         }
+
+
+
         return algorithm;
     }
 
@@ -1183,7 +1233,7 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
     }
 
     private void setAlgorithm() {
-        AlgName name = (AlgName) algNamesDropdown.getSelectedItem();
+        String name = (String) algNamesDropdown.getSelectedItem();
         AlgorithmDescriptionClass description = mappedDescriptions.get(name);
 
         if (name == null) {
@@ -1383,8 +1433,8 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
         return AlgName.valueOf(parameters.getString("algName", "PC"));
     }
 
-    private void setAlgName(AlgName algName) {
-        parameters.set("algName", algName.toString());
+    private void setAlgName(String algName) {
+        parameters.set("algName", algName);
     }
 
     private TestType getTestType() {

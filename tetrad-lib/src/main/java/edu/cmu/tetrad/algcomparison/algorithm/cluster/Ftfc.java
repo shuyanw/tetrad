@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @author jdramsey
  */
-public class Ftfc implements Algorithm, TakesInitialGraph, HasKnowledge, ClusterAlgorithm {
+public class Ftfc implements Algorithm, HasKnowledge, ClusterAlgorithm {
     static final long serialVersionUID = 23L;
     private IKnowledge knowledge = new Knowledge2();
 
@@ -79,4 +79,6 @@ public class Ftfc implements Algorithm, TakesInitialGraph, HasKnowledge, Cluster
     public void setKnowledge(IKnowledge knowledge) {
         this.knowledge = knowledge;
     }
+
+
 }

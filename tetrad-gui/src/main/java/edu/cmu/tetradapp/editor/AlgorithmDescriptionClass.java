@@ -9,26 +9,18 @@ import edu.cmu.tetrad.annotation.OracleType;
  * Created  6/30/17 4:15 PM
  */
 public class AlgorithmDescriptionClass {
-    private AlgName algName;
+    private String algName;
     private AlgType algType;
     private OracleType oracleType;
 
-    public AlgorithmDescriptionClass(AlgName name, AlgType algType, OracleType oracleType) {
+    public AlgorithmDescriptionClass(String name, AlgType algType, OracleType oracleType) {
         this.algName = name;
         this.algType = algType;
         this.oracleType = oracleType;
     }
 
-    public AlgorithmDescriptionClass(String name, AlgType algType, OracleType oracleType){
-        this.algName = AlgName.valueOf(name);
-        this.algType = algType;
-        this.oracleType = oracleType;
 
-    };
-
-
-
-    public AlgName getAlgName() {
+    public String getAlgName() {
         return algName;
     }
 

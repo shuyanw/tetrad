@@ -13,6 +13,4 @@ public @interface AlgorithmDescription {
     String name();
     AlgType algType();
     OracleType oracleType();
-    boolean independenceWrapper();
-    boolean scoreWrapper();
 }

@@ -88,4 +88,9 @@ public class PcStableMax implements Algorithm, TakesInitialGraph, HasKnowledge {
     public boolean isCompareToTrue() {
         return compareToTrue;
     }
+
+    @Override
+    public void setInitialGraph(Algorithm initialGraph) {
+        this.initialGraph = initialGraph;
+    }
 }
