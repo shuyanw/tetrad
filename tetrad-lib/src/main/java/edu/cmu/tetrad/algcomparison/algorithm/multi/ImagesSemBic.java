@@ -4,6 +4,9 @@ import edu.cmu.tetrad.algcomparison.algorithm.MultiDataSetAlgorithm;
 import edu.cmu.tetrad.algcomparison.algorithm.oracle.pattern.Fges;
 import edu.cmu.tetrad.algcomparison.score.SemBicScore;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
+import edu.cmu.tetrad.annotation.AlgType;
+import edu.cmu.tetrad.annotation.AlgorithmDescription;
+import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.search.SearchGraphUtils;
@@ -24,6 +27,11 @@ import java.util.List;
  *
  * @author jdramsey
  */
+@AlgorithmDescription(
+        name = "IMaGES_Continuous",
+        algType = AlgType.forbid_latent_common_causes,
+        oracleType = OracleType.None
+)
 public class ImagesSemBic implements MultiDataSetAlgorithm, HasKnowledge {
     static final long serialVersionUID = 23L;
     private IKnowledge knowledge = new Knowledge2();

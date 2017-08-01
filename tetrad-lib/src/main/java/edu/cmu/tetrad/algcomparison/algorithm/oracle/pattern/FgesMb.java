@@ -4,6 +4,9 @@ import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
 import edu.cmu.tetrad.algcomparison.score.ScoreWrapper;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.algcomparison.utils.TakesInitialGraph;
+import edu.cmu.tetrad.annotation.AlgType;
+import edu.cmu.tetrad.annotation.AlgorithmDescription;
+import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
@@ -20,6 +23,11 @@ import java.util.List;
  *
  * @author jdramsey
  */
+@AlgorithmDescription(
+        name = "FgesMb",
+        algType = AlgType.search_for_Markov_blankets,
+        oracleType = OracleType.Score
+)
 public class FgesMb implements Algorithm, TakesInitialGraph, HasKnowledge {
     static final long serialVersionUID = 23L;
     private ScoreWrapper score;

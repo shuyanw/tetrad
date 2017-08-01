@@ -4,6 +4,9 @@ import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
 import edu.cmu.tetrad.algcomparison.independence.IndependenceWrapper;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.algcomparison.utils.TakesInitialGraph;
+import edu.cmu.tetrad.annotation.AlgType;
+import edu.cmu.tetrad.annotation.AlgorithmDescription;
+import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.DataModel;
 import edu.cmu.tetrad.data.DataType;
 import edu.cmu.tetrad.data.IKnowledge;
@@ -20,6 +23,11 @@ import java.util.List;
  *
  * @author jdramsey
  */
+@AlgorithmDescription(
+        name = "PCStableMax",
+        algType = AlgType.forbid_latent_common_causes,
+        oracleType = OracleType.Test
+)
 public class PcStableMax implements Algorithm, TakesInitialGraph, HasKnowledge {
     static final long serialVersionUID = 23L;
     private boolean compareToTrue = false;

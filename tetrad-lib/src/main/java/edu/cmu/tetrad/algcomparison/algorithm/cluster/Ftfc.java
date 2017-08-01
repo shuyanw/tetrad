@@ -3,6 +3,9 @@ package edu.cmu.tetrad.algcomparison.algorithm.cluster;
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.algcomparison.utils.TakesInitialGraph;
+import edu.cmu.tetrad.annotation.AlgType;
+import edu.cmu.tetrad.annotation.AlgorithmDescription;
+import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
@@ -18,6 +21,12 @@ import java.util.List;
  *
  * @author jdramsey
  */
+@AlgorithmDescription(
+        name = "Ftfc",
+        algType = AlgType.search_for_structure_over_latents,
+        oracleType = OracleType.None
+)
+
 public class Ftfc implements Algorithm, HasKnowledge, ClusterAlgorithm {
     static final long serialVersionUID = 23L;
     private IKnowledge knowledge = new Knowledge2();

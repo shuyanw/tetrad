@@ -9,7 +9,9 @@ import org.reflections.Reflections;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -19,7 +21,7 @@ import java.util.Set;
 public class AlgorithmDescriptionFactory {
     private static AlgorithmDescriptionFactory ourInstance = new AlgorithmDescriptionFactory();
 
-    private HashMap<String,Class> algorithmMap = new HashMap<String, Class>();
+    private Map<String,Class> algorithmMap = new LinkedHashMap<>();
 
     private ArrayList<AlgorithmDescriptionClass> algorithmDescriptions = new ArrayList<AlgorithmDescriptionClass>();
 

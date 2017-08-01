@@ -4,6 +4,9 @@ import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
 import edu.cmu.tetrad.algcomparison.independence.IndependenceWrapper;
 import edu.cmu.tetrad.algcomparison.score.ScoreWrapper;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
+import edu.cmu.tetrad.annotation.AlgType;
+import edu.cmu.tetrad.annotation.AlgorithmDescription;
+import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.search.DagToPag;
@@ -21,6 +24,12 @@ import java.util.List;
  * @author Chirayu (Kong) Wongchokprasitti, PhD
  * 
  */
+@AlgorithmDescription(
+        name = "BootstrapGFCI",
+        algType = AlgType.bootstrapping,
+        oracleType = OracleType.Both
+)
+
 public class BootstrapGfci implements Algorithm, HasKnowledge {
 
     static final long serialVersionUID = 23L;

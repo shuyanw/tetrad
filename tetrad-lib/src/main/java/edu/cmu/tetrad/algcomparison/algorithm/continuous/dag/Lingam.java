@@ -1,6 +1,9 @@
 package edu.cmu.tetrad.algcomparison.algorithm.continuous.dag;
 
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
+import edu.cmu.tetrad.annotation.AlgType;
+import edu.cmu.tetrad.annotation.AlgorithmDescription;
+import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.DataModel;
 import edu.cmu.tetrad.data.DataUtils;
 import edu.cmu.tetrad.graph.EdgeListGraph;
@@ -16,6 +19,11 @@ import java.util.List;
  *
  * @author jdramsey
  */
+/*@AlgorithmDescription(
+        name = "LiNGAM",
+        algType = AlgType.forbid_latent_common_causes,
+        oracleType = OracleType.None
+)*/
 public class Lingam implements Algorithm {
     static final long serialVersionUID = 23L;
 
