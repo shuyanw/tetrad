@@ -21,24 +21,26 @@
 package edu.cmu.tetradapp.editor;
 
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
-import edu.cmu.tetrad.algcomparison.algorithm.description.AlgorithmDescriptionClass;
-import edu.cmu.tetrad.algcomparison.algorithm.description.AlgorithmDescriptions;
+import edu.cmu.tetrad.algcomparison.algorithm.AlgorithmFactory;
 import edu.cmu.tetrad.algcomparison.algorithm.oracle.pattern.*;
-import edu.cmu.tetrad.algcomparison.graph.SingleGraph;
 import edu.cmu.tetrad.algcomparison.independence.*;
 import edu.cmu.tetrad.algcomparison.score.*;
-import edu.cmu.tetrad.algcomparison.utils.TakesIndependenceWrapper;
 import edu.cmu.tetrad.algcomparison.utils.TakesInitialGraph;
-import edu.cmu.tetrad.algcomparison.utils.UsesScoreWrapper;
-import edu.cmu.tetrad.annotation.AlgName;
 import edu.cmu.tetrad.annotation.AlgType;
-import edu.cmu.tetrad.annotation.AlgorithmDescription;
-import edu.cmu.tetrad.annotation.OracleType;
-import edu.cmu.tetrad.annotation.ScoreType;
-import edu.cmu.tetrad.annotation.TestType;
+import edu.cmu.tetrad.annotation.AnnotatedClassUtils;
+import edu.cmu.tetrad.annotation.AnnotatedClassWrapper;
+import edu.cmu.tetrad.annotation.Gaussian;
+import edu.cmu.tetrad.annotation.Linear;
+import edu.cmu.tetrad.annotation.Score;
+import edu.cmu.tetrad.annotation.TestOfIndependence;
+import edu.cmu.tetrad.annotation.TetradAlgorithmAnnotations;
+import edu.cmu.tetrad.annotation.TetradScoreAnnotations;
+import edu.cmu.tetrad.annotation.TetradTestOfIndependenceAnnotations;
 import edu.cmu.tetrad.data.DataModel;
 import edu.cmu.tetrad.data.DataModelList;
 import edu.cmu.tetrad.data.DataSet;
+import edu.cmu.tetrad.data.DataType;
+import edu.cmu.tetrad.data.ICovarianceMatrix;
 import edu.cmu.tetrad.data.Knowledge2;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.Node;
@@ -67,16 +69,13 @@ import edu.pitt.dbmi.tetrad.db.entity.HpcParameter;
 import edu.pitt.dbmi.tetrad.db.entity.JvmOption;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
+import java.util.LinkedList;
 import java.util.List;
-import javax.help.HelpSet;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -92,46 +91,55 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
 
-    // Note: When adding an algorithm, make sure you do all of the following:
-    // 1. Add a enum AlgName in edu.cmu.tetrad.annotation.AlgName
-    // 2. Add a enum AlgType in edu.cmu.tetrad.annotation.AlgType if adding a new type
-    // 3. Inside algorithm calss, add the annotation block to describe the algorithm
     private static final long serialVersionUID = -5719467682865706447L;
 
     private final GeneralAlgorithmRunner runner;
-    private final Box algoTypesBox;
     private Box parametersBox;
     private Box graphContainer;
-    private final JComboBox<TestType> testDropdown = new JComboBox<>();
-    private final JComboBox<ScoreType> scoreDropdown = new JComboBox<>();
+    private JComboBox<AnnotatedClassWrapper<TestOfIndependence>> testDropdown;
+    private JComboBox<AnnotatedClassWrapper<Score>> scoreDropdown;
+    private DefaultComboBoxModel<AnnotatedClassWrapper<TestOfIndependence>> testDropdownModel = new DefaultComboBoxModel<>();
+    private DefaultComboBoxModel<AnnotatedClassWrapper<Score>> scoreDropdownModel = new DefaultComboBoxModel<>();
     private final GraphSelectionEditor graphEditor;
     private final Parameters parameters;
-    private final HelpSet helpSet;
     private final TetradDesktop desktop;
     private HpcJobInfo hpcJobInfo;
     private String jsonResult;
-    //private final TreeMap<String, AlgorithmDescriptionClass> descriptions;
-
-    private List<String> algorithmNames;
-
-    private List<String> algorithmsCanHaveKnowledge;
-    private DefaultListModel suggestedAlgosListModel = new DefaultListModel();
-    private JList suggestedAlgosList;
-    private Boolean takesKnowledgeFile = null;
-    private ButtonGroup algoTypesBtnGrp = new ButtonGroup();
-    private ButtonGroup varLinearRelationshipsBtnGrp = new ButtonGroup();
-    private ButtonGroup gaussianVariablesBtnGrp = new ButtonGroup();
-    private ButtonGroup priorKnowledgeBtnGrp = new ButtonGroup();
-    private ButtonGroup includeUnmeasuredConfoundersBtnGrp = new ButtonGroup();
-    private AlgType selectedAlgoType;
-    private String selectedAlgoName;
-    private JTextArea algoDescriptionTextArea = new JTextArea();
+    private final List<AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm>> algoWrappers;
+    private final List<AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm>> algorithmsAcceptKnowledge;
+    private final List<AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm>> algorithmsHandleUnmeasuredConfounder;
+    private List<AnnotatedClassWrapper<TestOfIndependence>> tests;
+    private List<AnnotatedClassWrapper<Score>> scores;
+    private List<AnnotatedClassWrapper<TestOfIndependence>> filteredIndTests;
+    private List<AnnotatedClassWrapper<Score>> filteredScores;
+    private final DefaultListModel<AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm>> suggestedAlgosListModel = new DefaultListModel<>();
+    private final JList<AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm>> suggestedAlgosList;
+    private AlgType selectedAlgoType = null;
+    private Boolean acceptKnowledgeFile = null;
+    private Boolean handleUnmeasuredConfounders = null;
+    private final ButtonGroup algoTypesBtnGrp = new ButtonGroup();
+    private final ButtonGroup priorKnowledgeBtnGrp = new ButtonGroup();
+    private final ButtonGroup unmeasuredConfoundersBtnGrp = new ButtonGroup();
+    private AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm> selectedAgloWrapper;
+    private final JTextArea algoDescriptionTextArea = new JTextArea();
     private ParameterPanel parametersPanel;
-    private JDialog loadingIndicatorDialog;
+    private JDialog loadingIndicatorDialog = new JDialog();
     private JButton step1BackBtn;
     private JButton step2Btn;
     private JButton step2BackBtn;
     private JButton step3Btn;
+
+    private JRadioButton algoTypeAllRadioBtn;
+    private JRadioButton priorKnowledgeAllRadioBtn;
+    private JRadioButton unmeasuredConfoundersAllRadioBtn;
+
+    // Assumption checkboxes
+    private JCheckBox linearVariablesCheckbox;
+    private JCheckBox gaussianVariablesCheckbox;
+
+    // Assumption flags
+    private boolean linearRelationshipAssumption = false;
+    private boolean gaussianVariablesAssumption = false;
 
     //=========================CONSTRUCTORS============================//
     /**
@@ -142,118 +150,213 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
     public GeneralAlgorithmEditor(final GeneralAlgorithmRunner runner) {
         this.runner = runner;
 
-        this.loadingIndicatorDialog = new JDialog();
+        this.desktop = (TetradDesktop) DesktopController.getInstance();
 
-        String helpHS = "/resources/javahelp/TetradHelp.hs";
+        // Access to the uploaded dataset
+        DataModelList dataModelList = runner.getDataModelList();
 
+        // NOTE: the dataModelList.isEmpty() returns false even if there's no real dataset
+        // Taht's because Joe's using an empty dataset to populate the empty spreadsheet - Zhou
+        // Notify the users that we need input dataset or source graph
+        // if the data model has no dataset
         try {
-            URL url = this.getClass().getResource(helpHS);
-            this.helpSet = new HelpSet(null, url);
-        } catch (Exception ee) {
-            System.out.println("HelpSet " + ee.getMessage());
-            System.out.println("HelpSet " + helpHS + " not found");
-            throw new IllegalArgumentException();
+            if ((dataModelList.containsEmptyData() && runner.getSourceGraph() == null)) {
+                throw new Exception("You need either some datasets or a graph as input.");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(desktop, e.getMessage(), "Please Note", JOptionPane.INFORMATION_MESSAGE);
         }
 
-        // Group the tests based on data type
-        List<TestType> discreteTests = new ArrayList<>();
-        discreteTests.add(TestType.ChiSquare);
-        discreteTests.add(TestType.GSquare);
-        discreteTests.add(TestType.Discrete_BIC_Test);
-        discreteTests.add(TestType.Conditional_Gaussian_LRT);
+        // Use annotations to populate algo list
+        // Only show algorithms that support multi dataset if there are multi datasets uploaded
+        // Otherwise show all algorithms that take at least one dataset
+        if (dataModelList.size() > 1) {
+            algoWrappers = TetradAlgorithmAnnotations.getInstance().getAcceptMultipleDatasetNameWrappers();
+        } else {
+            algoWrappers = TetradAlgorithmAnnotations.getInstance().getNameWrappers();
+        }
 
-        List<TestType> continuousTests = new ArrayList<>();
-        continuousTests.add(TestType.Fisher_Z);
-        continuousTests.add(TestType.Correlation_T);
-        continuousTests.add(TestType.SEM_BIC);
-        continuousTests.add(TestType.Conditional_Correlation);
-        continuousTests.add(TestType.Conditional_Gaussian_LRT);
+        // Algos that accept knowledge file
+        // Later use this to filter algos based on the knowledge siwtch
+        algorithmsAcceptKnowledge = TetradAlgorithmAnnotations.getInstance().getAcceptKnowledgeNameWrappers();
 
-        List<TestType> mixedTests = new ArrayList<>();
-        mixedTests.add(TestType.Conditional_Gaussian_LRT);
+        // Algos that can handle unmeasured confounders
+        // Later use this to filter algos based on the unmeasured confounders siwtch
+        algorithmsHandleUnmeasuredConfounder = TetradAlgorithmAnnotations.getInstance().getUnmeasuredConfounderNameWrappers();
 
-        List<TestType> dsepTests = new ArrayList<>();
-        dsepTests.add(TestType.D_SEPARATION);
+        // Use annotations to get the tests and scores based on different data types
+        // Need to do this before calling createAlgoChooserPanel() - Zhou
+        determineTestAndScore(dataModelList);
 
-        // Group the scores based on data type
-        List<ScoreType> discreteScores = new ArrayList<>();
-        discreteScores.add(ScoreType.BDeu);
-        discreteScores.add(ScoreType.Discrete_BIC);
-        discreteScores.add(ScoreType.Conditional_Gaussian_BIC);
+        // Create default models of test and score dropdowns
+        setTestAndScoreDropdownModels(tests, scores);
 
-        List<ScoreType> continuousScores = new ArrayList<>();
-        continuousScores.add(ScoreType.SEM_BIC);
-        continuousScores.add(ScoreType.Fisher_Z_Score);
-        continuousScores.add(ScoreType.Conditional_Gaussian_BIC);
+        // Create default algos list model
+        setDefaultAlgosListModel();
 
-        List<ScoreType> mixedScores = new ArrayList<>();
-        mixedScores.add(ScoreType.Conditional_Gaussian_BIC);
-
-        List<ScoreType> dsepScores = new ArrayList<>();
-        dsepScores.add(ScoreType.D_SEPARATION);
-
-        // Use annotations to populate description list
-        // TreeMap<String, AlgorithmDescriptionClass>
-        // TODO: fiter the algos to only show the ones can handle the uploaded dataset - Zhou
-        //descriptions = AlgorithmDescriptionFactory.getInstance().getAlgorithmDescriptions();
-        //algorithmsCanHaveKnowledge = AlgorithmDescriptionFactory.getInstance().getAlgorithmsCanHaveKnowledge();
-        algorithmNames = AlgorithmDescriptions.getInstance().getNames();
-
-        algorithmsCanHaveKnowledge = AlgorithmDescriptions.getInstance().getAcceptKnowledgeAlgorithms();
+        // Suggested algo list
+        suggestedAlgosList = new JList<>(suggestedAlgosListModel);
 
         this.parameters = runner.getParameters();
 
         graphEditor = new GraphSelectionEditor(new GraphSelectionWrapper(runner.getGraphs(), new Parameters()));
 
-        // Create the test/score dropdown menu based on dataset
-        List<TestType> tests;
-        List<ScoreType> scores;
+        // Embed the algo chooser panel into EditorWindow
+        add(createAlgoChooserPanel(), BorderLayout.CENTER);
 
-        // We can also use this way to filter the algos based on the data types they can handle - Zhou
-        DataModelList dataModelList = runner.getDataModelList();
+        // Default to select the first algo name in list
+        setSelection();
+    }
 
-        if ((dataModelList.isEmpty() && runner.getSourceGraph() != null)) {
-            tests = dsepTests;
-            scores = dsepScores;
-        } else if (!(dataModelList.isEmpty())) {
+    private void determineTestAndScore(DataModelList dataModelList) {
+        // Use annotations to get the tests based on data type
+        TetradTestOfIndependenceAnnotations indTestAnno = TetradTestOfIndependenceAnnotations.getInstance();
+        // Use annotations to get the scores based on data type
+        TetradScoreAnnotations scoreAnno = TetradScoreAnnotations.getInstance();
+
+        // Determine the test/score dropdown menu options based on dataset
+        if (dataModelList.isEmpty()) {
+            tests = indTestAnno.getNameWrappers(DataType.Graph);
+            scores = scoreAnno.getNameWrappers(DataType.Graph);
+        } else {
+            // Check type based on the first dataset
             DataModel dataSet = dataModelList.get(0);
 
-            if (dataSet.isContinuous()) {
-                tests = continuousTests;
-                scores = continuousScores;
+            // Covariance dataset is continuous at the same time - Zhou
+            if (dataSet.isContinuous() && !(dataSet instanceof ICovarianceMatrix)) {
+                tests = indTestAnno.getNameWrappers(DataType.Continuous);
+                scores = scoreAnno.getNameWrappers(DataType.Continuous);
             } else if (dataSet.isDiscrete()) {
-                tests = discreteTests;
-                scores = discreteScores;
+                tests = indTestAnno.getNameWrappers(DataType.Discrete);
+                scores = scoreAnno.getNameWrappers(DataType.Discrete);
             } else if (dataSet.isMixed()) {
-                tests = mixedTests;
-                scores = mixedScores;
+                tests = indTestAnno.getNameWrappers(DataType.Mixed);
+                scores = scoreAnno.getNameWrappers(DataType.Mixed);
+            } else if (dataSet instanceof ICovarianceMatrix) { // Better to add an isCovariance() - Zhou
+                tests = indTestAnno.getNameWrappers(DataType.Covariance);
+                scores = scoreAnno.getNameWrappers(DataType.Covariance);
             } else {
                 throw new IllegalArgumentException();
             }
-        } else {
-            throw new IllegalArgumentException("You need either some data sets or a graph as input.");
+        }
+    }
+
+    // Use this inside the assumptions checkboxes event listener to update the tests and scores
+    // based on the selections of those checkboxes
+    private void updateTestAndScoreOptions() {
+        // Update the tests and scores list to show items that have @linear/Gaussian annotations
+        filteredIndTests = tests;
+        filteredScores = scores;
+
+        if (linearRelationshipAssumption) {
+            filteredIndTests = AnnotatedClassUtils.filterByAnnotations(Linear.class, tests);
+            filteredScores = AnnotatedClassUtils.filterByAnnotations(Linear.class, scores);
         }
 
-        // Add to the test dropdown menu
-        for (TestType item : tests) {
-            testDropdown.addItem(item);
+        if (gaussianVariablesAssumption) {
+            filteredIndTests = AnnotatedClassUtils.filterByAnnotations(Gaussian.class, tests);
+            filteredScores = AnnotatedClassUtils.filterByAnnotations(Gaussian.class, scores);
         }
 
-        // Add to the score dropdown menu
-        for (ScoreType item : scores) {
-            scoreDropdown.addItem(item);
-        }
+        // Recreate the test and score dropdowns
+        setTestAndScoreDropdownModels(filteredIndTests, filteredScores);
+    }
+
+    private void setTestAndScoreDropdownModels(List<AnnotatedClassWrapper<TestOfIndependence>> tests, List<AnnotatedClassWrapper<Score>> scores) {
+        // First remove all elements from combox model before recreation
+        testDropdownModel.removeAllElements();
+        scoreDropdownModel.removeAllElements();
+
+        // Recreate the dropdown menus
+        tests.forEach((test) -> {
+            testDropdownModel.addElement(test);
+        });
+
+        scores.forEach((score) -> {
+            scoreDropdownModel.addElement(score);
+        });
+    }
+
+    private JPanel createAlgoChooserPanel() {
+        // Overall container
+        // contains data preview panel, loading params panel, and load button
+        Box container = Box.createVerticalBox();
+        // Must set the size of container
+        container.setPreferredSize(new Dimension(940, 640));
+
+        // Algo selection container, step 1
+        // contains 3 columns, leftContainer, middleContainer, and rightContainer
+        Box algoChooserContainer = Box.createHorizontalBox();
+        algoChooserContainer.setPreferredSize(new Dimension(940, 560));
+
+        // Parameters container, step 2
+        Box parametersContainer = Box.createHorizontalBox();
+        parametersContainer.setPreferredSize(new Dimension(940, 560));
+
+        // Graph container, step 3
+        graphContainer = Box.createHorizontalBox();
+        graphContainer.setPreferredSize(new Dimension(940, 580));
+
+        // Contains data description and result description
+        Box leftContainer = Box.createVerticalBox();
+        leftContainer.setPreferredSize(new Dimension(340, 560));
+
+        Box middleContainer = Box.createVerticalBox();
+        middleContainer.setPreferredSize(new Dimension(250, 560));
+
+        // Contains algo list, algo description, test, score, and parameters
+        Box rightContainer = Box.createVerticalBox();
+        rightContainer.setPreferredSize(new Dimension(340, 560));
+
+        // Describe your data and result using these filters
+        Box algoFiltersBox = Box.createVerticalBox();
+        algoFiltersBox.setMinimumSize(new Dimension(330, 550));
+        algoFiltersBox.setMaximumSize(new Dimension(330, 550));
+        algoFiltersBox.setAlignmentX(LEFT_ALIGNMENT);
+
+        // Use a titled border with 5 px inside padding - Zhou
+        String algoFiltersBoxBorderTitle = "Algorithm filters";
+        algoFiltersBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(algoFiltersBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
 
         // Filter based on algo types dropdown
-        algoTypesBox = Box.createVerticalBox();
+        Box algoTypesBox = Box.createVerticalBox();
 
         // Algo types label box
         Box algTypesBoxLabelBox = Box.createHorizontalBox();
-        algTypesBoxLabelBox.add(new JLabel("List Algorithms that: "));
+        algTypesBoxLabelBox.add(new JLabel("Filter algorithms that: "));
         algTypesBoxLabelBox.setAlignmentX(LEFT_ALIGNMENT);
 
         // Add label to containing box
         algoTypesBox.add(algTypesBoxLabelBox);
+
+        // All option
+        Box algoTypeOptionAllBox = Box.createHorizontalBox();
+        algoTypeOptionAllBox.setAlignmentX(LEFT_ALIGNMENT);
+
+        algoTypeAllRadioBtn = new JRadioButton("All");
+
+        // Add to button group
+        algoTypesBtnGrp.add(algoTypeAllRadioBtn);
+
+        // Add padding and option
+        algoTypeOptionAllBox.add(Box.createRigidArea(new Dimension(10, 20)));
+        algoTypeOptionAllBox.add(algoTypeAllRadioBtn);
+
+        // Add all option to containing box
+        algoTypesBox.add(algoTypeOptionAllBox);
+
+        // Event listener on each radio button
+        algoTypeAllRadioBtn.addActionListener((ActionEvent actionEvent) -> {
+            JRadioButton button = (JRadioButton) actionEvent.getSource();
+
+            if (button.isSelected()) {
+                // Update the selected algo type to null
+                selectedAlgoType = null;
+
+                // Update the list
+                updateSuggestedAlgosList();
+            }
+        });
 
         // Show each algo type as a radio button
         for (AlgType item : AlgType.values()) {
@@ -267,13 +370,6 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
 
             // Add to button group
             algoTypesBtnGrp.add(algoTypeRadioBtn);
-
-            // Default to select "ALL"
-            if ("ALL".equals(algoType)) {
-                algoTypeRadioBtn.setSelected(true);
-                // Set the default selected selectedAlgoType
-                selectedAlgoType = AlgType.ALL;
-            }
 
             // Add padding and option
             algoTypeOptionBox.add(Box.createRigidArea(new Dimension(10, 20)));
@@ -296,16 +392,225 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
             });
         }
 
-        // Add default algos to list model
-        setDefaultAlgosListModel();
+        // Set All as the default selection
+        algoTypeAllRadioBtn.setSelected(true);
 
-        suggestedAlgosList = new JList(suggestedAlgosListModel);
+        // Is there a prior knowledge file?
+        Box priorKnowledgeBox = Box.createVerticalBox();
 
+        // Add label into this label box to size
+        Box priorKnowledgeLabelBox = Box.createHorizontalBox();
+        priorKnowledgeLabelBox.add(new JLabel("Filter algorithms that: "));
+        priorKnowledgeLabelBox.setAlignmentX(LEFT_ALIGNMENT);
+
+        // Option all
+        Box priorKnowledgeOptionAllBox = Box.createHorizontalBox();
+        priorKnowledgeOptionAllBox.setAlignmentX(LEFT_ALIGNMENT);
+
+        priorKnowledgeAllRadioBtn = new JRadioButton("Both");
+
+        // Event listener
+        priorKnowledgeAllRadioBtn.addActionListener((ActionEvent actionEvent) -> {
+            JRadioButton button = (JRadioButton) actionEvent.getSource();
+
+            if (button.isSelected()) {
+                // Set the flag
+                acceptKnowledgeFile = null;
+
+                // Update the list
+                updateSuggestedAlgosList();
+            }
+        });
+
+        // Add padding and option
+        priorKnowledgeOptionAllBox.add(Box.createRigidArea(new Dimension(10, 20)));
+        priorKnowledgeOptionAllBox.add(priorKnowledgeAllRadioBtn);
+
+        // Option 1
+        Box priorKnowledgeOption1Box = Box.createHorizontalBox();
+        priorKnowledgeOption1Box.setAlignmentX(LEFT_ALIGNMENT);
+
+        JRadioButton priorKnowledgeYesRadioBtn = new JRadioButton("accept prior knowledge file");
+
+        // Event listener
+        priorKnowledgeYesRadioBtn.addActionListener((ActionEvent actionEvent) -> {
+            JRadioButton button = (JRadioButton) actionEvent.getSource();
+
+            if (button.isSelected()) {
+                // Set the flag
+                acceptKnowledgeFile = true;
+
+                // Update the list
+                updateSuggestedAlgosList();
+            }
+        });
+
+        // Add padding and option
+        priorKnowledgeOption1Box.add(Box.createRigidArea(new Dimension(10, 20)));
+        priorKnowledgeOption1Box.add(priorKnowledgeYesRadioBtn);
+
+        // Option 2
+        Box priorKnowledgeOption2Box = Box.createHorizontalBox();
+        priorKnowledgeOption2Box.setAlignmentX(LEFT_ALIGNMENT);
+
+        JRadioButton priorKnowledgeNoRadioBtn = new JRadioButton("don't accept prior knowledge file");
+
+        // Event listener
+        priorKnowledgeNoRadioBtn.addActionListener((ActionEvent actionEvent) -> {
+            JRadioButton button = (JRadioButton) actionEvent.getSource();
+
+            if (button.isSelected()) {
+                // Set the flag
+                acceptKnowledgeFile = false;
+
+                // Update the list model
+                updateSuggestedAlgosList();
+            }
+        });
+
+        // Add padding and option
+        priorKnowledgeOption2Box.add(Box.createRigidArea(new Dimension(10, 20)));
+        priorKnowledgeOption2Box.add(priorKnowledgeNoRadioBtn);
+
+        // We need to group the radio buttons, otherwise all can be selected
+        priorKnowledgeBtnGrp.add(priorKnowledgeAllRadioBtn);
+        priorKnowledgeBtnGrp.add(priorKnowledgeYesRadioBtn);
+        priorKnowledgeBtnGrp.add(priorKnowledgeNoRadioBtn);
+
+        // Set All as the default selection
+        priorKnowledgeAllRadioBtn.setSelected(true);
+
+        // Add to containg box
+        priorKnowledgeBox.add(priorKnowledgeLabelBox);
+        priorKnowledgeBox.add(priorKnowledgeOptionAllBox);
+        priorKnowledgeBox.add(priorKnowledgeOption1Box);
+        priorKnowledgeBox.add(priorKnowledgeOption2Box);
+
+        // Can algorithms handle unmeasured confounders?
+        Box unmeasuredConfoundersBox = Box.createVerticalBox();
+
+        // Add label into this label box to size
+        Box unmeasuredConfoundersLabelBox = Box.createHorizontalBox();
+        unmeasuredConfoundersLabelBox.add(new JLabel("Filter algorithms that: "));
+        unmeasuredConfoundersLabelBox.setAlignmentX(LEFT_ALIGNMENT);
+
+        // Option all
+        Box unmeasuredConfoundersOptionAllBox = Box.createHorizontalBox();
+        unmeasuredConfoundersOptionAllBox.setAlignmentX(LEFT_ALIGNMENT);
+
+        unmeasuredConfoundersAllRadioBtn = new JRadioButton("Both");
+
+        // Event listener
+        unmeasuredConfoundersAllRadioBtn.addActionListener((ActionEvent actionEvent) -> {
+            JRadioButton button = (JRadioButton) actionEvent.getSource();
+
+            if (button.isSelected()) {
+                // Set the flag
+                handleUnmeasuredConfounders = null;
+
+                // Update the list
+                updateSuggestedAlgosList();
+            }
+        });
+
+        // Add padding and option
+        unmeasuredConfoundersOptionAllBox.add(Box.createRigidArea(new Dimension(10, 20)));
+        unmeasuredConfoundersOptionAllBox.add(unmeasuredConfoundersAllRadioBtn);
+
+        // Option 1
+        Box unmeasuredConfoundersOption1Box = Box.createHorizontalBox();
+        unmeasuredConfoundersOption1Box.setAlignmentX(LEFT_ALIGNMENT);
+
+        JRadioButton unmeasuredConfoundersYesRadioBtn = new JRadioButton("can handle unmeasured confounders");
+
+        // Event listener
+        unmeasuredConfoundersYesRadioBtn.addActionListener((ActionEvent actionEvent) -> {
+            JRadioButton button = (JRadioButton) actionEvent.getSource();
+
+            if (button.isSelected()) {
+                // Set the flag
+                handleUnmeasuredConfounders = true;
+
+                // Update the list
+                updateSuggestedAlgosList();
+            }
+        });
+
+        // Add padding and option
+        unmeasuredConfoundersOption1Box.add(Box.createRigidArea(new Dimension(10, 20)));
+        unmeasuredConfoundersOption1Box.add(unmeasuredConfoundersYesRadioBtn);
+
+        // Option 2
+        Box unmeasuredConfoundersOption2Box = Box.createHorizontalBox();
+        unmeasuredConfoundersOption2Box.setAlignmentX(LEFT_ALIGNMENT);
+
+        JRadioButton unmeasuredConfoundersNoRadioBtn = new JRadioButton("can't handle unmeasured confounders");
+
+        // Event listener
+        unmeasuredConfoundersNoRadioBtn.addActionListener((ActionEvent actionEvent) -> {
+            JRadioButton button = (JRadioButton) actionEvent.getSource();
+
+            if (button.isSelected()) {
+                // Set the flag
+                handleUnmeasuredConfounders = false;
+
+                // Update the list
+                updateSuggestedAlgosList();
+            }
+        });
+
+        // Add padding and option
+        unmeasuredConfoundersOption2Box.add(Box.createRigidArea(new Dimension(10, 20)));
+        unmeasuredConfoundersOption2Box.add(unmeasuredConfoundersNoRadioBtn);
+
+        // We need to group the radio buttons, otherwise all can be selected
+        unmeasuredConfoundersBtnGrp.add(unmeasuredConfoundersAllRadioBtn);
+        unmeasuredConfoundersBtnGrp.add(unmeasuredConfoundersYesRadioBtn);
+        unmeasuredConfoundersBtnGrp.add(unmeasuredConfoundersNoRadioBtn);
+
+        // Set All as the default selection
+        unmeasuredConfoundersAllRadioBtn.setSelected(true);
+
+        // Add to containing box
+        unmeasuredConfoundersBox.add(unmeasuredConfoundersLabelBox);
+        unmeasuredConfoundersBox.add(unmeasuredConfoundersOptionAllBox);
+        unmeasuredConfoundersBox.add(unmeasuredConfoundersOption1Box);
+        unmeasuredConfoundersBox.add(unmeasuredConfoundersOption2Box);
+        unmeasuredConfoundersBox.add(Box.createHorizontalGlue());
+
+        // Reset filter selections
+        JButton resetFilterSelectionsBtn = new JButton("Reset all filters");
+
+        // Event listener of clearFilterSelectionsBtn
+        resetFilterSelectionsBtn.addActionListener((ActionEvent actionEvent) -> {
+            resetAlgoFilters();
+        });
+
+        // Items to put in data description box
+        algoFiltersBox.add(algoTypesBox);
+        algoFiltersBox.add(Box.createVerticalStrut(10));
+        algoFiltersBox.add(priorKnowledgeBox);
+        algoFiltersBox.add(Box.createVerticalStrut(10));
+        algoFiltersBox.add(unmeasuredConfoundersBox);
+        algoFiltersBox.add(Box.createVerticalStrut(20));
+        algoFiltersBox.add(resetFilterSelectionsBtn);
+
+        // Add to leftContainer
+        leftContainer.add(algoFiltersBox);
+
+        // Components in middleContainer
+        // Show a list of filtered algorithms
+        Box suggestedAlgosBox = Box.createVerticalBox();
+        suggestedAlgosBox.setMinimumSize(new Dimension(240, 550));
+        suggestedAlgosBox.setMaximumSize(new Dimension(240, 550));
+
+        // Use a titled border with 5 px inside padding - Zhou
+        String suggestedAlgosBoxBorderTitle = "Choose algorithm";
+        suggestedAlgosBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(suggestedAlgosBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
+
+        // suggestedAlgosList
         // Only allow single selection
         suggestedAlgosList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        // Default to select the first algo name in list
-        setDefaultSelectedAlgo();
 
         // Event listener
         suggestedAlgosList.addListSelectionListener((ListSelectionEvent e) -> {
@@ -319,97 +624,500 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
                     return;
                 }
 
-                selectedAlgoName = suggestedAlgosList.getSelectedValue().toString();
+                selectedAgloWrapper = suggestedAlgosList.getSelectedValue();
 
-                System.out.println("Selected algo ..." + selectedAlgoName);
-
-                // Reset description
+                // Set description
                 setAlgoDescriptionContent();
 
-                // Finally, update the test and score dropdown menus
+                // Update the test and score dropdown menus
+                // and set all other parameters
                 setAlgorithm();
             }
         });
 
-        if (tests.contains(getTestType())) {
-            testDropdown.setSelectedItem(getTestType());
-        }
+        // Put the list in a scrollable area
+        JScrollPane suggestedAlgosListScrollPane = new JScrollPane(suggestedAlgosList);
+        suggestedAlgosListScrollPane.setMinimumSize(new Dimension(260, 550));
+        suggestedAlgosListScrollPane.setMaximumSize(new Dimension(260, 550));
 
-        if (scores.contains(getScoreType())) {
-            scoreDropdown.setSelectedItem(getScoreType());
-        }
+        suggestedAlgosBox.add(suggestedAlgosListScrollPane);
 
-        testDropdown.setEnabled(parameters.getBoolean("testEnabled", true));
-        scoreDropdown.setEnabled(parameters.getBoolean("scoreEnabled", false));
+        middleContainer.add(suggestedAlgosBox);
 
+        // Components in rightContainer
+        // Algo description
+        Box algoDescriptionBox = Box.createVerticalBox();
+        algoDescriptionBox.setMinimumSize(new Dimension(330, 335));
+        algoDescriptionBox.setMaximumSize(new Dimension(330, 335));
+
+        // Use a titled border with 5 px inside padding - Zhou
+        String algoDescriptionBoxBorderTitle = "Algorithm description";
+        algoDescriptionBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(algoDescriptionBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
+
+        // Set line arap
+        algoDescriptionTextArea.setWrapStyleWord(true);
+        algoDescriptionTextArea.setLineWrap(true);
+
+        // Read only
+        algoDescriptionTextArea.setEditable(false);
+
+        JScrollPane algoDescriptionScrollPane = new JScrollPane(algoDescriptionTextArea);
+        algoDescriptionScrollPane.setMinimumSize(new Dimension(330, 335));
+        algoDescriptionScrollPane.setMaximumSize(new Dimension(330, 335));
+
+        algoDescriptionBox.add(algoDescriptionScrollPane);
+
+        // Choose corresponding test and score based on algorithm
+        Box testAndScoreBox = Box.createVerticalBox();
+        testAndScoreBox.setMinimumSize(new Dimension(330, 200));
+        testAndScoreBox.setMaximumSize(new Dimension(330, 200));
+
+        // Use a titled border with 5 px inside padding - Zhou
+        String testAndScoreBoxBorderTitle = "Choose Independence Test and Score";
+        testAndScoreBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(testAndScoreBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
+
+        // Assumptions label box
+        Box assumptionsLabelBox = Box.createHorizontalBox();
+        assumptionsLabelBox.setPreferredSize(new Dimension(330, 20));
+        JLabel assumptionsLabel = new JLabel("Filter by dataset properties: ");
+        //assumptionsLabelBox.setAlignmentX(LEFT_ALIGNMENT);
+        assumptionsLabelBox.add(assumptionsLabel);
+        assumptionsLabelBox.add(Box.createHorizontalGlue());
+
+        Box linearRelationshipBox = Box.createHorizontalBox();
+        linearRelationshipBox.add(Box.createRigidArea(new Dimension(10, 20)));
+        linearVariablesCheckbox = new JCheckBox("Variables with linear relationship");
+
+        // Register event listener on checkbox
+        linearVariablesCheckbox.addActionListener((ActionEvent actionEvent) -> {
+            // Set the flag
+            linearRelationshipAssumption = linearVariablesCheckbox.isSelected();
+            // Recreate the dropdown
+            updateTestAndScoreOptions();
+        });
+
+        //linearVariablesBox.setAlignmentX(LEFT_ALIGNMENT);
+        linearRelationshipBox.add(linearVariablesCheckbox);
+        linearRelationshipBox.add(Box.createHorizontalGlue());
+
+        Box gaussianVariablesBox = Box.createHorizontalBox();
+        gaussianVariablesBox.add(Box.createRigidArea(new Dimension(10, 20)));
+        gaussianVariablesCheckbox = new JCheckBox("Gaussian variables");
+
+        // Register event listener on checkbox
+        gaussianVariablesCheckbox.addActionListener((ActionEvent actionEvent) -> {
+            // Set the flag
+            gaussianVariablesAssumption = gaussianVariablesCheckbox.isSelected();
+            // Recreate the dropdown
+            updateTestAndScoreOptions();
+        });
+
+        //gaussianVariablesBox.setAlignmentX(LEFT_ALIGNMENT);
+        gaussianVariablesBox.add(gaussianVariablesCheckbox);
+        gaussianVariablesBox.add(Box.createHorizontalGlue());
+
+        // Test container
+        Box testBox = Box.createHorizontalBox();
+
+        Box testLabelBox = Box.createHorizontalBox();
+        testLabelBox.setPreferredSize(new Dimension(55, 15));
+        JLabel testLabel = new JLabel("Test:");
+        testLabelBox.add(testLabel);
+
+        Box testSelectionBox = Box.createHorizontalBox();
+
+        // Initialize test dropdown menu
+        testDropdown = new JComboBox<>(testDropdownModel);
+
+        testDropdown.setPreferredSize(new Dimension(240, 15));
+
+        // Event listener of test seleciton
         testDropdown.addActionListener((ActionEvent e) -> {
-            setAlgorithm();
+            // Don't use setAlgorithm() because we don't need to determine if
+            // enable/disable the test and score dropdown menus again - Zhou
+            if (testDropdown.getSelectedItem() != null) {
+                setTestType(((AnnotatedClassWrapper<TestOfIndependence>) testDropdown.getSelectedItem()).getName());
+            }
         });
 
+        testSelectionBox.add(testDropdown);
+
+        testBox.add(testLabelBox);
+        testBox.add(testSelectionBox);
+
+        // Score container
+        Box scoreBox = Box.createHorizontalBox();
+
+        Box scoreLabelBox = Box.createHorizontalBox();
+        scoreLabelBox.setPreferredSize(new Dimension(55, 15));
+        JLabel scoreLabel = new JLabel("Score:");
+        scoreLabelBox.add(scoreLabel);
+
+        Box scoreSelectionBox = Box.createHorizontalBox();
+
+        // Initialize score dropdown menu
+        scoreDropdown = new JComboBox<>(scoreDropdownModel);
+        scoreDropdown.setPreferredSize(new Dimension(240, 15));
+
+        // Event listener of score seleciton
         scoreDropdown.addActionListener((ActionEvent e) -> {
-            setAlgorithm();
+            // Don't use setAlgorithm() because we don't need to determine if
+            // enable/disable the test and score dropdown menus again - Zhou
+            if (scoreDropdown.getSelectedItem() != null) {
+                setScoreType(((AnnotatedClassWrapper<Score>) scoreDropdown.getSelectedItem()).getName());
+            }
         });
 
-        // Embed the algo chooser panel into EditorWindow
-        add(createAlgoChooserPanel(), BorderLayout.CENTER);
+        scoreSelectionBox.add(scoreDropdown);
 
-        this.desktop = (TetradDesktop) DesktopController.getInstance();
+        scoreBox.add(scoreLabelBox);
+        scoreBox.add(scoreSelectionBox);
+
+        // Add to testAndScoreBox
+        testAndScoreBox.add(assumptionsLabelBox);
+        testAndScoreBox.add(linearRelationshipBox);
+        testAndScoreBox.add(gaussianVariablesBox);
+
+        // Add some gap
+        testAndScoreBox.add(Box.createVerticalStrut(10));
+        testAndScoreBox.add(testBox);
+        // Add some gap
+        testAndScoreBox.add(Box.createVerticalStrut(10));
+        testAndScoreBox.add(scoreBox);
+
+        // Parameters
+        parametersBox = Box.createVerticalBox();
+        parametersBox.setMinimumSize(new Dimension(940, 570));
+        parametersBox.setMaximumSize(new Dimension(940, 570));
+
+        // Use a titled border with 5 px inside padding - Zhou
+        String parametersBoxBorderTitle = "Specify algorithm parameters";
+        parametersBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(parametersBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
+
+        // Parameters
+        // This is only the parameters pane of the default algorithm - Zhou
+        parametersPanel = new ParameterPanel(runner.getAlgorithm().getParameters(), getParameters());
+
+        parametersPanel.setMinimumSize(new Dimension(920, 590));
+        parametersPanel.setMaximumSize(new Dimension(920, 590));
+
+        // Add to parameters box
+        parametersBox.add(parametersPanel);
+
+        // Add to parametersContainer
+        parametersContainer.add(parametersBox);
+
+        // Back to step 1 button
+        step1BackBtn = new JButton("< Choose Algorithm");
+
+        // Step 1 button listener
+        step1BackBtn.addActionListener((ActionEvent e) -> {
+            // Hide parameters
+            parametersContainer.setVisible(false);
+
+            // Show algo step 1
+            algoChooserContainer.setVisible(true);
+
+            // Show step 2 button
+            step2Btn.setVisible(true);
+
+            // Hide step 3 button
+            step3Btn.setVisible(false);
+
+            // Hide back button
+            step1BackBtn.setVisible(false);
+        });
+
+        // Hide step 2
+        parametersContainer.setVisible(false);
+
+        // Parameters button
+        step2Btn = new JButton("Set Parameters >");
+        step2BackBtn = new JButton("< Set Parameters");
+
+        // Step 2 button listener
+        step2Btn.addActionListener((ActionEvent e) -> {
+            // Show parameters
+            parametersContainer.setVisible(true);
+
+            // Hide algo step 1
+            algoChooserContainer.setVisible(false);
+
+            // SHow back to step 1 button and search button
+            step1BackBtn.setVisible(true);
+            step3Btn.setVisible(true);
+
+            // Hide step 2 button
+            step2Btn.setVisible(false);
+        });
+
+        // Step 2 button listener
+        step2BackBtn.addActionListener((ActionEvent e) -> {
+            // Show parameters
+            parametersContainer.setVisible(true);
+
+            // Hide algo step 1
+            algoChooserContainer.setVisible(false);
+
+            // Hide step 3 graph
+            graphContainer.setVisible(false);
+
+            // SHow back to step 1 button and search button
+            step1BackBtn.setVisible(true);
+            step3Btn.setVisible(true);
+
+            // Hide step 2 button
+            step2Btn.setVisible(false);
+
+            // Hide back button
+            step2BackBtn.setVisible(false);
+        });
+
+        // Step 3 button
+        step3Btn = new JButton("Run Search & Generate Graph >");
+
+        step3Btn.addActionListener((ActionEvent e) -> {
+            // Load all data files and hide the loading indicator once done
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    doSearch(runner);
+
+                    // Schedule a Runnable which will be executed on the Event Dispatching Thread
+                    // SwingUtilities.invokeLater means that this call will return immediately
+                    // as the event is placed in Event Dispatcher Queue,
+                    // and run() method will run asynchronously
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Hide the loading indicator
+                            hideLoadingIndicator();
+
+                            // Hide algo chooser
+                            algoChooserContainer.setVisible(false);
+
+                            // Hide parameters
+                            parametersContainer.setVisible(false);
+
+                            // Show graphContainer
+                            graphContainer.setVisible(true);
+
+                            // Show back to step 2 button
+                            step2BackBtn.setVisible(true);
+
+                            // Hide step 1 back button
+                            step1BackBtn.setVisible(false);
+
+                            // Hide step 3 button
+                            step3Btn.setVisible(false);
+                        }
+                    });
+                }
+            }).start();
+
+            // Create the loading indicator dialog and show
+            showLoadingIndicator("Runing...");
+        });
+
+        // Add to rightContainer
+        rightContainer.add(Box.createVerticalStrut(10));
+        rightContainer.add(algoDescriptionBox);
+        rightContainer.add(Box.createVerticalStrut(10));
+        rightContainer.add(testAndScoreBox);
+
+        // Buttons container
+        Box buttonsContainer = Box.createVerticalBox();
+
+        // Buttons box
+        Box buttonsBox = Box.createHorizontalBox();
+        buttonsBox.add(step1BackBtn);
+        // Don't use Box.createHorizontalStrut(20)
+        buttonsBox.add(Box.createRigidArea(new Dimension(20, 0)));
+        buttonsBox.add(step2Btn);
+        buttonsBox.add(Box.createRigidArea(new Dimension(20, 0)));
+        buttonsBox.add(step2BackBtn);
+        buttonsBox.add(Box.createRigidArea(new Dimension(20, 0)));
+        buttonsBox.add(step3Btn);
+
+        // Default to only show step 2 forward button
+        step1BackBtn.setVisible(false);
+        step2BackBtn.setVisible(false);
+        step3Btn.setVisible(false);
+
+        // Add to buttons container
+        buttonsContainer.add(Box.createVerticalStrut(10));
+        buttonsContainer.add(buttonsBox);
+
+        // Add to algoChooserContainer as the first column
+        algoChooserContainer.add(leftContainer);
+
+        // Add some gap
+        algoChooserContainer.add(Box.createHorizontalStrut(10));
+
+        // Add middleContainer
+        algoChooserContainer.add(middleContainer);
+
+        // Add some gap
+        algoChooserContainer.add(Box.createHorizontalStrut(10));
+
+        // Add to algoChooserContainer as the third column
+        algoChooserContainer.add(rightContainer);
+
+        // Add to big panel
+        container.add(algoChooserContainer);
+
+        container.add(parametersContainer);
+
+        container.add(graphContainer);
+
+        container.add(buttonsContainer);
+
+        JPanel p = new JPanel(new BorderLayout());
+        p.add(container, BoxLayout.X_AXIS);
+
+        return p;
+    }
+
+    private void setDefaultAlgosListModel() {
+        // Clear the list model
+        suggestedAlgosListModel.removeAllElements();
+
+        algoWrappers.forEach(e -> {
+            suggestedAlgosListModel.addElement(e);
+        });
+    }
+
+    private void setAlgoDescriptionContent() {
+        if (!suggestedAlgosListModel.isEmpty() && selectedAgloWrapper != null) {
+            edu.cmu.tetrad.annotation.Algorithm agloAnno = selectedAgloWrapper.getAnnotatedClass().getAnnotation();
+            algoDescriptionTextArea.setText("Description of " + agloAnno.name() + ": " + agloAnno.description());
+        } else {
+            // Erase the previous content
+            algoDescriptionTextArea.setText("");
+        }
+    }
+
+    private void resetAlgoFilters() {
+        // Reset algo type to All
+        selectedAlgoType = null;
+
+        algoTypesBtnGrp.setSelected(algoTypeAllRadioBtn.getModel(), true);
+
+        // Also need to reset the knowledge file flag
+        acceptKnowledgeFile = null;
+
+        // Reset prior knowledge to All
+        priorKnowledgeBtnGrp.setSelected(priorKnowledgeAllRadioBtn.getModel(), true);
+
+        // Also need to reset the unmeasured confounders flag
+        handleUnmeasuredConfounders = null;
+
+        // Reset unmeasured confounders to All
+        unmeasuredConfoundersBtnGrp.setSelected(unmeasuredConfoundersAllRadioBtn.getModel(), true);
+
+        // Don't forget to update the list of algos
+        setDefaultAlgosListModel();
+
+        // Reset default selected algorithm
+        setSelection();
     }
 
     private void updateSuggestedAlgosList() {
         // Clear the list model
         suggestedAlgosListModel.removeAllElements();
 
-        // Create a new list model based on selections
-        for (String algoName : algorithmNames) {
-            // Also check the there's selection of knowledge file
-            AlgorithmDescriptionClass algoDescClass = AlgorithmDescriptions.getInstance().get(algoName);
+        // Algo type, knowledge file, unmeasured confounders
+        List<AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm>> filteredAlgosByType = new LinkedList<>();
+        List<AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm>> filteredAlgosByKnowledgeFile = new LinkedList<>();
+        List<AnnotatedClassWrapper<edu.cmu.tetrad.annotation.Algorithm>> filteredAlgosByUnmeasuredConfounder = new LinkedList<>();
 
-            AlgorithmDescription algoDesc = algoDescClass.getAlgorithmDescription();
+        // Don't assign algoWrappers directly to the above three lists since algoWrappers is unmodifiableList
+        // Iterate over algoWrappers so all the three lists contain all algos at the beginning
+        algoWrappers.forEach(algoWrapper -> {
+            filteredAlgosByType.add(algoWrapper);
+            filteredAlgosByKnowledgeFile.add(algoWrapper);
+            filteredAlgosByUnmeasuredConfounder.add(algoWrapper);
+        });
 
-            if (takesKnowledgeFile != null) {
-                if (takesKnowledgeFile) {
-                    if ((algoDesc.algType() == selectedAlgoType || selectedAlgoType == AlgType.ALL) && algorithmsCanHaveKnowledge.contains(algoDesc.name())) {
-                        suggestedAlgosListModel.addElement(algoDesc.name());
-                    }
-                } else if ((algoDesc.algType() == selectedAlgoType || selectedAlgoType == AlgType.ALL) && !algorithmsCanHaveKnowledge.contains(algoDesc.name())) {
-                    suggestedAlgosListModel.addElement(algoDesc.name());
+        // Remove algos that are not the selected type from filteredAlgosByType if a specific algo type is selected
+        if (selectedAlgoType != null) {
+            algoWrappers.forEach(algoWrapper -> {
+                edu.cmu.tetrad.annotation.Algorithm annotation = algoWrapper.getAnnotatedClass().getAnnotation();
+
+                if (annotation.algoType() != selectedAlgoType) {
+                    filteredAlgosByType.remove(algoWrapper);
                 }
-            } else if (algoDesc.algType() == selectedAlgoType || selectedAlgoType == AlgType.ALL) {
-                suggestedAlgosListModel.addElement(algoDesc.name());
-            }
+            });
         }
 
+        // Remove algos that don't meet the prior knowledge file selection
+        if (acceptKnowledgeFile != null) {
+            algoWrappers.forEach(algoWrapper -> {
+                Class clazz = algoWrapper.getAnnotatedClass().getClazz();
+
+                // Remove algo if the the flag doesn't equal to the acceptKnowledge(clazz)
+                if (acceptKnowledgeFile != TetradAlgorithmAnnotations.getInstance().acceptKnowledge(clazz)) {
+                    filteredAlgosByKnowledgeFile.remove(algoWrapper);
+                }
+            });
+        }
+
+        if (handleUnmeasuredConfounders != null) {
+            algoWrappers.forEach(algoWrapper -> {
+                Class clazz = algoWrapper.getAnnotatedClass().getClazz();
+
+                // Remove algo is flag doesn't equal to the handleUnmeasuredConfounder(clazz)
+                if (handleUnmeasuredConfounders != TetradAlgorithmAnnotations.getInstance().handleUnmeasuredConfounder(clazz)) {
+                    filteredAlgosByUnmeasuredConfounder.remove(algoWrapper);
+                }
+            });
+        }
+
+        // Now get intersections of all three lists
+        // filteredAlgosByType now contains only the elements which are also contained in filteredAlgosByKnowledgeFile
+        filteredAlgosByType.retainAll(filteredAlgosByKnowledgeFile);
+
+        // filteredAlgosByUnmeasuredConfounder now contains only the elements which are also contained in filteredAlgosByType
+        filteredAlgosByUnmeasuredConfounder.retainAll(filteredAlgosByType);
+
+        // Add the filtered elements to suggestedAlgosListModel
+        filteredAlgosByUnmeasuredConfounder.forEach(algoWrapper -> {
+            suggestedAlgosListModel.addElement(algoWrapper);
+        });
+
         // Reset default selected algorithm
+        setSelection();
+    }
+
+    private void setSelection() {
+        // Set default selected algorithm
         setDefaultSelectedAlgo();
 
-        // Reset description
+        // Set description
         setAlgoDescriptionContent();
 
-        // Finally, update the test and score dropdown menus
+        // Set the selected algo and update the test and score dropdown menus
         setAlgorithm();
     }
 
     private void setDefaultSelectedAlgo() {
-        suggestedAlgosList.setSelectedIndex(0);
-        selectedAlgoName = suggestedAlgosList.getSelectedValue().toString();
-    }
+        if (!suggestedAlgosListModel.isEmpty()) {
+            suggestedAlgosList.setSelectedIndex(0);
+            selectedAgloWrapper = suggestedAlgosList.getSelectedValue();
 
-    private void setAlgoDescriptionContent() {
-        AlgorithmDescriptionClass algoDescClass = AlgorithmDescriptions.getInstance().get(selectedAlgoName);
-        AlgorithmDescription algoDesc = algoDescClass.getAlgorithmDescription();
-
-        algoDescriptionTextArea.setText("Description of " + selectedAlgoName + ": " + algoDesc.description());
+            // Set the selected algo and update the test and score dropdown menus
+            // also set other runner parameters
+            setAlgorithm();
+        }
     }
 
     private void doSearch(final GeneralAlgorithmRunner runner) {
         HpcAccount hpcAccount = null;
 
-        AlgName name = AlgName.valueOf(selectedAlgoName);
-        switch (name) {
-            case FGES:
-            case GFCI:
-                hpcAccount = showRemoteComputingOptions(name);
+        switch (selectedAgloWrapper.getName()) {
+            case "FGES":
+            case "GFCI":
+                hpcAccount = showRemoteComputingOptions(selectedAgloWrapper.getName());
                 break;
             default:
         }
@@ -435,7 +1143,7 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
         }
     }
 
-    private HpcAccount showRemoteComputingOptions(AlgName name) {
+    private HpcAccount showRemoteComputingOptions(String name) {
         List<HpcAccount> hpcAccounts = desktop.getHpcAccountManager().getHpcAccounts();
 
         if (hpcAccounts == null || hpcAccounts.size() == 0) {
@@ -602,17 +1310,14 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
             Algorithm algorithm = runner.getAlgorithm();
             System.out.println("Algorithm: " + algorithm.getDescription());
 
-            // Get the equivalent enum type of selectedAlgoName string
-            AlgName name = AlgName.valueOf(selectedAlgoName);
-
-            switch (name) {
-                case FGES:
+            switch (selectedAgloWrapper.getName()) {
+                case "FGES":
                     algorithmName = AbstractAlgorithmRequest.FGES;
                     if (dataModel.isDiscrete()) {
                         algorithmName = AbstractAlgorithmRequest.FGES_DISCRETE;
                     }
                     break;
-                case GFCI:
+                case "GFCI":
                     algorithmName = AbstractAlgorithmRequest.GFCI;
                     if (dataModel.isDiscrete()) {
                         algorithmName = AbstractAlgorithmRequest.GFCI_DISCRETE;
@@ -777,64 +1482,37 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
         throw new IllegalArgumentException(errorResult);
     }
 
+    /**
+     * Initialize algorithm
+     *
+     * @return Algorithm
+     */
     public Algorithm getAlgorithmFromInterface() {
-        if (selectedAlgoName == null) {
+        if (selectedAgloWrapper == null) {
             throw new NullPointerException();
         }
 
         IndependenceWrapper independenceWrapper = getIndependenceWrapper();
         ScoreWrapper scoreWrapper = getScoreWrapper();
 
-        Algorithm algorithm = getAlgorithm(selectedAlgoName, independenceWrapper, scoreWrapper);
+        Class algoClass = selectedAgloWrapper.getAnnotatedClass().getClazz();
 
-        return algorithm;
-    }
-
-    /**
-     * Initialize algorithm
-     *
-     * @param name
-     * @param independenceWrapper
-     * @param scoreWrapper
-     * @return
-     */
-    private Algorithm getAlgorithm(String name, IndependenceWrapper independenceWrapper, ScoreWrapper scoreWrapper) {
-        AlgorithmDescriptions algoDescs = AlgorithmDescriptions.getInstance();
-        AlgorithmDescriptionClass algoDescClass = algoDescs.get(name);
-        if (algoDescClass == null) {
-            return null;
-        }
-
-        Class clazz = algoDescClass.getClazz();
-        Object obj = null;
+//        Algorithm algorithm = getAlgorithm(selectedAlgoName, independenceWrapper, scoreWrapper);
+        Algorithm algorithm = null;
         try {
-            obj = clazz.newInstance();
+            algorithm = AlgorithmFactory.create(algoClass, independenceWrapper, scoreWrapper);
         } catch (IllegalAccessException | InstantiationException exception) {
             // todo : use logger
             exception.printStackTrace(System.err);
         }
 
-        if (obj == null || !(obj instanceof Algorithm)) {
-            return null;
-        }
-
-        Algorithm algorithm = (Algorithm) obj;
-
-        if (algorithm instanceof UsesScoreWrapper) {
-            ((UsesScoreWrapper) algorithm).setScoreWrapper(scoreWrapper);
-        }
-
 //        if (algorithm instanceof HasKnowledge) {
 //            ((HasKnowledge) algorithm).setKnowledge();
 //        }
-        if (algorithm instanceof TakesIndependenceWrapper) {
-            ((TakesIndependenceWrapper) algorithm).setIndependenceWrapper(independenceWrapper);
-        }
-
-        if (algorithm instanceof TakesInitialGraph) {
+        // Those pairwise algos (EB, R1, R2,..) require source graph to initialize - Zhou
+        if (algorithm != null && algorithm instanceof TakesInitialGraph) {
             Algorithm initialGraph = null;
 
-            // Those pairwise algos (EB, R1, R2,..) require source graph to initialize - Zhou
             if (runner.getSourceGraph() != null && !runner.getDataModelList().isEmpty()) {
                 initialGraph = new SingleGraphAlg(runner.getSourceGraph());
             }
@@ -852,723 +1530,107 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
     }
 
     private ScoreWrapper getScoreWrapper() {
-        ScoreType score = (ScoreType) scoreDropdown.getSelectedItem();
-        ScoreWrapper scoreWrapper;
+        AnnotatedClassWrapper<Score> score = (AnnotatedClassWrapper<Score>) scoreDropdown.getSelectedItem();
+        Class scoreClass = score.getAnnotatedClass().getClazz();
 
-        switch (score) {
-            case BDeu:
-                scoreWrapper = new BdeuScore();
-                break;
-            case Conditional_Gaussian_BIC:
-                scoreWrapper = new ConditionalGaussianBicScore();
-                break;
-            case Discrete_BIC:
-                scoreWrapper = new DiscreteBicScore();
-                break;
-            case SEM_BIC:
-                scoreWrapper = new SemBicScore();
-                break;
-            case Fisher_Z_Score:
-                scoreWrapper = new FisherZScore();
-                break;
-            case D_SEPARATION:
-                scoreWrapper = new DseparationScore(new SingleGraph(runner.getSourceGraph()));
-                break;
-            default:
-                throw new IllegalArgumentException("Please configure that score: " + score);
+        ScoreWrapper scoreWrapper = null;
+        try {
+            scoreWrapper = (ScoreWrapper) scoreClass.newInstance();
+        } catch (IllegalAccessException | InstantiationException exception) {
+            // log this error
+            throw new IllegalArgumentException("Please configure that score: " + score);
         }
+
+        if (scoreWrapper == null) {
+            return null;
+        }
+
         return scoreWrapper;
     }
 
     private IndependenceWrapper getIndependenceWrapper() {
-        TestType test = (TestType) testDropdown.getSelectedItem();
+        AnnotatedClassWrapper<TestOfIndependence> test = (AnnotatedClassWrapper<TestOfIndependence>) testDropdown.getSelectedItem();
+        Class indTestClass = test.getAnnotatedClass().getClazz();
 
-        IndependenceWrapper independenceWrapper;
-
-        switch (test) {
-            case ChiSquare:
-                independenceWrapper = new ChiSquare();
-                break;
-            case Conditional_Correlation:
-                independenceWrapper = new ConditionalCorrelation();
-                break;
-            case Conditional_Gaussian_LRT:
-                independenceWrapper = new ConditionalGaussianLRT();
-                break;
-            case Fisher_Z:
-                independenceWrapper = new FisherZ();
-                break;
-            case Correlation_T:
-                independenceWrapper = new CorrelationT();
-                break;
-            case GSquare:
-                independenceWrapper = new GSquare();
-                break;
-            case SEM_BIC:
-                independenceWrapper = new SemBicTest();
-                break;
-            case D_SEPARATION:
-                independenceWrapper = new DSeparationTest(new SingleGraph(runner.getSourceGraph()));
-                break;
-            default:
-                throw new IllegalArgumentException("Please configure that test: " + test);
+        IndependenceWrapper independenceWrapper = null;
+        try {
+            independenceWrapper = (IndependenceWrapper) indTestClass.newInstance();
+        } catch (IllegalAccessException | InstantiationException exception) {
+            // log this error
         }
 
-        List<IndependenceTest> tests = new ArrayList<>();
-
-        for (DataModel dataModel : runner.getDataModelList()) {
-            IndependenceTest _test = independenceWrapper.getTest(dataModel, parameters);
-            tests.add(_test);
+        if (independenceWrapper != null) {
+            // do independence test for each dataset
+            List<IndependenceTest> tests = new ArrayList<>();
+            for (DataModel dataModel : runner.getDataModelList()) {
+                IndependenceTest _test = independenceWrapper.getTest(dataModel, parameters);
+                tests.add(_test);
+            }
+            runner.setIndependenceTests(tests);
         }
 
-        runner.setIndependenceTests(tests);
         return independenceWrapper;
     }
 
+    // Determine if enable/disable test dropdowns
+    private void setTestDropdown() {
+        // Get annotated algo
+        TetradAlgorithmAnnotations algoAnno = TetradAlgorithmAnnotations.getInstance();
+        Class algoClass = selectedAgloWrapper.getAnnotatedClass().getClazz();
+
+        // Determine if enable/disable test and score dropdowns
+        testDropdown.setEnabled(algoAnno.requireIndependenceTest(algoClass));
+    }
+
+    // Determine if enable/disable score dropdowns
+    private void setScoreDropdown() {
+        // Get annotated algo
+        TetradAlgorithmAnnotations algoAnno = TetradAlgorithmAnnotations.getInstance();
+        Class algoClass = selectedAgloWrapper.getAnnotatedClass().getClazz();
+
+        // Determine if enable/disable test and score dropdowns
+        scoreDropdown.setEnabled(algoAnno.requireScore(algoClass));
+    }
+
+    // Enable/disable the checkboxes of assumptions
+    // based on if there are annotated tests/scores with assumption annotations
+    private void setAssumptions() {
+        // Disable assumptions checkboxes when both test and score dropdowns are disabled
+        boolean disabled = !testDropdown.isEnabled() && !scoreDropdown.isEnabled();
+
+        linearVariablesCheckbox.setEnabled(!disabled);
+        gaussianVariablesCheckbox.setEnabled(!disabled);
+    }
+
     private void setAlgorithm() {
-        // Get the equivalent enum type of selectedAlgoName string
-        AlgName name = AlgName.valueOf(selectedAlgoName);
+        if (selectedAgloWrapper != null) {
+            // Determine if enable/disable test and score dropdowns
+            setTestDropdown();
+            setScoreDropdown();
 
-        if (name == null) {
-            return;
-        }
+            // Determine if enable/disable the checkboxes of assumptions
+            setAssumptions();
 
-        // Get annotated algo description
-        AlgorithmDescriptionClass algoDescClass = AlgorithmDescriptions.getInstance().get(selectedAlgoName);
-        AlgorithmDescription algoDesc = algoDescClass.getAlgorithmDescription();
+            // Set the algo on each selection change
+            Algorithm algorithm = getAlgorithmFromInterface();
 
-        // Set the algo on each selection change
-        Algorithm algorithm = getAlgorithmFromInterface();
+            runner.setAlgorithm(algorithm);
 
-        System.out.println("algo parameters ..............");
-        System.out.println(algorithm.getParameters());
+            // Set runner parameters for target algo
+            parameters.set("testEnabled", testDropdown.isEnabled());
+            parameters.set("scoreEnabled", scoreDropdown.isEnabled());
 
-        runner.setAlgorithm(algorithm);
+            parameters.set("algName", selectedAgloWrapper.getName());
+            parameters.set("algType", selectedAgloWrapper.getAnnotatedClass().getAnnotation().algoType());
 
-        OracleType oracle = algoDesc.oracleType();
+            setTestType(((AnnotatedClassWrapper<TestOfIndependence>) testDropdown.getSelectedItem()).getName());
+            setScoreType(((AnnotatedClassWrapper<Score>) scoreDropdown.getSelectedItem()).getName());
 
-        if (oracle == OracleType.None) {
-            testDropdown.setEnabled(false);
-            scoreDropdown.setEnabled(false);
-        } else if (oracle == OracleType.Score) {
-            testDropdown.setEnabled(false);
-            scoreDropdown.setEnabled(true);
-        } else if (oracle == OracleType.Test) {
-            testDropdown.setEnabled(true);
-            scoreDropdown.setEnabled(false);
-        } else if (oracle == OracleType.Both) {
-            testDropdown.setEnabled(true);
-            scoreDropdown.setEnabled(true);
-        }
-
-        parameters.set("testEnabled", testDropdown.isEnabled());
-        parameters.set("scoreEnabled", scoreDropdown.isEnabled());
-
-        setAlgName(name);
-        setAlgType(selectedAlgoName.replace(" ", "_"));
-        setTestType((TestType) testDropdown.getSelectedItem());
-        setScoreType((ScoreType) scoreDropdown.getSelectedItem());
-
-        // Also need to update the corresponding parameters
-        parametersPanel = new ParameterPanel(runner.getAlgorithm().getParameters(), getParameters());
-        // Remove all and add new
-        parametersBox.removeAll();
-        parametersBox.add(parametersPanel);
-    }
-
-    private JPanel createAlgoChooserPanel() {
-        // Overall container
-        // contains data preview panel, loading params panel, and load button
-        Box container = Box.createVerticalBox();
-        // Must set the size of container
-        container.setPreferredSize(new Dimension(940, 640));
-
-        helpSet.setHomeID("tetrad_overview");
-
-        // Algo selection container, step 1
-        // contains 3 columns, leftContainer, middleContainer, and rightContainer
-        Box algoChooserContainer = Box.createHorizontalBox();
-        algoChooserContainer.setPreferredSize(new Dimension(940, 600));
-
-        // Parameters container, step 2
-        Box parametersContainer = Box.createHorizontalBox();
-        parametersContainer.setPreferredSize(new Dimension(940, 600));
-
-        // Graph container, step 3
-        graphContainer = Box.createHorizontalBox();
-        graphContainer.setPreferredSize(new Dimension(940, 600));
-
-        // Contains data description and result description
-        Box leftContainer = Box.createVerticalBox();
-        leftContainer.setPreferredSize(new Dimension(300, 600));
-
-        Box middleContainer = Box.createVerticalBox();
-        middleContainer.setPreferredSize(new Dimension(270, 600));
-
-        // Contains algo list, algo description, test, score, and parameters
-        Box rightContainer = Box.createVerticalBox();
-        rightContainer.setPreferredSize(new Dimension(360, 600));
-
-        // Are the relationships between your variables linear?
-        Box varLinearRelationshipsBox = Box.createVerticalBox();
-
-        // Add label into this label box
-        Box varLinearRelationshipsLabelBox = Box.createHorizontalBox();
-        varLinearRelationshipsLabelBox.add(new JLabel("Linear variables: "));
-        varLinearRelationshipsLabelBox.setAlignmentX(LEFT_ALIGNMENT);
-
-        // Option 1
-        Box varLinearRelationshipsOption1Box = Box.createHorizontalBox();
-        varLinearRelationshipsOption1Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton varLinearRelationshipsYes = new JRadioButton("Yes");
-
-        // Add padding and option
-        varLinearRelationshipsOption1Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        varLinearRelationshipsOption1Box.add(varLinearRelationshipsYes);
-
-        // Option 2
-        Box varLinearRelationshipsOption2Box = Box.createHorizontalBox();
-        varLinearRelationshipsOption2Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton varLinearRelationshipsNo = new JRadioButton("No");
-
-        // Add padding and option
-        varLinearRelationshipsOption2Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        varLinearRelationshipsOption2Box.add(varLinearRelationshipsNo);
-
-        // Option 3
-        Box varLinearRelationshipsOption3Box = Box.createHorizontalBox();
-        varLinearRelationshipsOption3Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton varLinearRelationshipsUnknown = new JRadioButton("Let's find out");
-
-        // Add padding and option
-        varLinearRelationshipsOption3Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        varLinearRelationshipsOption3Box.add(varLinearRelationshipsUnknown);
-
-        // We need to group the radio buttons, otherwise all can be selected
-        varLinearRelationshipsBtnGrp.add(varLinearRelationshipsYes);
-        varLinearRelationshipsBtnGrp.add(varLinearRelationshipsNo);
-        varLinearRelationshipsBtnGrp.add(varLinearRelationshipsUnknown);
-
-        // Add to containing box
-        varLinearRelationshipsBox.add(varLinearRelationshipsLabelBox);
-        varLinearRelationshipsBox.add(varLinearRelationshipsOption1Box);
-        varLinearRelationshipsBox.add(varLinearRelationshipsOption2Box);
-        varLinearRelationshipsBox.add(varLinearRelationshipsOption3Box);
-        varLinearRelationshipsBox.add(Box.createHorizontalGlue());
-
-        // Are your variables Gaussian?
-        Box gaussianVariablesBox = Box.createVerticalBox();
-
-        // Add label into this label box to size
-        Box gaussianVariablesLabelBox = Box.createHorizontalBox();
-        gaussianVariablesLabelBox.add(new JLabel("Gaussian variables: "));
-        gaussianVariablesLabelBox.setAlignmentX(LEFT_ALIGNMENT);
-
-        // Option 1
-        Box gaussianVariablesOption1Box = Box.createHorizontalBox();
-        gaussianVariablesOption1Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton gaussianVariablesYes = new JRadioButton("Yes");
-
-        // Add padding and option
-        gaussianVariablesOption1Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        gaussianVariablesOption1Box.add(gaussianVariablesYes);
-
-        // Option 2
-        Box gaussianVariablesOption2Box = Box.createHorizontalBox();
-        gaussianVariablesOption2Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton gaussianVariablesNo = new JRadioButton("No");
-
-        // Add padding and option
-        gaussianVariablesOption2Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        gaussianVariablesOption2Box.add(gaussianVariablesNo);
-
-        // Option 3
-        Box gaussianVariablesOption3Box = Box.createHorizontalBox();
-        gaussianVariablesOption3Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton gaussianVariablesUnknown = new JRadioButton("Let's find out");
-
-        // Add padding and option
-        gaussianVariablesOption3Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        gaussianVariablesOption3Box.add(gaussianVariablesUnknown);
-
-        // We need to group the radio buttons, otherwise all can be selected
-        gaussianVariablesBtnGrp.add(gaussianVariablesYes);
-        gaussianVariablesBtnGrp.add(gaussianVariablesNo);
-        gaussianVariablesBtnGrp.add(gaussianVariablesUnknown);
-
-        // Add to containing box
-        gaussianVariablesBox.add(gaussianVariablesLabelBox);
-        gaussianVariablesBox.add(gaussianVariablesOption1Box);
-        gaussianVariablesBox.add(gaussianVariablesOption2Box);
-        gaussianVariablesBox.add(gaussianVariablesOption3Box);
-        gaussianVariablesBox.add(Box.createHorizontalGlue());
-
-        // Is there a prior knowledge file?
-        Box priorKnowledgeBox = Box.createVerticalBox();
-
-        // Add label into this label box to size
-        Box priorKnowledgeLabelBox = Box.createHorizontalBox();
-        priorKnowledgeLabelBox.add(new JLabel("Takes prior knowledge file: "));
-        priorKnowledgeLabelBox.setAlignmentX(LEFT_ALIGNMENT);
-
-        // Option 1
-        Box priorKnowledgeOption1Box = Box.createHorizontalBox();
-        priorKnowledgeOption1Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton priorKnowledgeYes = new JRadioButton("Yes");
-
-        // Event listener
-        priorKnowledgeYes.addActionListener((ActionEvent actionEvent) -> {
-            JRadioButton button = (JRadioButton) actionEvent.getSource();
-
-            if (button.isSelected()) {
-                // Set the flag
-                takesKnowledgeFile = true;
-
-                // Update the list
-                updateSuggestedAlgosList();
-            }
-        });
-
-        // Add padding and option
-        priorKnowledgeOption1Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        priorKnowledgeOption1Box.add(priorKnowledgeYes);
-
-        // Option 2
-        Box priorKnowledgeOption2Box = Box.createHorizontalBox();
-        priorKnowledgeOption2Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton priorKnowledgeNo = new JRadioButton("No");
-
-        // Event listener
-        priorKnowledgeNo.addActionListener((ActionEvent actionEvent) -> {
-            JRadioButton button = (JRadioButton) actionEvent.getSource();
-
-            if (button.isSelected()) {
-                // Set the flag
-                takesKnowledgeFile = false;
-
-                // Update the list model
-                updateSuggestedAlgosList();
-            }
-        });
-
-        // Add padding and option
-        priorKnowledgeOption2Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        priorKnowledgeOption2Box.add(priorKnowledgeNo);
-
-        // We need to group the radio buttons, otherwise all can be selected
-        priorKnowledgeBtnGrp.add(priorKnowledgeYes);
-        priorKnowledgeBtnGrp.add(priorKnowledgeNo);
-
-        // Add to containg box
-        priorKnowledgeBox.add(priorKnowledgeLabelBox);
-        priorKnowledgeBox.add(priorKnowledgeOption1Box);
-        priorKnowledgeBox.add(priorKnowledgeOption2Box);
-
-        // Include unmeasured confounders?
-        Box includeUnmeasuredConfoundersBox = Box.createVerticalBox();
-
-        // Add label into this label box to size
-        Box includeUnmeasuredConfoundersLabelBox = Box.createHorizontalBox();
-        includeUnmeasuredConfoundersLabelBox.add(new JLabel("Unmeasured confounders: "));
-        includeUnmeasuredConfoundersLabelBox.setAlignmentX(LEFT_ALIGNMENT);
-
-        // Option 1
-        Box includeUnmeasuredConfoundersOption1Box = Box.createHorizontalBox();
-        includeUnmeasuredConfoundersOption1Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton includeUnmeasuredConfoundersYes = new JRadioButton("Yes");
-
-        // Add padding and option
-        includeUnmeasuredConfoundersOption1Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        includeUnmeasuredConfoundersOption1Box.add(includeUnmeasuredConfoundersYes);
-
-        // Option 2
-        Box includeUnmeasuredConfoundersOption2Box = Box.createHorizontalBox();
-        includeUnmeasuredConfoundersOption2Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton includeUnmeasuredConfoundersNo = new JRadioButton("No");
-
-        // Add padding and option
-        includeUnmeasuredConfoundersOption2Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        includeUnmeasuredConfoundersOption2Box.add(includeUnmeasuredConfoundersNo);
-
-        // Option 3
-        Box includeUnmeasuredConfoundersOption3Box = Box.createHorizontalBox();
-        includeUnmeasuredConfoundersOption3Box.setAlignmentX(LEFT_ALIGNMENT);
-
-        JRadioButton includeUnmeasuredConfoundersUnknown = new JRadioButton("Let's find out");
-
-        // Add padding and option
-        includeUnmeasuredConfoundersOption3Box.add(Box.createRigidArea(new Dimension(10, 20)));
-        includeUnmeasuredConfoundersOption3Box.add(includeUnmeasuredConfoundersUnknown);
-
-        // We need to group the radio buttons, otherwise all can be selected
-        includeUnmeasuredConfoundersBtnGrp.add(includeUnmeasuredConfoundersYes);
-        includeUnmeasuredConfoundersBtnGrp.add(includeUnmeasuredConfoundersNo);
-        includeUnmeasuredConfoundersBtnGrp.add(includeUnmeasuredConfoundersUnknown);
-
-        // Add to containing box
-        includeUnmeasuredConfoundersBox.add(includeUnmeasuredConfoundersLabelBox);
-        includeUnmeasuredConfoundersBox.add(includeUnmeasuredConfoundersOption1Box);
-        includeUnmeasuredConfoundersBox.add(includeUnmeasuredConfoundersOption2Box);
-        includeUnmeasuredConfoundersBox.add(includeUnmeasuredConfoundersOption3Box);
-        includeUnmeasuredConfoundersBox.add(Box.createHorizontalGlue());
-
-        // Reset filter selections
-        JButton resetFilterSelectionsBtn = new JButton("Reset filter selections");
-
-        // Event listener of clearFilterSelectionsBtn
-        resetFilterSelectionsBtn.addActionListener((ActionEvent actionEvent) -> {
-            resetAlgoFilters();
-        });
-
-        // Test and score, Joe's old implementation
-        Box testBox = Box.createHorizontalBox();
-        JLabel label1 = new JLabel("Test if needed:");
-        testBox.add(label1);
-        testDropdown.setMaximumSize(testDropdown.getPreferredSize());
-        testBox.add(testDropdown);
-        testBox.add(Box.createHorizontalGlue());
-
-        Box scoreBox = Box.createHorizontalBox();
-        JLabel label2 = new JLabel("Score if needed:");
-        scoreBox.add(label2);
-        scoreDropdown.setMaximumSize(scoreDropdown.getPreferredSize());
-        scoreBox.add(scoreDropdown);
-        scoreBox.add(Box.createHorizontalGlue());
-
-        // Describe your data and result using these filters
-        Box algoFiltersBox = Box.createVerticalBox();
-        algoFiltersBox.setMinimumSize(new Dimension(290, 590));
-        algoFiltersBox.setMaximumSize(new Dimension(290, 590));
-        algoFiltersBox.setAlignmentX(LEFT_ALIGNMENT);
-
-        // Use a titled border with 5 px inside padding - Zhou
-        String algoFiltersBoxBorderTitle = "Algorithm filters";
-        algoFiltersBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(algoFiltersBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
-
-        // Items to put in data description box
-        algoFiltersBox.add(algoTypesBox);
-        algoFiltersBox.add(Box.createVerticalStrut(5));
-        algoFiltersBox.add(varLinearRelationshipsBox);
-        algoFiltersBox.add(Box.createVerticalStrut(5));
-        algoFiltersBox.add(gaussianVariablesBox);
-        algoFiltersBox.add(Box.createVerticalStrut(5));
-        algoFiltersBox.add(priorKnowledgeBox);
-        algoFiltersBox.add(Box.createVerticalStrut(5));
-        algoFiltersBox.add(includeUnmeasuredConfoundersBox);
-        algoFiltersBox.add(Box.createVerticalStrut(5));
-        algoFiltersBox.add(resetFilterSelectionsBtn);
-
-        // Add to leftContainer
-        leftContainer.add(algoFiltersBox);
-
-        // Components in middleContainer
-        // Show a list of filtered algorithms
-        Box suggestedAlgosBox = Box.createVerticalBox();
-        suggestedAlgosBox.setMinimumSize(new Dimension(260, 590));
-        suggestedAlgosBox.setMaximumSize(new Dimension(260, 590));
-
-        // Use a titled border with 5 px inside padding - Zhou
-        String suggestedAlgosBoxBorderTitle = "Choose algorithm";
-        suggestedAlgosBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(suggestedAlgosBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
-
-        // Set default description as the first algorithm
-        setAlgoDescriptionContent();
-
-        // Set default algo in runner
-        Algorithm algorithm = getAlgorithmFromInterface();
-        runner.setAlgorithm(algorithm);
-
-        // Put the list in a scrollable area
-        JScrollPane suggestedAlgosListScrollPane = new JScrollPane(suggestedAlgosList);
-        suggestedAlgosListScrollPane.setMinimumSize(new Dimension(260, 590));
-        suggestedAlgosListScrollPane.setMaximumSize(new Dimension(260, 590));
-
-        suggestedAlgosBox.add(suggestedAlgosListScrollPane);
-
-        middleContainer.add(suggestedAlgosBox);
-
-        // Components in rightContainer
-        // Algo description
-        Box algoDescriptionBox = Box.createVerticalBox();
-        algoDescriptionBox.setMinimumSize(new Dimension(350, 445));
-        algoDescriptionBox.setMaximumSize(new Dimension(350, 445));
-
-        // Use a titled border with 5 px inside padding - Zhou
-        String algoDescriptionBoxBorderTitle = "Algorithm description";
-        algoDescriptionBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(algoDescriptionBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
-
-        // Set line arap
-        algoDescriptionTextArea.setWrapStyleWord(true);
-        algoDescriptionTextArea.setLineWrap(true);
-
-        // Read only
-        algoDescriptionTextArea.setEditable(false);
-
-        JScrollPane algoDescriptionScrollPane = new JScrollPane(algoDescriptionTextArea);
-        algoDescriptionScrollPane.setMinimumSize(new Dimension(350, 445));
-        algoDescriptionScrollPane.setMaximumSize(new Dimension(350, 445));
-
-        algoDescriptionBox.add(algoDescriptionScrollPane);
-
-        // Choose corresponding test and score based on algorithm
-        Box testAndScoreBox = Box.createVerticalBox();
-        testAndScoreBox.setMinimumSize(new Dimension(350, 130));
-        testAndScoreBox.setMaximumSize(new Dimension(350, 130));
-
-        // Use a titled border with 5 px inside padding - Zhou
-        String testAndScoreBoxBorderTitle = "Choose Test and Score";
-        testAndScoreBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(testAndScoreBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
-
-        testAndScoreBox.add(testBox);
-        // Add some gap between test and score
-        testAndScoreBox.add(Box.createVerticalStrut(10));
-        testAndScoreBox.add(scoreBox);
-
-        // Parameters
-        parametersBox = Box.createVerticalBox();
-        parametersBox.setMinimumSize(new Dimension(940, 590));
-        parametersBox.setMaximumSize(new Dimension(940, 590));
-
-        // Use a titled border with 5 px inside padding - Zhou
-        String parametersBoxBorderTitle = "Specify algorithm parameters";
-        parametersBox.setBorder(new CompoundBorder(BorderFactory.createTitledBorder(parametersBoxBorderTitle), new EmptyBorder(5, 5, 5, 5)));
-
-        // Parameters
-        // This is only the parameters pane of the default algorithm - Zhou
-        parametersPanel = new ParameterPanel(runner.getAlgorithm().getParameters(), getParameters());
-
-        parametersPanel.setMinimumSize(new Dimension(920, 590));
-        parametersPanel.setMaximumSize(new Dimension(920, 590));
-
-        // Add to parameters box
-        parametersBox.add(parametersPanel);
-
-        // Add to parametersContainer
-        parametersContainer.add(parametersBox);
-
-        // Back to step 1 button
-        step1BackBtn = new JButton("< Choose Algorithm");
-
-        // Step 1 button listener
-        step1BackBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Hide parameters
-                parametersContainer.setVisible(false);
-
-                // Show algo step 1
-                algoChooserContainer.setVisible(true);
-
-                // Show step 2 button
-                step2Btn.setVisible(true);
-
-                // Hide step 3 button
-                step3Btn.setVisible(false);
-
-                // Hide back button
-                step1BackBtn.setVisible(false);
-            }
-        });
-
-        // Hide step 2
-        parametersContainer.setVisible(false);
-
-        // Parameters button
-        step2Btn = new JButton("Set Parameters >");
-        step2BackBtn = new JButton("< Set Parameters");
-
-        // Step 2 button listener
-        step2Btn.addActionListener((ActionEvent e) -> {
-            // Show parameters
-            parametersContainer.setVisible(true);
-
-            // Hide algo step 1
-            algoChooserContainer.setVisible(false);
-
-            // SHow back to step 1 button and search button
-            step1BackBtn.setVisible(true);
-            step3Btn.setVisible(true);
-
-            // Hide step 2 button
-            step2Btn.setVisible(false);
-        });
-
-        // Step 2 button listener
-        step2BackBtn.addActionListener((ActionEvent e) -> {
-            // Show parameters
-            parametersContainer.setVisible(true);
-
-            // Hide algo step 1
-            algoChooserContainer.setVisible(false);
-
-            // Hide step 3 graph
-            graphContainer.setVisible(false);
-
-            // SHow back to step 1 button and search button
-            step1BackBtn.setVisible(true);
-            step3Btn.setVisible(true);
-
-            // Hide step 2 button
-            step2Btn.setVisible(false);
-
-            // Hide back button
-            step2BackBtn.setVisible(false);
-        });
-
-        // Step 3 button
-        step3Btn = new JButton("Run Search & Generate Graph >");
-
-        step3Btn.addActionListener((ActionEvent e) -> {
-            // Load all data files and hide the loading indicator once done
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    doSearch(runner);
-
-                    // Schedule a Runnable which will be executed on the Event Dispatching Thread
-                    // SwingUtilities.invokeLater means that this call will return immediately
-                    // as the event is placed in Event Dispatcher Queue,
-                    // and run() method will run asynchronously
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            // Hide the loading indicator
-                            hideLoadingIndicator();
-
-                            // Hide algo chooser
-                            algoChooserContainer.setVisible(false);
-
-                            // Hide parameters
-                            parametersContainer.setVisible(false);
-
-                            // Show graphContainer
-                            graphContainer.setVisible(true);
-
-                            // Show back to step 2 button
-                            step2BackBtn.setVisible(true);
-
-                            // Hide step 1 back button
-                            step1BackBtn.setVisible(false);
-
-                            // Hide step 3 button
-                            step3Btn.setVisible(false);
-                        }
-                    });
-                }
-            }).start();
-
-            // Create the loading indicator dialog and show
-            showLoadingIndicator("Runing...");
-        });
-
-        // Add to rightContainer
-        rightContainer.add(Box.createVerticalStrut(10));
-        rightContainer.add(algoDescriptionBox);
-        rightContainer.add(Box.createVerticalStrut(10));
-        rightContainer.add(testAndScoreBox);
-        rightContainer.add(Box.createVerticalStrut(10));
-
-        // Buttons container
-        Box buttonsContainer = Box.createVerticalBox();
-
-        // Buttons box
-        Box buttonsBox = Box.createHorizontalBox();
-        buttonsBox.add(step1BackBtn);
-        // Don't use Box.createHorizontalStrut(20)
-        buttonsBox.add(Box.createRigidArea(new Dimension(20, 0)));
-        buttonsBox.add(step2Btn);
-        buttonsBox.add(Box.createRigidArea(new Dimension(20, 0)));
-        buttonsBox.add(step2BackBtn);
-        buttonsBox.add(Box.createRigidArea(new Dimension(20, 0)));
-        buttonsBox.add(step3Btn);
-
-        // Default to only show step 2 forward button
-        step1BackBtn.setVisible(false);
-        step2BackBtn.setVisible(false);
-        step3Btn.setVisible(false);
-
-        // Add to buttons container
-        buttonsContainer.add(Box.createVerticalStrut(10));
-        buttonsContainer.add(buttonsBox);
-
-        // Add to algoChooserContainer as the first column
-        algoChooserContainer.add(leftContainer);
-
-        // Add some gap
-        algoChooserContainer.add(Box.createHorizontalStrut(10));
-
-        // Add middleContainer
-        algoChooserContainer.add(middleContainer);
-
-        // Add some gap
-        algoChooserContainer.add(Box.createHorizontalStrut(10));
-
-        // Add to algoChooserContainer as the third column
-        algoChooserContainer.add(rightContainer);
-
-        // Add to big panel
-        container.add(algoChooserContainer);
-
-        container.add(parametersContainer);
-
-        container.add(graphContainer);
-
-        container.add(buttonsContainer);
-
-        JPanel p = new JPanel(new BorderLayout());
-        p.add(container, BorderLayout.CENTER);
-//        JOptionPane.showOptionDialog(JOptionUtils.centeringComp(), container,
-//                "Algorithm Chooser", JOptionPane.OK_CANCEL_OPTION,
-//                JOptionPane.PLAIN_MESSAGE, null, new Object[]{}, null);
-
-        return p;
-    }
-
-    private void resetAlgoFilters() {
-        // Reset algoTypesBtnGrp to select "ALL"
-        for (Enumeration<AbstractButton> buttons = algoTypesBtnGrp.getElements(); buttons.hasMoreElements();) {
-            AbstractButton button = buttons.nextElement();
-
-            if ("ALL".equals(button.getText())) {
-                button.setSelected(true);
-
-                // Also reset the selectedAlgoType
-                selectedAlgoType = AlgType.ALL;
-
-                break;
-            }
-        }
-
-        // Also need to reset the knowledge file flag
-        takesKnowledgeFile = null;
-
-        // Clear all selections - the radio bottons
-        varLinearRelationshipsBtnGrp.clearSelection();
-        gaussianVariablesBtnGrp.clearSelection();
-        priorKnowledgeBtnGrp.clearSelection();
-        includeUnmeasuredConfoundersBtnGrp.clearSelection();
-
-        // Finally show the default list of algos
-        setDefaultAlgosListModel();
-    }
-
-    private void setDefaultAlgosListModel() {
-        // Clear the list model
-        suggestedAlgosListModel.removeAllElements();
-
-        // Create a new list model
-        for (String algoName : algorithmNames) {
-            suggestedAlgosListModel.addElement(algoName);
+            // Also need to update the corresponding parameters
+            parametersPanel = new ParameterPanel(runner.getAlgorithm().getParameters(), getParameters());
+            // Remove all and add new
+            parametersBox.removeAll();
+            parametersBox.add(parametersPanel);
         }
     }
 
@@ -1623,29 +1685,12 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
         return parameters;
     }
 
-    private void setAlgType(String algType) {
-        parameters.set("algType", algType.replace(" ", "_"));
+    private void setTestType(String testType) {
+        parameters.set("testType", testType);
     }
 
-    private void setAlgName(AlgName algName) {
-        parameters.set("algName", algName.toString());
-    }
-
-    private TestType getTestType() {
-        return TestType.valueOf(parameters.getString("testType", "ChiSquare"));
-    }
-
-    private void setTestType(TestType testType) {
-        parameters.set("testType", testType.toString());
-    }
-
-    private ScoreType getScoreType() {
-        String string = parameters.getString("scoreType", "BDeu");
-        return ScoreType.valueOf(string);
-    }
-
-    private void setScoreType(ScoreType scoreType) {
-        parameters.set("scoreType", scoreType.toString());
+    private void setScoreType(String scoreType) {
+        parameters.set("scoreType", scoreType);
     }
 
     @Override

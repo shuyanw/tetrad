@@ -6,8 +6,6 @@ import edu.cmu.tetrad.algcomparison.score.ScoreWrapper;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.algcomparison.utils.UsesScoreWrapper;
 import edu.cmu.tetrad.annotation.AlgType;
-import edu.cmu.tetrad.annotation.AlgorithmDescription;
-import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
@@ -15,7 +13,6 @@ import edu.cmu.tetrad.search.*;
 import edu.cmu.tetrad.util.Parameters;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapEdgeEnsemble;
 import edu.pitt.dbmi.algo.bootstrap.GeneralBootstrapTest;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,12 +22,11 @@ import java.util.List;
  * @author jdramsey
  * @author Daniel Malinsky
  */
-@AlgorithmDescription(
+@edu.cmu.tetrad.annotation.Algorithm(
         name = "TsImages",
-        algType = AlgType.allow_latent_common_causes,
-        oracleType = OracleType.Test,
-        description = "Short blurb goes here",
-        assumptions = {}
+        command = "ts-imgs",
+        algoType = AlgType.allow_latent_common_causes,
+        description = "Short blurb goes here"
 )
 public class TsImages implements Algorithm, HasKnowledge, MultiDataSetAlgorithm, UsesScoreWrapper {
 
@@ -52,7 +48,7 @@ public class TsImages implements Algorithm, HasKnowledge, MultiDataSetAlgorithm,
 
     @Override
     public Graph search(DataModel dataModel, Parameters parameters) {
-    	if(!parameters.getBoolean("bootstrapping")){
+        if (!parameters.getBoolean("bootstrapping")) {
             DataSet dataSet = (DataSet) dataModel;
             TsGFci search;
             Score score1 = score.getScore(dataSet, parameters);
@@ -60,28 +56,28 @@ public class TsImages implements Algorithm, HasKnowledge, MultiDataSetAlgorithm,
             search = new TsGFci(test, score1);
             search.setKnowledge(dataSet.getKnowledge());
             return search.search();
-    	}else{
-    		TsImages algorithm = new TsImages(score);
-    		
-    		DataSet data = (DataSet) dataModel;
-    		GeneralBootstrapTest search = new GeneralBootstrapTest(data, algorithm, parameters.getInt("bootstrapSampleSize"));
-    		
-    		BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-    		switch (parameters.getInt("bootstrapEnsemble", 1)) {
-    		case 0:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
-    			break;
-    		case 1:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-    			break;
-    		case 2:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Majority;
-    		}
-    		search.setEdgeEnsemble(edgeEnsemble);
-    		search.setParameters(parameters);    		
-    		search.setVerbose(parameters.getBoolean("verbose"));
-    		return search.search();
-    	}
+        } else {
+            TsImages algorithm = new TsImages(score);
+
+            DataSet data = (DataSet) dataModel;
+            GeneralBootstrapTest search = new GeneralBootstrapTest(data, algorithm, parameters.getInt("bootstrapSampleSize"));
+
+            BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+            switch (parameters.getInt("bootstrapEnsemble", 1)) {
+                case 0:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
+                    break;
+                case 1:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+                    break;
+                case 2:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Majority;
+            }
+            search.setEdgeEnsemble(edgeEnsemble);
+            search.setParameters(parameters);
+            search.setVerbose(parameters.getBoolean("verbose"));
+            return search.search();
+        }
     }
 
     @Override
@@ -102,8 +98,8 @@ public class TsImages implements Algorithm, HasKnowledge, MultiDataSetAlgorithm,
 
     @Override
     public List<String> getParameters() {
-    	List<String> parameters = score.getParameters();
-    	// Bootstrapping
+        List<String> parameters = score.getParameters();
+        // Bootstrapping
         parameters.add("bootstrapping");
         parameters.add("bootstrapSampleSize");
         parameters.add("bootstrapEnsemble");

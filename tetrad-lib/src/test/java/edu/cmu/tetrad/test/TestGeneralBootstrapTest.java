@@ -18,11 +18,6 @@
  */
 package edu.cmu.tetrad.test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
 import edu.cmu.tetrad.algcomparison.algorithm.oracle.pag.Fci;
 import edu.cmu.tetrad.algcomparison.algorithm.oracle.pag.Gfci;
@@ -47,11 +42,14 @@ import edu.cmu.tetrad.sem.LargeScaleSimulation;
 import edu.cmu.tetrad.util.Parameters;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapEdgeEnsemble;
 import edu.pitt.dbmi.algo.bootstrap.GeneralBootstrapTest;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Test;
 
 /**
- * 
+ *
  * Aug 17, 2017 2:28:48 PM
- * 
+ *
  * @author Chirayu Kong Wongchokprasitti, PhD (chw20@pitt.edu)
  *
  */

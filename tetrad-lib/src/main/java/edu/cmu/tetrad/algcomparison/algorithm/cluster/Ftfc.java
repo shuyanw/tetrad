@@ -3,8 +3,6 @@ package edu.cmu.tetrad.algcomparison.algorithm.cluster;
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.annotation.AlgType;
-import edu.cmu.tetrad.annotation.AlgorithmDescription;
-import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
@@ -14,7 +12,6 @@ import edu.cmu.tetrad.util.Parameters;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapEdgeEnsemble;
 import edu.pitt.dbmi.algo.bootstrap.GeneralBootstrapTest;
 import edu.pitt.dbmi.data.Dataset;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,14 +20,12 @@ import java.util.List;
  *
  * @author jdramsey
  */
-@AlgorithmDescription(
+@edu.cmu.tetrad.annotation.Algorithm(
         name = "Ftfc",
-        algType = AlgType.search_for_structure_over_latents,
-        oracleType = OracleType.None,
-        description = "Short blurb goes here" ,
-                assumptions = {}
+        command = "ftfc",
+        algoType = AlgType.search_for_structure_over_latents,
+        description = "Short blurb goes here"
 )
-
 public class Ftfc implements Algorithm, HasKnowledge, ClusterAlgorithm {
 
     static final long serialVersionUID = 23L;
@@ -41,12 +36,12 @@ public class Ftfc implements Algorithm, HasKnowledge, ClusterAlgorithm {
 
     @Override
     public Graph search(DataModel dataSet, Parameters parameters) {
-    	if(!parameters.getBoolean("bootstrapping")){
+        if (!parameters.getBoolean("bootstrapping")) {
             ICovarianceMatrix cov = null;
 
             if (dataSet instanceof Dataset) {
                 cov = DataUtils.getCovMatrix(dataSet);
-            } else if (dataSet instanceof  ICovarianceMatrix){
+            } else if (dataSet instanceof ICovarianceMatrix) {
                 cov = (ICovarianceMatrix) dataSet;
             } else {
                 throw new IllegalArgumentException("Expected a dataset or a covariance matrix.");
@@ -68,34 +63,34 @@ public class Ftfc implements Algorithm, HasKnowledge, ClusterAlgorithm {
             search.setVerbose(parameters.getBoolean("verbose"));
 
             return search.search();
-    	}else{
-    		Ftfc algorithm = new Ftfc();
-    		
-        	algorithm.setKnowledge(knowledge);
+        } else {
+            Ftfc algorithm = new Ftfc();
+
+            algorithm.setKnowledge(knowledge);
 //          if (initialGraph != null) {
 //      		algorithm.setInitialGraph(initialGraph);
 //  		}
 
-    		DataSet data = (DataSet) dataSet;
-    		
-    		GeneralBootstrapTest search = new GeneralBootstrapTest(data, algorithm, parameters.getInt("bootstrapSampleSize"));
-    		
-    		BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-    		switch (parameters.getInt("bootstrapEnsemble", 1)) {
-    		case 0:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
-    			break;
-    		case 1:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-    			break;
-    		case 2:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Majority;
-    		}
-    		search.setEdgeEnsemble(edgeEnsemble);
-    		search.setParameters(parameters);    		
-    		search.setVerbose(parameters.getBoolean("verbose"));
-    		return search.search();
-    	}
+            DataSet data = (DataSet) dataSet;
+
+            GeneralBootstrapTest search = new GeneralBootstrapTest(data, algorithm, parameters.getInt("bootstrapSampleSize"));
+
+            BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+            switch (parameters.getInt("bootstrapEnsemble", 1)) {
+                case 0:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
+                    break;
+                case 1:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+                    break;
+                case 2:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Majority;
+            }
+            search.setEdgeEnsemble(edgeEnsemble);
+            search.setParameters(parameters);
+            search.setVerbose(parameters.getBoolean("verbose"));
+            return search.search();
+        }
     }
 
     @Override

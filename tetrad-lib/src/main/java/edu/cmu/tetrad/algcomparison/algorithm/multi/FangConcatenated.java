@@ -3,8 +3,6 @@ package edu.cmu.tetrad.algcomparison.algorithm.multi;
 import edu.cmu.tetrad.algcomparison.algorithm.MultiDataSetAlgorithm;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.annotation.AlgType;
-import edu.cmu.tetrad.annotation.AlgorithmDescription;
-import edu.cmu.tetrad.annotation.OracleType;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
@@ -12,7 +10,6 @@ import edu.cmu.tetrad.search.Fang;
 import edu.cmu.tetrad.util.Parameters;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapEdgeEnsemble;
 import edu.pitt.dbmi.algo.bootstrap.GeneralBootstrapTest;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,12 +23,11 @@ import java.util.List;
  *
  * @author jdramsey
  */
-@AlgorithmDescription(
-        name = "FANG",
-        algType = AlgType.forbid_latent_common_causes,
-        oracleType = OracleType.None,
-        description = "Short blurb goes here",
-        assumptions = {}
+@edu.cmu.tetrad.annotation.Algorithm(
+        name = "FANG Concatenated",
+        command = "fang-concatenated",
+        algoType = AlgType.forbid_latent_common_causes,
+        description = "Short blurb goes here"
 )
 public class FangConcatenated implements MultiDataSetAlgorithm, HasKnowledge {
 
@@ -49,7 +45,7 @@ public class FangConcatenated implements MultiDataSetAlgorithm, HasKnowledge {
 
     @Override
     public Graph search(List<DataModel> dataSets, Parameters parameters) {
-    	if (!parameters.getBoolean("bootstrapping")) {
+        if (!parameters.getBoolean("bootstrapping")) {
             List<DataSet> centered = new ArrayList<>();
 
             for (DataModel dataSet : dataSets) {
@@ -63,64 +59,64 @@ public class FangConcatenated implements MultiDataSetAlgorithm, HasKnowledge {
             search.setAlpha(parameters.getDouble("twoCycleAlpha"));
             search.setKnowledge(knowledge);
             return search.search();
-    	}else{
-    		FangConcatenated algorithm = new FangConcatenated(empirical);
-			algorithm.setKnowledge(knowledge);
+        } else {
+            FangConcatenated algorithm = new FangConcatenated(empirical);
+            algorithm.setKnowledge(knowledge);
 
-			List<DataSet> datasets = new ArrayList<>();
+            List<DataSet> datasets = new ArrayList<>();
 
-			for (DataModel dataModel : dataSets) {
-				datasets.add((DataSet) dataModel);
-			}
-			GeneralBootstrapTest search = new GeneralBootstrapTest(datasets, algorithm,
-					parameters.getInt("bootstrapSampleSize"));
+            for (DataModel dataModel : dataSets) {
+                datasets.add((DataSet) dataModel);
+            }
+            GeneralBootstrapTest search = new GeneralBootstrapTest(datasets, algorithm,
+                    parameters.getInt("bootstrapSampleSize"));
 
-			BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-			switch (parameters.getInt("bootstrapEnsemble", 1)) {
-			case 0:
-				edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
-				break;
-			case 1:
-				edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-				break;
-			case 2:
-				edgeEnsemble = BootstrapEdgeEnsemble.Majority;
-			}
-			search.setEdgeEnsemble(edgeEnsemble);
-			search.setParameters(parameters);
-			search.setVerbose(parameters.getBoolean("verbose"));
-			return search.search();
-    	}
+            BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+            switch (parameters.getInt("bootstrapEnsemble", 1)) {
+                case 0:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
+                    break;
+                case 1:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+                    break;
+                case 2:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Majority;
+            }
+            search.setEdgeEnsemble(edgeEnsemble);
+            search.setParameters(parameters);
+            search.setVerbose(parameters.getBoolean("verbose"));
+            return search.search();
+        }
     }
 
     @Override
     public Graph search(DataModel dataSet, Parameters parameters) {
-    	if (!parameters.getBoolean("bootstrapping")) {
+        if (!parameters.getBoolean("bootstrapping")) {
             return search(Collections.singletonList((DataModel) DataUtils.getContinuousDataSet(dataSet)), parameters);
-    	}else{
-    		FangConcatenated algorithm = new FangConcatenated(empirical);
-			algorithm.setKnowledge(knowledge);
+        } else {
+            FangConcatenated algorithm = new FangConcatenated(empirical);
+            algorithm.setKnowledge(knowledge);
 
-			List<DataSet> dataSets = Collections.singletonList(DataUtils.getContinuousDataSet(dataSet));
-			GeneralBootstrapTest search = new GeneralBootstrapTest(dataSets, algorithm,
-					parameters.getInt("bootstrapSampleSize"));
+            List<DataSet> dataSets = Collections.singletonList(DataUtils.getContinuousDataSet(dataSet));
+            GeneralBootstrapTest search = new GeneralBootstrapTest(dataSets, algorithm,
+                    parameters.getInt("bootstrapSampleSize"));
 
-			BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-			switch (parameters.getInt("bootstrapEnsemble", 1)) {
-			case 0:
-				edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
-				break;
-			case 1:
-				edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-				break;
-			case 2:
-				edgeEnsemble = BootstrapEdgeEnsemble.Majority;
-			}
-			search.setEdgeEnsemble(edgeEnsemble);
-			search.setParameters(parameters);
-			search.setVerbose(parameters.getBoolean("verbose"));
-			return search.search();
-    	}
+            BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+            switch (parameters.getInt("bootstrapEnsemble", 1)) {
+                case 0:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
+                    break;
+                case 1:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+                    break;
+                case 2:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Majority;
+            }
+            search.setEdgeEnsemble(edgeEnsemble);
+            search.setParameters(parameters);
+            search.setVerbose(parameters.getBoolean("verbose"));
+            return search.search();
+        }
     }
 
     @Override
@@ -147,11 +143,11 @@ public class FangConcatenated implements MultiDataSetAlgorithm, HasKnowledge {
         parameters.add("numRuns");
         parameters.add("randomSelectionSize");
         // Bootstrapping
- 		parameters.add("bootstrapping");
- 		parameters.add("bootstrapSampleSize");
- 		parameters.add("bootstrapEnsemble");
- 		parameters.add("verbose");
-     		
+        parameters.add("bootstrapping");
+        parameters.add("bootstrapSampleSize");
+        parameters.add("bootstrapEnsemble");
+        parameters.add("verbose");
+
         return parameters;
     }
 

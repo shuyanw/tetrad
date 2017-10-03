@@ -3,24 +3,20 @@ package edu.cmu.tetrad.algcomparison.algorithm.oracle.pag;
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
 import edu.cmu.tetrad.algcomparison.independence.IndependenceWrapper;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
-import edu.cmu.tetrad.data.DataModel;
-import edu.cmu.tetrad.data.DataSet;
-import edu.cmu.tetrad.data.Knowledge;
-import edu.cmu.tetrad.graph.EdgeListGraph;
-import edu.cmu.tetrad.util.Parameters;
 import edu.cmu.tetrad.algcomparison.utils.TakesIndependenceWrapper;
 import edu.cmu.tetrad.algcomparison.utils.TakesInitialGraph;
 import edu.cmu.tetrad.annotation.AlgType;
-import edu.cmu.tetrad.annotation.AlgorithmDescription;
-import edu.cmu.tetrad.annotation.OracleType;
+import edu.cmu.tetrad.annotation.UnmeasuredConfounder;
+import edu.cmu.tetrad.data.DataModel;
+import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.DataType;
 import edu.cmu.tetrad.data.IKnowledge;
+import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.search.TsDagToPag;
-
+import edu.cmu.tetrad.util.Parameters;
 import edu.pitt.dbmi.algo.bootstrap.BootstrapEdgeEnsemble;
 import edu.pitt.dbmi.algo.bootstrap.GeneralBootstrapTest;
-
 import java.util.List;
 
 /**
@@ -29,13 +25,13 @@ import java.util.List;
  * @author jdramsey
  * @author dmalinsky
  */
-@AlgorithmDescription(
+@edu.cmu.tetrad.annotation.Algorithm(
         name = "TsFCI",
-        algType = AlgType.allow_latent_common_causes,
-        oracleType = OracleType.Test,
-        description = "Short blurb goes here",
-        assumptions = {}
+        command = "ts-fci",
+        algoType = AlgType.allow_latent_common_causes,
+        description = "Short blurb goes here"
 )
+@UnmeasuredConfounder
 public class TsFci implements Algorithm, TakesInitialGraph, HasKnowledge, TakesIndependenceWrapper {
 
     static final long serialVersionUID = 23L;
@@ -58,36 +54,36 @@ public class TsFci implements Algorithm, TakesInitialGraph, HasKnowledge, TakesI
 
     @Override
     public Graph search(DataModel dataSet, Parameters parameters) {
-    	if(!parameters.getBoolean("bootstrapping")){
-    		edu.cmu.tetrad.search.TsFci search = new edu.cmu.tetrad.search.TsFci(test.getTest(dataSet, parameters));
+        if (!parameters.getBoolean("bootstrapping")) {
+            edu.cmu.tetrad.search.TsFci search = new edu.cmu.tetrad.search.TsFci(test.getTest(dataSet, parameters));
             search.setDepth(parameters.getInt("depth"));
 
             IKnowledge _knowledge = getKnowledge() != null ? getKnowledge() : dataSet.getKnowledge();
 
             search.setKnowledge(_knowledge);
             return search.search();
-    	}else{
-    		TsFci tsFci = new TsFci(test, algorithm);
-    		
-    		DataSet data = (DataSet) dataSet;
-    		GeneralBootstrapTest search = new GeneralBootstrapTest(data, tsFci, parameters.getInt("bootstrapSampleSize"));
-    		
-    		BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-    		switch (parameters.getInt("bootstrapEnsemble", 1)) {
-    		case 0:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
-    			break;
-    		case 1:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Highest;
-    			break;
-    		case 2:
-    			edgeEnsemble = BootstrapEdgeEnsemble.Majority;
-    		}
-    		search.setEdgeEnsemble(edgeEnsemble);
-    		search.setParameters(parameters);    		
-    		search.setVerbose(parameters.getBoolean("verbose"));
-    		return search.search();
-    	}
+        } else {
+            TsFci tsFci = new TsFci(test, algorithm);
+
+            DataSet data = (DataSet) dataSet;
+            GeneralBootstrapTest search = new GeneralBootstrapTest(data, tsFci, parameters.getInt("bootstrapSampleSize"));
+
+            BootstrapEdgeEnsemble edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+            switch (parameters.getInt("bootstrapEnsemble", 1)) {
+                case 0:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Preserved;
+                    break;
+                case 1:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Highest;
+                    break;
+                case 2:
+                    edgeEnsemble = BootstrapEdgeEnsemble.Majority;
+            }
+            search.setEdgeEnsemble(edgeEnsemble);
+            search.setParameters(parameters);
+            search.setVerbose(parameters.getBoolean("verbose"));
+            return search.search();
+        }
     }
 
     @Override
@@ -96,9 +92,9 @@ public class TsFci implements Algorithm, TakesInitialGraph, HasKnowledge, TakesI
     }
 
     public String getDescription() {
-        return "tsFCI (Time Series Fast Causal Inference) using " + test.getDescription() +
-                (algorithm != null ? " with initial graph from " +
-                		algorithm.getDescription() : "");
+        return "tsFCI (Time Series Fast Causal Inference) using " + test.getDescription()
+                + (algorithm != null ? " with initial graph from "
+                        + algorithm.getDescription() : "");
     }
 
     @Override
@@ -108,8 +104,8 @@ public class TsFci implements Algorithm, TakesInitialGraph, HasKnowledge, TakesI
 
     @Override
     public List<String> getParameters() {
-    	List<String> parameters = test.getParameters();
-    	// Bootstrapping
+        List<String> parameters = test.getParameters();
+        // Bootstrapping
         parameters.add("bootstrapping");
         parameters.add("bootstrapSampleSize");
         parameters.add("bootstrapEnsemble");
@@ -127,15 +123,15 @@ public class TsFci implements Algorithm, TakesInitialGraph, HasKnowledge, TakesI
         this.knowledge = knowledge;
     }
 
-	@Override
-	public Graph getInitialGraph() {
-		return initialGraph;
-	}
+    @Override
+    public Graph getInitialGraph() {
+        return initialGraph;
+    }
 
-	@Override
-	public void setInitialGraph(Graph initialGraph) {
-		this.initialGraph = initialGraph;
-	}
+    @Override
+    public void setInitialGraph(Graph initialGraph) {
+        this.initialGraph = initialGraph;
+    }
 
     @Override
     public void setInitialGraph(Algorithm algorithm) {
