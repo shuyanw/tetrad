@@ -1,6 +1,7 @@
 package edu.cmu.tetrad.algcomparison.algorithm.multi;
 
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithm;
+import edu.cmu.tetrad.algcomparison.independence.IndependenceWrapper;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
@@ -20,15 +21,11 @@ import java.util.List;
  */
 public class Fask implements Algorithm, HasKnowledge {
     static final long serialVersionUID = 23L;
-    private boolean empirical = false;
+    private final IndependenceWrapper test;
     private IKnowledge knowledge = new Knowledge2();
 
-    public Fask() {
-        this.empirical = false;
-    }
-
-    public Fask(boolean empirical) {
-        this.empirical = empirical;
+    public Fask(IndependenceWrapper test) {
+        this.test = test;
     }
 
     private Graph getGraph(edu.cmu.tetrad.search.Fask search) {
@@ -37,10 +34,11 @@ public class Fask implements Algorithm, HasKnowledge {
 
     @Override
     public Graph search(DataModel dataSet, Parameters parameters) {
-        edu.cmu.tetrad.search.Fask search = new edu.cmu.tetrad.search.Fask((DataSet) dataSet);
+        edu.cmu.tetrad.search.Fask search = new edu.cmu.tetrad.search.Fask(test.getTest(dataSet, parameters),
+                (DataSet) dataSet);
         search.setDepth(parameters.getInt("depth"));
-        search.setPenaltyDiscount(parameters.getDouble("penaltyDiscount"));
-        search.setAlpha(parameters.getDouble("twoCycleAlpha"));
+//        search.setPenaltyDiscount(parameters.getDouble("penaltyDiscount"));
+        search.setTwoCycleAlpha(parameters.getDouble("twoCycleAlpha"));
         search.setKnowledge(knowledge);
         return getGraph(search);
     }
@@ -62,7 +60,7 @@ public class Fask implements Algorithm, HasKnowledge {
 
     @Override
     public List<String> getParameters() {
-        List<String> parameters = new ArrayList<>();
+        List<String> parameters = test.getParameters();
         parameters.add("depth");
         parameters.add("penaltyDiscount");
         parameters.add("twoCycleAlpha");

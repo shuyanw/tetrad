@@ -3,9 +3,6 @@ package edu.cmu.tetrad.algcomparison.independence;
 import edu.cmu.tetrad.data.DataModel;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.DataType;
-import edu.cmu.tetrad.data.ICovarianceMatrix;
-import edu.cmu.tetrad.search.IndTestFisherZ;
-import edu.cmu.tetrad.search.IndTestPositiveCorr;
 import edu.cmu.tetrad.search.IndependenceTest;
 import edu.cmu.tetrad.util.Parameters;
 
@@ -17,7 +14,7 @@ import java.util.List;
  *
  * @author jdramsey
  */
-public class PositiveCorr implements IndependenceWrapper {
+public class AdjacencyDetector implements IndependenceWrapper {
     static final long serialVersionUID = 23L;
     private double alpha = 0.001;
 
@@ -27,7 +24,7 @@ public class PositiveCorr implements IndependenceWrapper {
         this.alpha = alpha;
 
         if (dataSet instanceof DataSet) {
-            return new IndTestPositiveCorr((DataSet) dataSet, alpha);
+            return new edu.cmu.tetrad.search.AdjacencyDetector((DataSet) dataSet, alpha);
         }
 
         throw new IllegalArgumentException("Expecting a data set.");
@@ -35,7 +32,7 @@ public class PositiveCorr implements IndependenceWrapper {
 
     @Override
     public String getDescription() {
-        return "Fisher Z test, alpha = " + alpha;
+        return "Adjacency Detector, alpha = " + alpha;
     }
 
     @Override

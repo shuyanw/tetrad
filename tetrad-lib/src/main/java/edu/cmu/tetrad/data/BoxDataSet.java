@@ -382,6 +382,7 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
             throw new IndexOutOfBoundsException("Index must in (0, #vars).");
         }
 
+        if (variables.contains(variable)) return;
         variables.add(index, variable);
         resize(dataBox.numRows(), variables.size());
 

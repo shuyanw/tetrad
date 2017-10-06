@@ -50,18 +50,9 @@ import static java.lang.Math.sqrt;
  * @author Joseph Ramsey
  * @author Frank Wimberly adapted IndTestCramerT for Fisher's Z
  */
-public final class IndTestPositiveCorr implements IndependenceTest {
+public final class AdjacencyDetector implements IndependenceTest {
 
-    /**
-     * The covariance matrix.
-     */
-    private final ICovarianceMatrix covMatrix;
     private final double[][] data;
-
-//    /**
-//     * The matrix out of the cov matrix.
-//     */
-//    private final TetradMatrix _covMatrix;
 
     /**
      * The variables of the covariance matrix, in order. (Unmodifiable list.)
@@ -106,7 +97,7 @@ public final class IndTestPositiveCorr implements IndependenceTest {
      * @param dataSet A data set containing only continuous columns.
      * @param alpha   The alpha level of the test.
      */
-    public IndTestPositiveCorr(DataSet dataSet, double alpha) {
+    public AdjacencyDetector(DataSet dataSet, double alpha) {
         if (!(dataSet.isContinuous())) {
             throw new IllegalArgumentException("Data set must be continuous.");
         }
@@ -115,8 +106,7 @@ public final class IndTestPositiveCorr implements IndependenceTest {
             throw new IllegalArgumentException("Alpha mut be in [0, 1]");
         }
 
-        this.covMatrix = new CovarianceMatrixOnTheFly(dataSet);
-        List<Node> nodes = covMatrix.getVariables();
+        List<Node> nodes = dataSet.getVariables();
 
         this.variables = Collections.unmodifiableList(nodes);
         this.indexMap = indexMap(variables);
@@ -126,6 +116,8 @@ public final class IndTestPositiveCorr implements IndependenceTest {
         this.dataSet = dataSet;
 
         data = dataSet.getDoubleData().transpose().toArray();
+
+        setAlpha(alpha);
 
     }
 
@@ -148,10 +140,6 @@ public final class IndTestPositiveCorr implements IndependenceTest {
      * @throws RuntimeException if a matrix singularity is encountered.
      */
     public boolean isIndependent(Node x0, Node y0, List<Node> z0) {
-
-        System.out.println(SearchLogUtils.independenceFact(x0, y0, z0));
-
-
         double[] x = data[dataSet.getColumn(x0)];
         double[] y = data[dataSet.getColumn(y0)];
 
@@ -178,11 +166,11 @@ public final class IndTestPositiveCorr implements IndependenceTest {
         double zv1 = (z - z1) / sqrt((1.0 / ((double) nc - 3) + 1.0 / ((double) nc1 - 3)));
         double zv2 = (z - z2) / sqrt((1.0 / ((double) nc - 3) + 1.0 / ((double) nc2 - 3)));
 
-        double p1 = 2 * (1.0 - new NormalDistribution(0, 1).cumulativeProbability(abs(zv1)));
-        double p2 = 2 * (1.0 - new NormalDistribution(0, 1).cumulativeProbability(abs(zv2)));
+//        double p1 = 2 * (1.0 - new NormalDistribution(0, 1).cumulativeProbability(abs(zv1)));
+//        double p2 = 2 * (1.0 - new NormalDistribution(0, 1).cumulativeProbability(abs(zv2)));
 
-        boolean rejected1 = p1 < alpha;
-        boolean rejected2 = p2 < alpha;
+        boolean rejected1 = abs(zv1) > cutoff;
+        boolean rejected2 = abs(zv2) > cutoff;
 
         boolean possibleEdge = false;
 
@@ -195,8 +183,6 @@ public final class IndTestPositiveCorr implements IndependenceTest {
         } else if (rejected1 || rejected2) {
             possibleEdge = true;
         }
-
-        System.out.println(possibleEdge);
 
         return !possibleEdge;
     }
@@ -273,40 +259,7 @@ public final class IndTestPositiveCorr implements IndependenceTest {
      * UnsupportedOperationException.
      */
     public boolean determines(List<Node> z, Node x) throws UnsupportedOperationException {
-        int[] parents = new int[z.size()];
-
-        for (int j = 0; j < parents.length; j++) {
-            parents[j] = covMatrix.getVariables().indexOf(z.get(j));
-        }
-
-//        int i = covMatrix.getVariable().indexOf(x);
-
-//        double variance = covMatrix.getValue(i, i);
-
-        if (parents.length > 0) {
-
-            // Regress z onto i, yielding regression coefficients b.
-            TetradMatrix Czz = covMatrix.getSelection(parents, parents);
-//            TetradMatrix inverse;
-
-            try {
-//                inverse =
-                Czz.inverse();
-            } catch (SingularMatrixException e) {
-//                System.out.println(SearchLogUtils.determinismDetected(z, x));
-
-                return true;
-            }
-
-//            TetradVector Cyz = covMatrix.getSelection(parents, new int[]{i}).getColumn(0);
-//            TetradVector b = inverse.times(Cyz);
-//
-//            variance -= Cyz.dotProduct(b);
-        }
-
-        return false;
-
-//        return variance < 1e-20;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -340,7 +293,7 @@ public final class IndTestPositiveCorr implements IndependenceTest {
     }
 
     private ICovarianceMatrix covMatrix() {
-        return covMatrix;
+        throw new UnsupportedOperationException();
     }
 
     private Map<String, Node> nameMap(List<Node> variables) {
@@ -366,11 +319,10 @@ public final class IndTestPositiveCorr implements IndependenceTest {
     public void setVariables(List<Node> variables) {
         if (variables.size() != this.variables.size()) throw new IllegalArgumentException("Wrong # of variables.");
         this.variables = new ArrayList<>(variables);
-        covMatrix.setVariables(variables);
     }
 
     public ICovarianceMatrix getCov() {
-        return covMatrix;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -385,7 +337,7 @@ public final class IndTestPositiveCorr implements IndependenceTest {
 
     @Override
     public int getSampleSize() {
-        return covMatrix.getSampleSize();
+        return dataSet.getNumRows();
     }
 
     @Override
@@ -404,10 +356,6 @@ public final class IndTestPositiveCorr implements IndependenceTest {
 
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
-    }
-
-    public double getRho() {
-        return rho;
     }
 
     private double partialCorrelation(double[] x, double[] y, double[][] z, double[] condition, double threshold, double direction) throws SingularMatrixException {

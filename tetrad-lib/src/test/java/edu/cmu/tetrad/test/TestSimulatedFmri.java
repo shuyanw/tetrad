@@ -24,20 +24,11 @@ package edu.cmu.tetrad.test;
 import edu.cmu.tetrad.algcomparison.Comparison;
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithms;
 import edu.cmu.tetrad.algcomparison.algorithm.multi.*;
+import edu.cmu.tetrad.algcomparison.independence.AdjacencyDetector;
+import edu.cmu.tetrad.algcomparison.independence.SemBicTest;
 import edu.cmu.tetrad.algcomparison.simulation.Simulations;
 import edu.cmu.tetrad.algcomparison.statistic.*;
-import edu.cmu.tetrad.data.ContinuousVariable;
-import edu.cmu.tetrad.data.DataSet;
-import edu.cmu.tetrad.graph.EdgeListGraph;
-import edu.cmu.tetrad.graph.Graph;
-import edu.cmu.tetrad.graph.Node;
-import edu.cmu.tetrad.search.Fask;
-import edu.cmu.tetrad.sem.GeneralizedSemIm;
-import edu.cmu.tetrad.sem.GeneralizedSemPm;
 import edu.cmu.tetrad.util.Parameters;
-import org.junit.Test;
-
-import java.text.ParseException;
 
 /**
  * Pulling this test out for Madelyn.
@@ -47,11 +38,12 @@ import java.text.ParseException;
 public class TestSimulatedFmri {
 
     public void TestCycles_Data_fMRI_FASK() {
-        task(true);
+        task(false);
     }
 
     private void task(boolean testing) {
         Parameters parameters = new Parameters();
+        parameters.set("alpha", 0.0001);
         parameters.set("penaltyDiscount", 6);
         parameters.set("depth", -1);
         parameters.set("twoCycleAlpha", 1E-8);
@@ -175,7 +167,7 @@ public class TestSimulatedFmri {
 
         Algorithms algorithms = new Algorithms();
 
-        algorithms.add(new FaskConcatenated(false));
+        algorithms.add(new FaskConcatenated(new AdjacencyDetector()));
 //
         Comparison comparison = new Comparison();
 
@@ -254,7 +246,7 @@ public class TestSimulatedFmri {
 //
 //        algorithms.add(new FgesConcatenated(new edu.cmu.tetrad.algcomparison.score.SemBicScore(), true));
 //        algorithms.add(new PcStableMaxConcatenated(new SemBicTest(), true));
-        algorithms.add(new FaskConcatenated());
+        algorithms.add(new FaskConcatenated(new SemBicTest()));
 //        algorithms.add(new FasLofsConcatenated(Lofs2.Rule.R1));
 //        algorithms.add(new FasLofsConcatenated(Lofs2.Rule.R2));
 //        algorithms.add(new FasLofsConcatenated(Lofs2.Rule.R3));
@@ -275,140 +267,141 @@ public class TestSimulatedFmri {
         comparison.compareFromSimulations("comparison", simulations, algorithms, statistics, parameters);
     }
 
-    @Test
-    public void testClark() {
+//    @Test
+//    public void testClark() {
+//
+//        double f = .1;
+//        int N = 512;
+//        double alpha = 1.0;
+//        double penaltyDiscount = 1.0;
+//
+//        for (int i = 0; i < 100; i++) {
+//            {
+//                Node x = new ContinuousVariable("X");
+//                Node y = new ContinuousVariable("Y");
+//                Node z = new ContinuousVariable("Z");
+//
+//                Graph g = new EdgeListGraph();
+//                g.addNode(x);
+//                g.addNode(y);
+//                g.addNode(z);
+//
+//                g.addDirectedEdge(x, y);
+//                g.addDirectedEdge(z, x);
+//                g.addDirectedEdge(z, y);
+//
+//                GeneralizedSemPm pm = new GeneralizedSemPm(g);
+//
+//                try {
+//                    pm.setNodeExpression(g.getNode("X"), "0.5 * Z + E_X");
+//                    pm.setNodeExpression(g.getNode("Y"), "0.5 * X + 0.5 * Z + E_Y");
+//                    pm.setNodeExpression(g.getNode("Z"), "E_Z");
+//
+//                    String error = "pow(Uniform(0, 1), " + f + ")";
+//                    pm.setNodeExpression(pm.getErrorNode(g.getNode("X")), error);
+//                    pm.setNodeExpression(pm.getErrorNode(g.getNode("Y")), error);
+//                    pm.setNodeExpression(pm.getErrorNode(g.getNode("Z")), error);
+//                } catch (ParseException e) {
+//                    System.out.println(e);
+//                }
+//
+//                GeneralizedSemIm im = new GeneralizedSemIm(pm);
+//                DataSet data = im.simulateData(N, false);
+//
+//
+//                Fask fask = new Fask(test, data);
+//                fask.setPenaltyDiscount(penaltyDiscount);
+//                fask.setAlpha(alpha);
+//                Graph out = fask.search();
+//
+//                System.out.println(out);
+//            }
+//
+//            {
+//                Node x = new ContinuousVariable("X");
+//                Node y = new ContinuousVariable("Y");
+//                Node z = new ContinuousVariable("Z");
+//
+//                Graph g = new EdgeListGraph();
+//                g.addNode(x);
+//                g.addNode(y);
+//                g.addNode(z);
+//
+//                g.addDirectedEdge(x, y);
+//                g.addDirectedEdge(x, z);
+//                g.addDirectedEdge(y, z);
+//
+//                GeneralizedSemPm pm = new GeneralizedSemPm(g);
+//
+//                try {
+//                    pm.setNodeExpression(g.getNode("X"), "E_X");
+//                    pm.setNodeExpression(g.getNode("Y"), "0.4 * X + E_Y");
+//                    pm.setNodeExpression(g.getNode("Z"), "0.4 * X + 0.4 * Y + E_Z");
+//
+//                    String error = "pow(Uniform(0, 1), " + f + ")";
+//                    pm.setNodeExpression(pm.getErrorNode(g.getNode("X")), error);
+//                    pm.setNodeExpression(pm.getErrorNode(g.getNode("Y")), error);
+//                    pm.setNodeExpression(pm.getErrorNode(g.getNode("Z")), error);
+//                } catch (ParseException e) {
+//                    System.out.println(e);
+//                }
+//
+//                GeneralizedSemIm im = new GeneralizedSemIm(pm);
+//                DataSet data = im.simulateData(N, false);
+//
+//                Fask fask = new Fask(test, data);
+//                fask.setPenaltyDiscount(penaltyDiscount);
+//                fask.setAlpha(alpha);
+//                Graph out = fask.search();
+//
+//                System.out.println(out);
+//
+//            }
+//        }
+//    }
 
-        double f = .1;
-        int N = 512;
-        double alpha = 1.0;
-        double penaltyDiscount = 1.0;
 
-        for (int i = 0; i < 100; i++) {
-            {
-                Node x = new ContinuousVariable("X");
-                Node y = new ContinuousVariable("Y");
-                Node z = new ContinuousVariable("Z");
-
-                Graph g = new EdgeListGraph();
-                g.addNode(x);
-                g.addNode(y);
-                g.addNode(z);
-
-                g.addDirectedEdge(x, y);
-                g.addDirectedEdge(z, x);
-                g.addDirectedEdge(z, y);
-
-                GeneralizedSemPm pm = new GeneralizedSemPm(g);
-
-                try {
-                    pm.setNodeExpression(g.getNode("X"), "0.5 * Z + E_X");
-                    pm.setNodeExpression(g.getNode("Y"), "0.5 * X + 0.5 * Z + E_Y");
-                    pm.setNodeExpression(g.getNode("Z"), "E_Z");
-
-                    String error = "pow(Uniform(0, 1), " + f + ")";
-                    pm.setNodeExpression(pm.getErrorNode(g.getNode("X")), error);
-                    pm.setNodeExpression(pm.getErrorNode(g.getNode("Y")), error);
-                    pm.setNodeExpression(pm.getErrorNode(g.getNode("Z")), error);
-                } catch (ParseException e) {
-                    System.out.println(e);
-                }
-
-                GeneralizedSemIm im = new GeneralizedSemIm(pm);
-                DataSet data = im.simulateData(N, false);
-
-                Fask fask = new Fask(data);
-                fask.setPenaltyDiscount(penaltyDiscount);
-                fask.setAlpha(alpha);
-                Graph out = fask.search();
-
-                System.out.println(out);
-            }
-
-            {
-                Node x = new ContinuousVariable("X");
-                Node y = new ContinuousVariable("Y");
-                Node z = new ContinuousVariable("Z");
-
-                Graph g = new EdgeListGraph();
-                g.addNode(x);
-                g.addNode(y);
-                g.addNode(z);
-
-                g.addDirectedEdge(x, y);
-                g.addDirectedEdge(x, z);
-                g.addDirectedEdge(y, z);
-
-                GeneralizedSemPm pm = new GeneralizedSemPm(g);
-
-                try {
-                    pm.setNodeExpression(g.getNode("X"), "E_X");
-                    pm.setNodeExpression(g.getNode("Y"), "0.4 * X + E_Y");
-                    pm.setNodeExpression(g.getNode("Z"), "0.4 * X + 0.4 * Y + E_Z");
-
-                    String error = "pow(Uniform(0, 1), " + f + ")";
-                    pm.setNodeExpression(pm.getErrorNode(g.getNode("X")), error);
-                    pm.setNodeExpression(pm.getErrorNode(g.getNode("Y")), error);
-                    pm.setNodeExpression(pm.getErrorNode(g.getNode("Z")), error);
-                } catch (ParseException e) {
-                    System.out.println(e);
-                }
-
-                GeneralizedSemIm im = new GeneralizedSemIm(pm);
-                DataSet data = im.simulateData(N, false);
-
-                Fask fask = new Fask(data);
-                fask.setPenaltyDiscount(penaltyDiscount);
-                fask.setAlpha(alpha);
-                Graph out = fask.search();
-
-                System.out.println(out);
-
-            }
-        }
-    }
-
-
-    @Test
-    public void testClark2() {
-
-        Node x = new ContinuousVariable("X");
-        Node y = new ContinuousVariable("Y");
-        Node z = new ContinuousVariable("Z");
-
-        Graph g = new EdgeListGraph();
-        g.addNode(x);
-        g.addNode(y);
-        g.addNode(z);
-
-        g.addDirectedEdge(x, y);
-        g.addDirectedEdge(x, z);
-        g.addDirectedEdge(y, z);
-
-        GeneralizedSemPm pm = new GeneralizedSemPm(g);
-
-        try {
-            pm.setNodeExpression(g.getNode("X"), "E_X");
-            pm.setNodeExpression(g.getNode("Y"), "0.4 * X + E_Y");
-            pm.setNodeExpression(g.getNode("Z"), "0.4 * X + 0.4 * Y + E_Z");
-
-            String error = "pow(Uniform(0, 1), 1.5)";
-            pm.setNodeExpression(pm.getErrorNode(g.getNode("X")), error);
-            pm.setNodeExpression(pm.getErrorNode(g.getNode("Y")), error);
-            pm.setNodeExpression(pm.getErrorNode(g.getNode("Z")), error);
-        } catch (ParseException e) {
-            System.out.println(e);
-        }
-
-        GeneralizedSemIm im = new GeneralizedSemIm(pm);
-        DataSet data = im.simulateData(1000, false);
-
-        Fask fask = new Fask(data);
-        fask.setPenaltyDiscount(1);
-        fask.setAlpha(0.5);
-        Graph out = fask.search();
-
-        System.out.println(out);
-    }
+//    @Test
+//    public void testClark2() {
+//
+//        Node x = new ContinuousVariable("X");
+//        Node y = new ContinuousVariable("Y");
+//        Node z = new ContinuousVariable("Z");
+//
+//        Graph g = new EdgeListGraph();
+//        g.addNode(x);
+//        g.addNode(y);
+//        g.addNode(z);
+//
+//        g.addDirectedEdge(x, y);
+//        g.addDirectedEdge(x, z);
+//        g.addDirectedEdge(y, z);
+//
+//        GeneralizedSemPm pm = new GeneralizedSemPm(g);
+//
+//        try {
+//            pm.setNodeExpression(g.getNode("X"), "E_X");
+//            pm.setNodeExpression(g.getNode("Y"), "0.4 * X + E_Y");
+//            pm.setNodeExpression(g.getNode("Z"), "0.4 * X + 0.4 * Y + E_Z");
+//
+//            String error = "pow(Uniform(0, 1), 1.5)";
+//            pm.setNodeExpression(pm.getErrorNode(g.getNode("X")), error);
+//            pm.setNodeExpression(pm.getErrorNode(g.getNode("Y")), error);
+//            pm.setNodeExpression(pm.getErrorNode(g.getNode("Z")), error);
+//        } catch (ParseException e) {
+//            System.out.println(e);
+//        }
+//
+//        GeneralizedSemIm im = new GeneralizedSemIm(pm);
+//        DataSet data = im.simulateData(1000, false);
+//
+//        Fask fask = new Fask(test, data);
+//        fask.setPenaltyDiscount(1);
+//        fask.setAlpha(0.5);
+//        Graph out = fask.search();
+//
+//        System.out.println(out);
+//    }
 
     public static void main(String... args) {
         new TestSimulatedFmri().TestCycles_Data_fMRI_FASK();

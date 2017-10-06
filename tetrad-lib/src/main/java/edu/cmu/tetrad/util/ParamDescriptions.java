@@ -158,7 +158,7 @@ public class ParamDescriptions {
                 0.05, 0.0, 1.0));
 
         put("twoCycleAlpha", new ParamDescription(
-                "Alpha orienting 2-cycles",
+                "Alpha for orienting 2-cycles",
                 1e-6, 0.0, 1.0));
 
         put("symmetricFirstStep", new ParamDescription(

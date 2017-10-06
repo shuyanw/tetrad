@@ -625,14 +625,17 @@ public final class TetradCmd {
             TetradLogger.getInstance().log("info", "Testing it.");
         }
 
-        Fask pc = new Fask(data);
-        pc.setAlpha(significance);
-        pc.setPenaltyDiscount(penaltyDiscount);
-        pc.setDepth(depth);
-        pc.setKnowledge(getKnowledge());
+        SemBicScore score = new SemBicScore(new CovarianceMatrixOnTheFly(data));
+        score.setPenaltyDiscount(penaltyDiscount);
+        IndependenceTest test = new IndTestScore(score, data);
+        Fask fask = new Fask(test, data);
+        fask.setTwoCycleAlpha(significance);
+//        fask.setPenaltyDiscount(penaltyDiscount);
+        fask.setDepth(depth);
+        fask.setKnowledge(getKnowledge());
 
         // Convert back to Graph..
-        Graph resultGraph = pc.search();
+        Graph resultGraph = fask.search();
 
         // PrintUtil outputStreamPath problem and graphs.
         outPrint("\nResult graph:");

@@ -24,9 +24,15 @@ package edu.cmu.tetrad.test;
 import edu.cmu.tetrad.algcomparison.Comparison;
 import edu.cmu.tetrad.algcomparison.algorithm.Algorithms;
 import edu.cmu.tetrad.algcomparison.algorithm.multi.*;
+import edu.cmu.tetrad.algcomparison.independence.SemBicTest;
+import edu.cmu.tetrad.algcomparison.score.SemBicScore;
 import edu.cmu.tetrad.algcomparison.simulation.Simulations;
 import edu.cmu.tetrad.algcomparison.statistic.*;
+import edu.cmu.tetrad.data.CovarianceMatrixOnTheFly;
+import edu.cmu.tetrad.search.IndTestScore;
+import edu.cmu.tetrad.search.IndependenceTest;
 import edu.cmu.tetrad.util.Parameters;
+import org.junit.Test;
 
 /**
  * Pulling this test out for Madelyn.
@@ -34,6 +40,10 @@ import edu.cmu.tetrad.util.Parameters;
  * @author jdramsey
  */
 public class TestSimulatedFmr3 {
+
+    @Test
+    public void name() throws Exception {
+    }
 
     public void TestCycles_Data_fMRI_FASK() {
         Parameters parameters = new Parameters();
@@ -129,7 +139,7 @@ public class TestSimulatedFmr3 {
 
         Algorithms algorithms = new Algorithms();
 
-        algorithms.add(new Fask());
+        algorithms.add(new Fask(new SemBicTest()));
 
         Comparison comparison = new Comparison();
 
@@ -216,7 +226,7 @@ public class TestSimulatedFmr3 {
 
             Algorithms algorithms = new Algorithms();
 
-            algorithms.add(new FaskConcatenated());
+            algorithms.add(new FaskConcatenated(new SemBicTest()));
 
             Comparison comparison = new Comparison();
 

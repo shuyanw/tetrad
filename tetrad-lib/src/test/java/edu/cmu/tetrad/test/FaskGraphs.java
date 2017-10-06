@@ -106,31 +106,31 @@ public class FaskGraphs {
                 if (!name.contains(s)) continue FILE;
             }
 
-            if (!name.contains("graph")) {
-                try {
-                    if (name.contains("autistic")) {
-                        types.add(true);
-                        DataSet dataSet = reader.parseTabular(new File(path, name));
-                        filenames.add(name);
-                        datasets.add(dataSet);
-                        Fask fask = new Fask();
-                        Graph search = fask.search(dataSet, parameters);
-                        graphs.add(search);
-                    } else if (name.contains("typical")) {
-                        types.add(false);
-                        DataSet dataSet = reader.parseTabular(new File(path, name));
-                        filenames.add(name);
-                        datasets.add(dataSet);
-                        Fask fask = new Fask();
-                        Graph search = fask.search(dataSet, parameters);
-                        graphs.add(search);
-                    }
-
-                    System.out.println("Loaded " + name);
-                } catch (IOException e) {
-                    System.out.println("File " + name + " could not be parsed.");
-                }
-            }
+//            if (!name.contains("graph")) {
+//                try {
+//                    if (name.contains("autistic")) {
+//                        types.add(true);
+//                        DataSet dataSet = reader.parseTabular(new File(path, name));
+//                        filenames.add(name);
+//                        datasets.add(dataSet);
+//                        Fask fask = new Fask();
+//                        Graph search = fask.search(dataSet, parameters);
+//                        graphs.add(search);
+//                    } else if (name.contains("typical")) {
+//                        types.add(false);
+//                        DataSet dataSet = reader.parseTabular(new File(path, name));
+//                        filenames.add(name);
+//                        datasets.add(dataSet);
+//                        Fask fask = new Fask();
+//                        Graph search = fask.search(dataSet, parameters);
+//                        graphs.add(search);
+//                    }
+//
+//                    System.out.println("Loaded " + name);
+//                } catch (IOException e) {
+//                    System.out.println("File " + name + " could not be parsed.");
+//                }
+//            }
         }
 
         reconcileNames();

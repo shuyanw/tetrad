@@ -23,6 +23,7 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.*;
+import edu.cmu.tetrad.util.ChoiceGenerator;
 import edu.cmu.tetrad.util.DepthChoiceGenerator;
 import edu.cmu.tetrad.util.StatUtils;
 import edu.cmu.tetrad.util.TetradMatrix;
@@ -49,6 +50,9 @@ public final class Fask implements GraphSearch {
     // Elapsed time of the search, in milliseconds.
     private long elapsed = 0;
 
+    // The test used for FAS.
+    private final IndependenceTest test;
+
     // The data sets being analyzed. They must all have the same variables and the same
     // number of records.
     private DataSet dataSet = null;
@@ -56,11 +60,11 @@ public final class Fask implements GraphSearch {
     // For the Fast Adjacency Search.
     private int depth = -1;
 
-    // For the SEM BIC score, for the Fast Adjacency Search.
-    private double penaltyDiscount = 1;
+//    // For the SEM BIC score, for the Fast Adjacency Search.
+//    private double penaltyDiscount = 1;
 
     // Alpha for orienting 2-cycles. Usually needs to be low.
-    private double alpha = 1e-6;
+    private double twoCycleAlpha = 1e-6;
 
     // Knowledge the the search will obey, of forbidden and required edges.
     private IKnowledge knowledge = new Knowledge2();
@@ -68,14 +72,20 @@ public final class Fask implements GraphSearch {
     // Data as a double[][].
     private final double[][] data;
 
+    // Cutoff for T tests for 2-cycle tests.
+    private double cutoff;
+
     /**
+     * @param test The test used for FAS.
      * @param dataSet These datasets must all have the same variables, in the same order.
      */
-    public Fask(DataSet dataSet) {
+    public Fask(IndependenceTest test, DataSet dataSet) {
+        this.test = test;
         this.dataSet = dataSet;
 
         data = dataSet.getDoubleData().transpose().toArray();
 
+        setAlpha(twoCycleAlpha);
     }
 
     //======================================== PUBLIC METHODS ====================================//
@@ -93,10 +103,6 @@ public final class Fask implements GraphSearch {
         long start = System.currentTimeMillis();
 
         DataSet dataSet = DataUtils.center(this.dataSet);
-
-        SemBicScore score = new SemBicScore(new CovarianceMatrixOnTheFly(dataSet));
-        score.setPenaltyDiscount(penaltyDiscount);
-        IndependenceTest test = new IndTestScore(score, dataSet);
         List<Node> variables = dataSet.getVariables();
 
         double[][] colData = dataSet.getDoubleData().transpose().toArray();
@@ -120,6 +126,8 @@ public final class Fask implements GraphSearch {
                 Node X = variables.get(i);
                 Node Y = variables.get(j);
 
+//                if (X == Y) continue;
+
                 // Centered
                 final double[] x = colData[i];
                 final double[] y = colData[j];
@@ -142,13 +150,21 @@ public final class Fask implements GraphSearch {
                         graph.addEdge(edge1);
                         graph.addEdge(edge2);
                     } else if (leftright(x, y)) {
-                        graph.addDirectedEdge(X, Y);
+                        graph.addPartiallyOrientedEdge(X, Y);
                     } else {
-                        graph.addDirectedEdge(Y, X);
+                        graph.addPartiallyOrientedEdge(Y, X);
                     }
                 }
             }
         }
+
+        IndependenceTest indTest = new IndTestFisherZ(dataSet, 0.001);
+        SepsetsGreedy sepsets = new SepsetsGreedy(graph, indTest, null, -1);
+        modifiedR0(graph, sepsets);
+
+        FciOrient fciOrient = new FciOrient(sepsets);
+        fciOrient.setKnowledge(getKnowledge());
+//        fciOrient.doFinalOrientation(graph);
 
         System.out.println();
         System.out.println("Done");
@@ -195,11 +211,14 @@ public final class Fask implements GraphSearch {
             double zv1 = (z - z1) / sqrt((1.0 / ((double) nc - 3) + 1.0 / ((double) nc1 - 3)));
             double zv2 = (z - z2) / sqrt((1.0 / ((double) nc - 3) + 1.0 / ((double) nc2 - 3)));
 
-            double p1 = 2 * (1.0 - new NormalDistribution(0, 1).cumulativeProbability(abs(zv1)));
-            double p2 = 2 * (1.0 - new NormalDistribution(0, 1).cumulativeProbability(abs(zv2)));
+//            double p1 = 2 * (1.0 - new NormalDistribution(0, 1).cumulativeProbability(abs(zv1)));
+//            double p2 = 2 * (1.0 - new NormalDistribution(0, 1).cumulativeProbability(abs(zv2)));
 
-            boolean rejected1 = p1 < alpha;
-            boolean rejected2 = p2 < alpha;
+//            boolean rejected1 = p1 < twoCycleAlpha;
+//            boolean rejected2 = p2 < twoCycleAlpha;
+
+            boolean rejected1 = abs(zv1) > cutoff;
+            boolean rejected2 = abs(zv2) > cutoff;
 
             boolean possibleTwoCycle = false;
 
@@ -241,10 +260,58 @@ public final class Fask implements GraphSearch {
         return exy / n;
     }
 
+    public void modifiedR0(Graph graph, SepsetProducer sepsets) {
+        List<Node> nodes = graph.getNodes();
+
+        for (Node b : nodes) {
+            List<Node> adjacentNodes = graph.getAdjacentNodes(b);
+
+            if (adjacentNodes.size() < 2) {
+                continue;
+            }
+
+            ChoiceGenerator cg = new ChoiceGenerator(adjacentNodes.size(), 2);
+            int[] combination;
+
+            while ((combination = cg.next()) != null) {
+                Node a = adjacentNodes.get(combination[0]);
+                Node c = adjacentNodes.get(combination[1]);
+
+                if (graph.isAdjacentTo(a, c)) continue;
+
+                if (!(graph.isAdjacentTo(a, b) && graph.isAdjacentTo(b, c))) continue;
+
+                if (!(graph.getEdge(a, b).pointsTowards(b) || graph.getEdge(c, b).pointsTowards(b))) {
+                    continue;
+                }
+
+                if (!(graph.getEdge(a, b).pointsTowards(b) && graph.getEdge(c, b).pointsTowards(b))) {
+                    List<Node> sepset = sepsets.getSepset(a, c);
+
+                    if (sepset != null && !sepset.contains(b)) {
+                        graph.setEndpoint(c, b, Endpoint.ARROW);
+                    }
+                }
+            }
+        }
+    }
+
     private double partialCorrelation(double[] x, double[] y, double[][] z, double[] condition, double threshold, double direction) throws SingularMatrixException {
         double[][] cv = StatUtils.covMatrix(x, y, z, condition, threshold, direction);
         TetradMatrix m = new TetradMatrix(cv).transpose();
         return StatUtils.partialCorrelation(m);
+    }
+
+    /**
+     * Sets the significance level at which independence judgments should be made.  Affects the cutoff for partial
+     * correlations to be considered statistically equal to zero.
+     */
+    private void setAlpha(double alpha) {
+        if (alpha < 0.0 || alpha > 1.0) {
+            throw new IllegalArgumentException("Significance out of range: " + alpha);
+        }
+
+        this.cutoff = StatUtils.getZForAlpha(alpha);
     }
 
     /**
@@ -270,28 +337,29 @@ public final class Fask implements GraphSearch {
         return elapsed;
     }
 
-    /**
-     * @return Returns the penalty discount used for the adjacency search. The default is 1,
-     * though a higher value is recommended, say, 2, 3, or 4.
-     */
-    public double getPenaltyDiscount() {
-        return penaltyDiscount;
-    }
+//    /**
+//     * @return Returns the penalty discount used for the adjacency search. The default is 1,
+//     * though a higher value is recommended, say, 2, 3, or 4.
+//     */
+//    public double getPenaltyDiscount() {
+//        return penaltyDiscount;
+//    }
+//
+//    /**
+//     * @param penaltyDiscount Sets the penalty discount used for the adjacency search.
+//     *                        The default is 1, though a higher value is recommended, say,
+//     *                        2, 3, or 4.
+//     */
+//    public void setPenaltyDiscount(double penaltyDiscount) {
+//        this.penaltyDiscount = penaltyDiscount;
+//    }
 
     /**
-     * @param penaltyDiscount Sets the penalty discount used for the adjacency search.
-     *                        The default is 1, though a higher value is recommended, say,
-     *                        2, 3, or 4.
+     * @param twoCycleAlpha Alpha for orienting 2-cycles. Needs to be on the low side usually. Default 1e-6.
      */
-    public void setPenaltyDiscount(double penaltyDiscount) {
-        this.penaltyDiscount = penaltyDiscount;
-    }
-
-    /**
-     * @param alpha Alpha for orienting 2-cycles. Needs to be on the low side usually. Default 1e-6.
-     */
-    public void setAlpha(double alpha) {
-        this.alpha = alpha;
+    public void setTwoCycleAlpha(double twoCycleAlpha) {
+        this.twoCycleAlpha = twoCycleAlpha;
+        setAlpha(twoCycleAlpha);
     }
 
     /**

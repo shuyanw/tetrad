@@ -1,6 +1,7 @@
 package edu.cmu.tetrad.algcomparison.algorithm.multi;
 
 import edu.cmu.tetrad.algcomparison.algorithm.MultiDataSetAlgorithm;
+import edu.cmu.tetrad.algcomparison.independence.IndependenceWrapper;
 import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
@@ -22,15 +23,11 @@ import java.util.List;
  */
 public class FaskConcatenated implements MultiDataSetAlgorithm, HasKnowledge {
     static final long serialVersionUID = 23L;
-    private boolean empirical = false;
+    private final IndependenceWrapper test;
     private IKnowledge knowledge = new Knowledge2();
 
-    public FaskConcatenated() {
-        this.empirical = false;
-    }
-
-    public FaskConcatenated(boolean empirical) {
-        this.empirical = empirical;
+    public FaskConcatenated(IndependenceWrapper test) {
+        this.test = test;
     }
 
     @Override
@@ -43,10 +40,10 @@ public class FaskConcatenated implements MultiDataSetAlgorithm, HasKnowledge {
         }
 
         DataSet dataSet = DataUtils.concatenate(centered);
-        Fask search = new Fask(dataSet);
+        Fask search = new Fask(test.getTest(dataSet, parameters), dataSet);
         search.setDepth(parameters.getInt("depth"));
-        search.setPenaltyDiscount(parameters.getDouble("penaltyDiscount"));
-        search.setAlpha(parameters.getDouble("twoCycleAlpha"));
+//        search.setPenaltyDiscount(parameters.getDouble("penaltyDiscount"));
+        search.setTwoCycleAlpha(parameters.getDouble("twoCycleAlpha"));
         search.setKnowledge(knowledge);
         return search.search();
     }
@@ -73,9 +70,9 @@ public class FaskConcatenated implements MultiDataSetAlgorithm, HasKnowledge {
 
     @Override
     public List<String> getParameters() {
-        List<String> parameters = new ArrayList<>();
+        List<String> parameters = test.getParameters();
         parameters.add("depth");
-        parameters.add("penaltyDiscount");
+//        parameters.add("penaltyDiscount");
         parameters.add("twoCycleAlpha");
         parameters.add("numRuns");
         parameters.add("randomSelectionSize");
