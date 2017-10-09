@@ -312,7 +312,7 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
         } else {
             throw new IllegalArgumentException(
                     "Expecting either a continuous "
-                    + "or a discrete variable.");
+                            + "or a discrete variable.");
         }
     }
 
@@ -382,7 +382,6 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
             throw new IndexOutOfBoundsException("Index must in (0, #vars).");
         }
 
-        if (variables.contains(variable)) return;
         variables.add(index, variable);
         resize(dataBox.numRows(), variables.size());
 
@@ -776,7 +775,7 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
             } else {
                 throw new IllegalArgumentException(
                         "Column not of type continuous"
-                        + "or of type discrete; can't classify this data set.");
+                                + "or of type discrete; can't classify this data set.");
             }
         }
 
@@ -976,8 +975,8 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
                 } else {
                     throw new IllegalStateException(
                             "Expecting either a continuous "
-                            + "variable or a discrete variable: variable = " + variable
-                            + " type = " + variable.getClass());
+                                    + "variable or a discrete variable: variable = " + variable
+                                    + " type = " + variable.getClass());
                 }
             }
 
@@ -1360,7 +1359,7 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
         } else {
             throw new IllegalArgumentException(
                     "The argument 'element' must be "
-                    + "either a Number or a String.");
+                            + "either a Number or a String.");
         }
     }
 
@@ -1373,7 +1372,7 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
      * reason is in the message.
      */
     private int getValueFromObjectDiscrete(Object element,
-            DiscreteVariable variable) {
+                                           DiscreteVariable variable) {
         if ("*".equals(element) || "".equals(element)) {
             return DiscreteVariable.MISSING_VALUE;
         }
@@ -1413,7 +1412,7 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
             } else {
                 throw new IllegalArgumentException(
                         "The argument 'element' must be "
-                        + "either a Number or a String.");
+                                + "either a Number or a String.");
             }
         } else if (element instanceof Number) {
             int index = ((Number) element).intValue();
@@ -1436,7 +1435,7 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
         } else {
             throw new IllegalArgumentException(
                     "The argument 'element' must be "
-                    + "either a Number or a String.");
+                            + "either a Number or a String.");
         }
     }
 
@@ -1446,7 +1445,7 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
      * the given category.
      */
     private DiscreteVariable accomodateCategory(DiscreteVariable variable,
-            String category) {
+                                                String category) {
         if (category == null) {
             throw new NullPointerException();
         }
@@ -1486,14 +1485,14 @@ public final class BoxDataSet implements DataSet, TetradSerializable {
      * categories. If it is too long, the extra categories are removed.
      */
     private void adjustCategories(DiscreteVariable variable,
-            int numCategories) {
+                                  int numCategories) {
         List<String> categories
                 = new LinkedList<>(variable.getCategories());
         List<String> newCategories = new LinkedList<>(categories);
 
         if (categories.size() > numCategories) {
             for (int i = variable.getCategories().size() - 1;
-                    i >= numCategories; i++) {
+                 i >= numCategories; i++) {
                 newCategories.remove(i);
             }
         } else if (categories.size() < numCategories) {

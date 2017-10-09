@@ -62,7 +62,7 @@ public final class AdjacencyDetector implements IndependenceTest {
     /**
      * The significance level of the independence tests.
      */
-    private double alpha;
+    private double alpha = 0.001;
 
     /**
      * The value of the Fisher's Z statistic associated with the las calculated partial correlation.

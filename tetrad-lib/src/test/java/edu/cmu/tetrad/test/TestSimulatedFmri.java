@@ -38,7 +38,7 @@ import edu.cmu.tetrad.util.Parameters;
 public class TestSimulatedFmri {
 
     public void TestCycles_Data_fMRI_FASK() {
-        task(false);
+        task(true);
     }
 
     private void task(boolean testing) {
@@ -46,7 +46,7 @@ public class TestSimulatedFmri {
         parameters.set("alpha", 0.0001);
         parameters.set("penaltyDiscount", 6);
         parameters.set("depth", -1);
-        parameters.set("twoCycleAlpha", 1E-8);
+        parameters.set("twoCycleAlpha", 1E-6);
 
         parameters.set("numRuns", 10);
         parameters.set("randomSelectionSize", 10);
@@ -167,8 +167,8 @@ public class TestSimulatedFmri {
 
         Algorithms algorithms = new Algorithms();
 
-        algorithms.add(new FaskConcatenated(new AdjacencyDetector()));
-//
+        algorithms.add(new FaskConcatenatedLV(new SemBicTest()));
+
         Comparison comparison = new Comparison();
 
         comparison.setShowAlgorithmIndices(true);
