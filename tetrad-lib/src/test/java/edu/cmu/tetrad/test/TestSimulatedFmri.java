@@ -38,15 +38,15 @@ import edu.cmu.tetrad.util.Parameters;
 public class TestSimulatedFmri {
 
     public void TestCycles_Data_fMRI_FASK() {
-        task(true);
+        task(false);
     }
 
     private void task(boolean testing) {
         Parameters parameters = new Parameters();
-        parameters.set("alpha", 0.0001);
-        parameters.set("penaltyDiscount", 6);
+        parameters.set("alpha", 0.01);
+        parameters.set("penaltyDiscount", 2);
         parameters.set("depth", -1);
-        parameters.set("twoCycleAlpha", 1E-6);
+        parameters.set("twoCycleAlpha", 0.01);
 
         parameters.set("numRuns", 10);
         parameters.set("randomSelectionSize", 10);
@@ -54,7 +54,6 @@ public class TestSimulatedFmri {
         parameters.set("Structure", "Placeholder");
 
         Statistics statistics = new Statistics();
-
         statistics.add(new ParameterColumn("Structure"));
         statistics.add(new AdjacencyPrecision());
         statistics.add(new AdjacencyRecall());
