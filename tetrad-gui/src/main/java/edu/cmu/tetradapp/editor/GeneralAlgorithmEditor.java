@@ -1013,7 +1013,7 @@ public class GeneralAlgorithmEditor extends JPanel implements FinalizingEditor {
                 algorithm = new FaskConcatenatedLV(independenceWrapper);
                 break;
             case FASKGFCI:
-                algorithm = new FaskFciConcatenated(independenceWrapper);
+                algorithm = new FaskGfci(independenceWrapper);
                 break;
             case FAS:
                 algorithm = new FAS(independenceWrapper);

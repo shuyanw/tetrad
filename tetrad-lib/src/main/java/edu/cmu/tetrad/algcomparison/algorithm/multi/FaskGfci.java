@@ -6,7 +6,6 @@ import edu.cmu.tetrad.algcomparison.utils.HasKnowledge;
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.EdgeListGraph;
 import edu.cmu.tetrad.graph.Graph;
-import edu.cmu.tetrad.search.FaskGfci;
 import edu.cmu.tetrad.util.Parameters;
 
 import java.util.ArrayList;
@@ -21,12 +20,12 @@ import java.util.List;
  *
  * @author jdramsey
  */
-public class FaskFciConcatenated implements MultiDataSetAlgorithm, HasKnowledge {
+public class FaskGfci implements MultiDataSetAlgorithm, HasKnowledge {
     static final long serialVersionUID = 23L;
     private final IndependenceWrapper test;
     private IKnowledge knowledge = new Knowledge2();
 
-    public FaskFciConcatenated(IndependenceWrapper test) {
+    public FaskGfci(IndependenceWrapper test) {
         this.test = test;
     }
 
@@ -39,7 +38,7 @@ public class FaskFciConcatenated implements MultiDataSetAlgorithm, HasKnowledge 
         }
 
         DataSet dataSet = DataUtils.concatenate(centered);
-        FaskGfci search = new FaskGfci(test.getTest(dataSet, parameters), dataSet);
+        edu.cmu.tetrad.search.FaskGfci search = new edu.cmu.tetrad.search.FaskGfci(test.getTest(dataSet, parameters), dataSet);
         search.setDepth(parameters.getInt("depth"));
         return search.search();
     }
