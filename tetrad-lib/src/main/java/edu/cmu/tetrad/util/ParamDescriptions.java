@@ -171,7 +171,7 @@ public class ParamDescriptions {
 
         // Bootstrapping
         map.put("bootstrapSampleSize", new ParamDescription("The number of bootstraps (min = 0)", 0, 0, Integer.MAX_VALUE));
-        map.put("bootstrapEnsemble", new ParamDescription("Ensemble method: Preserved (0), Highest (1), Majority (2)", 1, 0, 2));
+        map.put("bootstrapEnsemble", new ParamDescription("Bootstrap edge visibility: Preserving All Edges (0), Keep Edges having prob. >= no edge's (1), Keep Edges having prob. > 0.5 (2)", 1, 0, 2));
         //~Bootstrapping
 
         map.put("fasRule", new ParamDescription(
