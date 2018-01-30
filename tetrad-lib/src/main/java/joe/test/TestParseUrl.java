@@ -155,7 +155,7 @@ public class TestParseUrl {
         int targetIndex = 0;
         final int numLags = 4;
         final int sampleSize = 365;
-        final int daysBack = 8;
+        final int daysBack = 20;
         final int skipDays = 0;
 
         double[][][] advice = new double[daysBack][coins.length][];
