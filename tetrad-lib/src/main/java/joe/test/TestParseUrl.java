@@ -79,7 +79,7 @@ public class TestParseUrl {
         try {
 
             for (String coin : coins) {
-                final String spec = "https://coinmarketcap.com/currencies/" + coin + "/historical-data?start=20170128&end=20180130";
+                final String spec = "https://coinmarketcap.com/currencies/" + coin + "/historical-data?start=20170128&end=20180131";
                 System.out.println(spec);
 
                 URL url = new URL(spec);
@@ -155,7 +155,7 @@ public class TestParseUrl {
         int targetIndex = 0;
         final int numLags = 4;
         final int sampleSize = 365;
-        final int daysBack = 20;
+        final int daysBack = 1;
         final int skipDays = 0;
 
         double[][][] advice = new double[daysBack][coins.length][];
