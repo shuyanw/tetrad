@@ -79,7 +79,7 @@ public class TestParseUrl {
         try {
 
             for (String coin : coins) {
-                final String spec = "https://coinmarketcap.com/currencies/" + coin + "/historical-data?start=20170128&end=20180131";
+                final String spec = "https://coinmarketcap.com/currencies/" + coin + "/historical-data?start=20170128&end=20180201";
                 System.out.println(spec);
 
                 URL url = new URL(spec);
@@ -153,9 +153,9 @@ public class TestParseUrl {
     @Test
     public void test2() {
         int targetIndex = 0;
-        final int numLags = 4;
+        final int numLags = 6;
         final int sampleSize = 365;
-        final int daysBack = 1;
+        final int daysBack = 4;
         final int skipDays = 0;
 
         double[][][] advice = new double[daysBack][coins.length][];
@@ -197,8 +197,8 @@ public class TestParseUrl {
 
         LinkedList<Integer> hold = new LinkedList<>();
         hold.add(indexOf(coins, "bitcoin"));
+        hold.add(indexOf(coins, "bitconnect"));
         hold.add(indexOf(coins, "ethereum"));
-        hold.add(indexOf(coins, "edgeless"));
         hold.add(indexOf(coins, "basic-attention-token"));
 
         for (int _d = 0; _d < daysBack; _d++) {
@@ -225,14 +225,14 @@ public class TestParseUrl {
                 }
             }
 
-            if (advice[_d][hold.getLast()][0] < .95 && hold.size() > 2) {
+            if (advice[_d][hold.getLast()][0] < .95 && hold.size() > 1) {
                 System.out.println("\nSELL " + coins[hold.getLast()]);
-                hold.remove(hold.getLast());
+//                hold.remove(hold.getLast()); // DO THESE MANUALLY
             }
 
             if (!hold.contains(_c.getFirst()) && advice[_d][_c.getFirst()][0] < 2) {
                 System.out.println("\nBUY " + coins[_c.getFirst()]);
-                hold.addFirst(_c.getFirst());
+//                hold.addFirst(_c.getFirst()); // DO THESE MANUALLY
             }
 
             System.out.println("\nHolding:\n");
