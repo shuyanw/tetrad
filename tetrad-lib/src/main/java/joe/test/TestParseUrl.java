@@ -79,7 +79,7 @@ public class TestParseUrl {
         try {
 
             for (String coin : coins) {
-                final String spec = "https://coinmarketcap.com/currencies/" + coin + "/historical-data?start=20170128&end=20180201";
+                final String spec = "https://coinmarketcap.com/currencies/" + coin + "/historical-data?start=20170128&end=20180202";
                 System.out.println(spec);
 
                 URL url = new URL(spec);
